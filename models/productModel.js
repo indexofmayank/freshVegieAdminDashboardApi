@@ -5,6 +5,22 @@ const productSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please enter product name'],
   },
+  category: {
+    type: String,
+    require: [true, 'Please enter the product category'],
+  },
+  add_ons: {
+    type: String,
+    required: [true, 'Please enter the add ons'],
+  }, 
+  search_tags: {
+    type: String,
+    required: [true, 'Please enter a search tag'],
+  },
+  selling_method: {
+    type: String,
+    require: [true, 'Please enter a selling method'],
+  },
   description: {
     type: String,
     required: [true, 'Please enter product description'],
@@ -13,10 +29,6 @@ const productSchema = mongoose.Schema({
     type: Number,
     required: [true, 'Please enter product price'],
     maxLength: [8, 'Price cannot exceed 8 characters'],
-  },
-  rating: {
-    type: Number,
-    default: 0,
   },
   images: [
     {
@@ -30,69 +42,42 @@ const productSchema = mongoose.Schema({
       },
     },
   ],
-  colors: [
-    {
-      type: String,
-      required: true,
-    },
-  ],
-  sizes: [{ type: String, required: true }],
-  company: {
+  
+  sku: {
     type: String,
-    required: [true, 'Please enter product company'],
+    required: [true, "Please enter a sku"]
   },
-  category: {
+
+  barcode: {
     type: String,
-    required: [true, 'Please enter product category'],
+    required: [true, 'please enter a barcode']
   },
+
   stock: {
-    type: Number,
-    required: [true, 'Please enter product stock'],
-    maxLength: [4, 'stock cannot exceed 4 characters'],
-    min: 0,
-    default: 1,
+    type: String,
+    required: [true, 'Please enter a stock'],
   },
-  numberOfReviews: {
-    type: Number,
-    default: 0,
+
+  stock_notify: {
+    type: String,
+    required: [true, 'Please enter a stock notify'],
   },
-  reviews: [
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-      email: {
-        type: String,
-        required: true,
-      },
-      rating: {
-        type: Number,
-        required: true,
-      },
-      comment: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  shipping: {
-    type: Boolean,
-    default: true,
+
+  tax: {
+    type: String,
+    required: [true, 'Please enter a tax'],
   },
-  featured: {
-    type: Boolean,
-    default: false,
+
+  product_detail_min: {
+    type: String,
+    required: [true, 'Please enter a product detail min']
   },
-  admin: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Admin',
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
+
+  product_detail_max: {
+    type: String,
+    required: [true, 'Please enter a product detail max']
+  }
+
 });
 
 module.exports = mongoose.model('Product', productSchema);

@@ -45,14 +45,6 @@ const orderSchema = mongoose.Schema({
         type: String,
         required: true,
       },
-      color: {
-        type: String,
-        required: true,
-      },
-      size: {
-        type: String,
-        required: true,
-      },
       product: {
         type: mongoose.Schema.ObjectId,
         ref: 'Product',
