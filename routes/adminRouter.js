@@ -3,6 +3,8 @@ const router = require('express').Router();
 const adminController = require('../controllers/adminController');
 const productController = require('../controllers/productController');
 const orderController = require('../controllers/orderController');
+const userController = require('../controllers/userController');
+const categoryController = require('../controllers/categoryController');
 
 const auth = require('../middleware/Auth');
 
@@ -106,4 +108,49 @@ router
     orderController.deleteOrder
   );
 
+  // delete user
+  router.route('/user/:id')
+  .delete(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super'),
+    userController.deleteUser
+  );
+
+
+// send all users
+router
+  .route('/users')
+  .get(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('moderate', 'super', 'low'),
+    userController.getAllUser
+  );
+
+// delete single user
+router
+  .route('/user/:id')
+  .delete(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super'),
+    userController.deleteUser
+  );
+
+
+
+//get, update, delete routers for admin
+router
+  .route('/category/:id')
+  .put(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super', 'moderate'),
+    categoryController.updateCategory
+  );
+
+router
+  .route('/delete/:id')
+  .delete(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super', 'moderate'),
+    categoryController.deleteCategory
+  );
 module.exports = router;
