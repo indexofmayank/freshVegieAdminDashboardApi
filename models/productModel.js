@@ -12,7 +12,7 @@ const productSchema = mongoose.Schema({
   add_ons: {
     type: String,
     required: [true, 'Please enter the add ons'],
-  }, 
+  },
   search_tags: {
     type: String,
     required: [true, 'Please enter a search tag'],
@@ -30,6 +30,11 @@ const productSchema = mongoose.Schema({
     required: [true, 'Please enter product price'],
     maxLength: [8, 'Price cannot exceed 8 characters'],
   },
+
+  offerPrice: {
+    type: Number,
+    required: [true, 'Please enter product offerPrice']
+  },
   images: [
     {
       public_id: {
@@ -42,7 +47,7 @@ const productSchema = mongoose.Schema({
       },
     },
   ],
-  
+
   sku: {
     type: String,
     required: [true, "Please enter a sku"]
