@@ -4,8 +4,8 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 
 exports.createCategory = catchAsyncError(async(req, res, next) => {
 
-    const {name} = req.body;
-    const category = await Category.create({name});
+    const {name, image} = req.body;
+    const category = await Category.create({name, image});
 
     res.status(200).json({
         success: true,
@@ -54,7 +54,7 @@ exports.deleteCategory = catchAsyncError(async(req, res, next) => {
 
 exports.updateCategory = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, image } = req.body;
 
     if (!id) {
         return next(new ErrorHandler('Category ID is required', 400));
