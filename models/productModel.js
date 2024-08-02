@@ -31,7 +31,7 @@ const productSchema = mongoose.Schema({
     maxLength: [8, 'Price cannot exceed 8 characters'],
   },
 
-  offerPrice: {
+  offer_price: {
     type: Number,
     required: [true, 'Please enter product offerPrice']
   },
