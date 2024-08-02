@@ -18,7 +18,7 @@ exports.getAllCategroy = catchAsyncError(async(req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: categories
+        data: categories
     });
 });
 
