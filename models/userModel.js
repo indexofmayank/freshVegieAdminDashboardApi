@@ -50,10 +50,12 @@ const userModel = mongoose.Schema({
         required: [true, 'Please enter an email'],
     },
 
-    address: {
-        type: addressSchema,
-        required: [true, 'Please enter an address']
-    }
+    address: [
+        {
+            type: addressSchema,
+            required: [true, 'Please enter an address']
+        },
+    ],
 
 }, {timestamps: true});
 
