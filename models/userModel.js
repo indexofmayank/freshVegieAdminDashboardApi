@@ -1,6 +1,22 @@
 const mongoose = require('mongoose');
 
 const addressSchema = new mongoose.Schema({
+
+    name: {
+        type: String,
+        required: [true, 'Pleae enter name']
+    },  
+
+    phone: {
+        type: String,
+        required: [true, 'Please enter phone']
+    },
+
+    email: {
+        type: String,
+        required: [true, 'Please enter email']
+    },
+
     address: {
         type: String,
         required: [true, 'please enter address']
@@ -53,7 +69,7 @@ const userModel = mongoose.Schema({
     address: [
         {
             type: addressSchema,
-            required: [true, 'Please enter an address']
+            required: [false, 'Please enter an address']
         },
     ],
 

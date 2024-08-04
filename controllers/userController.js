@@ -94,3 +94,17 @@ exports.getUserByPhoneNumber = catchAsyncError(async (req, res, next) => {
         res.status(500).json({message: 'Server error', error: error.message});
     }
 });
+
+exports.getUpdateUser = catchAsyncError(async (req, res, next) => {
+    try {
+        const {id} = req.params;
+        const updateData = req.body;
+        const result = await User.findByIdAndUpdate(id, updateData, {new: false});
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({message: 'Server error', error: error.message});
+    }
+});
