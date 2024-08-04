@@ -2,15 +2,15 @@ const User = require('../models/userModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 
-exports.createUser = catchAsyncError(async(req, res, next) => {
+exports.createUser = catchAsyncError(async (req, res, next) => {
 
-   const {name, phone, email, address} = req.body;
-   const user = await User.create({
-    name,
-    phone,
-    email,
-    address
-   });
+    const { name, phone, email, address } = req.body;
+    const user = await User.create({
+        name,
+        phone,
+        email,
+        address
+    });
 
     res.status(200).json({
         success: true,
@@ -18,7 +18,7 @@ exports.createUser = catchAsyncError(async(req, res, next) => {
     });
 });
 
-exports.getAllUser = catchAsyncError(async(req, res, next) => {
+exports.getAllUser = catchAsyncError(async (req, res, next) => {
 
     const users = await User.find();
     const data = users.map((item, index) => {
@@ -45,14 +45,14 @@ exports.getAllUser = catchAsyncError(async(req, res, next) => {
     });
 });
 
-exports.getUserById = catchAsyncError(async(req, res, next) => {
+exports.getUserById = catchAsyncError(async (req, res, next) => {
 
-    if(!req.params.id) {
+    if (!req.params.id) {
         return next(new ErrorHandler('User Not found', 400));
     }
 
     const user = await User.findById(req.params.id);
-    if(!user) {
+    if (!user) {
         return next(new ErrorHandler('User Not Found', 200));
     }
 
@@ -63,15 +63,15 @@ exports.getUserById = catchAsyncError(async(req, res, next) => {
 
 });
 
-exports.deleteUser = catchAsyncError(async(req, res, next) => {
+exports.deleteUser = catchAsyncError(async (req, res, next) => {
     console.log('we hit here')
-    if(!req.params.id) {
+    if (!req.params.id) {
         return next(new ErrorHandler('User not found', 400));
     }
 
     const user = await User.findById(req.params.id);
 
-    if(!user) {
+    if (!user) {
         return next(new ErrorHandler('User not found', 200));
     }
     await user.remove();
@@ -83,52 +83,77 @@ exports.deleteUser = catchAsyncError(async(req, res, next) => {
 
 exports.getUserByPhoneNumber = catchAsyncError(async (req, res, next) => {
     try {
-        const {phone} = req.params;
-        const user = await User.findOne({phone});
+        const { phone } = req.params;
+        const user = await User.findOne({ phone });
 
-        if(!user) {
-            return res.status(404).json({message: 'User not found'});
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
         res.json(user);
     } catch (error) {
-        res.status(500).json({message: 'Server error', error: error.message});
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
 exports.getUpdateUser = catchAsyncError(async (req, res, next) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         const updateData = req.body;
-        const result = await User.findByIdAndUpdate(id, updateData, {new: false});
+        const result = await User.findByIdAndUpdate(id, updateData, { new: false });
         res.status(200).json({
             success: true,
             data: result,
         });
     } catch (error) {
-        res.status(500).json({message: 'Server error', error: error.message});
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-exports.updateUserAddress = catchAsyncError(async (req, res, next) => {
-    const {id} = req.params;
-    const {name, phone, email, address, locality, landmark, city, pin_code, state} = req.body;
-   try {
-    const user = await User.findById(id);
-    if(!user) {
-        return res.status(404).json({
-            success: false,
-            data: 'User not found'
+exports.addUserAddress = catchAsyncError(async (req, res, next) => {
+    const { id } = req.params;
+    const { name, phone, email, address, locality, landmark, city, pin_code, state } = req.body;
+    try {
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                data: 'User not found'
+            });
+        }
+        const result = user.address.push(
+            { name, phone, email, address, locality, landmark, city, pin_code, state }
+        );
+        await user.save();
+        return res.status(200).json({
+            success: true,
+            data: result
         });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
-    const result = user.address.push(
-        {name, phone, email, address, locality, landmark, city, pin_code, state}
-    );
-    await user.save();
-    return res.status(200).json({
-        success: true,
-        data: result
-    });
-   } catch (error) {
-    res.status(500).json({message: 'Server error', error: error.message});
-   } 
 });
+
+exports.editUserAddress = catchAsyncError(async (req, res, next) => {
+    const { userId, addressId } = req.params;
+    const updatedAddress = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const addressIndex = user.address.findIndex(addr => addr._id.toString() === addressId);
+        if (addressIndex === -1) {
+            return res.status(404).json({ message: 'Address not found' });
+        }
+
+        user.address[addressIndex] = { ...user.address[addressIndex]._doc, ...updatedAddress };
+        await user.save();
+
+        res.status(200).json({ message: 'Address updated successfully', user });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
