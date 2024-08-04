@@ -18,30 +18,35 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
     });
 });
 
-exports.getAllUser = catchAsyncError(async (req, res, next) => {
+exports.createUser = catchAsyncError(async (req, res, next) => {
+    const { name, email, phone, address } = req.body;
 
-    const users = await User.find();
-    const data = users.map((item, index) => {
-        const {
-            _id: id,
-            name,
-            email,
-            phone,
-            address
-        } = item;
+    // Check if the phone number already exists
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+        return res.status(400).json({
+            success: false,
+            message: 'Phone number already exists',
+        });
+    }
 
-        const newItem = {
-            id,
-            name,
-            email,
-            phone,
-            address
-        };
-        return newItem;
+    // Create a new user
+    const user = await User.create({
+        name,
+        email,
+        phone,
+        address,
     });
-    res.status(200).json({
+
+    res.status(201).json({
         success: true,
-        data,
+        data: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            address: user.address,
+        },
     });
 });
 
