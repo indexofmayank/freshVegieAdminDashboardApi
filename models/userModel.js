@@ -1,5 +1,38 @@
 const mongoose = require('mongoose');
 
+const addressSchema = new mongoose.Schema({
+    address: {
+        type: String,
+        required: [true, 'please enter address']
+    },
+
+    locality: {
+        type: String,
+        required: [false, 'Please enter locality']
+    },
+
+    landmark: {
+        type: String,
+        required: [false, 'Pleae enter landmark']
+    },
+
+    city: {
+        type: String,
+        required: [true, 'Please enter city']
+    },
+
+    pin_code: {
+        type: String,
+        required: [true, 'Please enter pin code']
+    },
+
+    state: {
+        type: String,
+        required: [true, 'Please enter state']
+    },
+
+});
+
 const userModel = mongoose.Schema({
 
     name: {
@@ -9,16 +42,16 @@ const userModel = mongoose.Schema({
 
     phone: {
         type: String,
-        require: [true, 'Please enter phone'],
+        required: [true, 'Please enter phone'],
     },
 
     email: {
         type: String,
-        require: [true, 'Please enter an email'],
+        required: [true, 'Please enter an email'],
     },
 
     address: {
-        type: String,
+        type: addressSchema,
         required: [true, 'Please enter an address']
     }
 
