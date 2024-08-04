@@ -2,19 +2,15 @@ const User = require('../models/userModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 
-exports.createUser = catchAsyncError(async (req, res, next) => {
-    console.log(req.body);
-    const { name, phone, email, address } = req.body;
-    const user = await User.create({
-        name,
-        phone,
-        email,
-        address
-    });
+exports.getAllUser = catchAsyncError(async (req, res, next) => {
 
+    const users = await User.find();
+    if(!users) {
+        res.status(200).json({success : false, message: 'No user found'});
+    }
     res.status(200).json({
-        success: true,
-        data: user
+    success: true,
+    data: users
     });
 });
 

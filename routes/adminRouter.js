@@ -118,13 +118,6 @@ router
 
 
 // send all users
-router
-  .route('/user')
-  .get(
-    auth.checkUserAuthentication,
-    auth.checkAdminPrivileges('moderate', 'super', 'low'),
-    userController.getAllUser
-  );
 
 
 
