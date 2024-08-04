@@ -147,7 +147,7 @@ router
   );
 
 router
-  .route('/delete/:id')
+  .route('/category/delete/:id')
   .delete(
     auth.checkUserAuthentication,
     auth.checkAdminPrivileges('super', 'moderate'),

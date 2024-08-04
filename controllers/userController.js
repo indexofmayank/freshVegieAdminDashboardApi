@@ -108,3 +108,27 @@ exports.getUpdateUser = catchAsyncError(async (req, res, next) => {
         res.status(500).json({message: 'Server error', error: error.message});
     }
 });
+
+exports.updateUserAddress = catchAsyncError(async (req, res, next) => {
+    const {id} = req.params;
+    const {name, phone, email, address, locality, landmark, city, pin_code, state} = req.body;
+   try {
+    const user = await User.findById(id);
+    if(!user) {
+        return res.status(404).json({
+            success: false,
+            data: 'User not found'
+        });
+    }
+    const result = user.address.push(
+        {name, phone, email, address, locality, landmark, city, pin_code, state}
+    );
+    await user.save();
+    return res.status(200).json({
+        success: true,
+        data: result
+    });
+   } catch (error) {
+    res.status(500).json({message: 'Server error', error: error.message});
+   } 
+});
