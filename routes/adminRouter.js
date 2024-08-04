@@ -119,20 +119,11 @@ router
 
 // send all users
 router
-  .route('/users')
+  .route('/user')
   .get(
     auth.checkUserAuthentication,
     auth.checkAdminPrivileges('moderate', 'super', 'low'),
     userController.getAllUser
-  );
-
-// delete single user
-router
-  .route('/user/:id')
-  .delete(
-    auth.checkUserAuthentication,
-    auth.checkAdminPrivileges('super'),
-    userController.deleteUser
   );
 
 
