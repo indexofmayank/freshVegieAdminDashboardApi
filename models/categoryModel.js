@@ -8,7 +8,12 @@ const categorySchema = new mongoose.Schema({
     image: {
         type: String,
         required: [true, 'Please enter category']
-    }
+    },
+    status: {
+        type: String,
+        enum: ['active', 'inactive'],
+        required: [true, 'Please enter status']
+    },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

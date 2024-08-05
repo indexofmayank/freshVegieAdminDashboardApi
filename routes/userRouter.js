@@ -10,5 +10,6 @@ router.route('/phone/:phone').get(userController.getUserByPhoneNumber);
 router.route('/:id').put(userController.updateUser);
 router.route('/addAddress/:id').post(userController.addUserAddress);
 router.route('/updateAddress/:userId/:addressId').put(userController.editUserAddress);
+router.route('/delete/:userId/:addressId').delete(userController.deleteAddress);
 
 module.exports = router;

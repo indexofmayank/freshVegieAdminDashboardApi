@@ -115,6 +115,7 @@ router
     auth.checkAdminPrivileges('super'),
     userController.deleteUser
   );
+  
 
 
 // send all users
