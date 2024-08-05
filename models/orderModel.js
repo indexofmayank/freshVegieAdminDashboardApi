@@ -2,30 +2,100 @@ const mongoose = require('mongoose');
 
 const orderSchema = mongoose.Schema({
   shippingInfo: {
-    address: {
-      type: String,
-      required: true,
+    deliveryAddress: {
+      name: {
+        type: String,
+        required: [true, 'Pleae enter name']
+      },
+
+      phone: {
+        type: String,
+        required: [true, 'Please enter phone']
+      },
+
+      email: {
+        type: String,
+        required: [true, 'Please enter email']
+      },
+
+      address: {
+        type: String,
+        required: [true, 'please enter address']
+      },
+
+      locality: {
+        type: String,
+        required: [false, 'Please enter locality']
+      },
+
+      landmark: {
+        type: String,
+        required: [false, 'Pleae enter landmark']
+      },
+
+      city: {
+        type: String,
+        required: [true, 'Please enter city']
+      },
+
+      pin_code: {
+        type: String,
+        required: [true, 'Please enter pin code']
+      },
+
+      state: {
+        type: String,
+        required: [true, 'Please enter state']
+      },
+
     },
-    city: {
-      type: String,
-      required: true,
-    },
-    state: {
-      type: String,
-      required: true,
-    },
-    country: {
-      type: String,
-      required: true,
-    },
-    pinCode: {
-      type: Number,
-      required: true,
-    },
-    phoneNumber: {
-      type: Number,
-      required: true,
-    },
+    billingAddress: {
+      name: {
+        type: String,
+        required: [true, 'Pleae enter name']
+      },
+
+      phone: {
+        type: String,
+        required: [true, 'Please enter phone']
+      },
+
+      email: {
+        type: String,
+        required: [true, 'Please enter email']
+      },
+
+      address: {
+        type: String,
+        required: [true, 'please enter address']
+      },
+
+      locality: {
+        type: String,
+        required: [false, 'Please enter locality']
+      },
+
+      landmark: {
+        type: String,
+        required: [false, 'Pleae enter landmark']
+      },
+
+      city: {
+        type: String,
+        required: [true, 'Please enter city']
+      },
+
+      pin_code: {
+        type: String,
+        required: [true, 'Please enter pin code']
+      },
+
+      state: {
+        type: String,
+        required: [true, 'Please enter state']
+      },
+
+    }
   },
   orderItems: [
     {
@@ -47,7 +117,7 @@ const orderSchema = mongoose.Schema({
       },
       product: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Product',
+        ref: 'products',
         required: true,
       },
     },
@@ -61,9 +131,18 @@ const orderSchema = mongoose.Schema({
       type: String,
       required: true,
     },
+    phone: {
+      type: String,
+      required: true
+    },
+    userId: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'users',
+      required: true,
+    }
   },
   paymentInfo: {
-    id: {
+    payment_type: {
       type: String,
       required: true,
     },
@@ -73,10 +152,15 @@ const orderSchema = mongoose.Schema({
     },
   },
   paidAt: {
-    type: Date,
+    type: String,
     required: true,
   },
   itemsPrice: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  discountPrice: {
     type: Number,
     required: true,
     default: 0,
@@ -96,11 +180,28 @@ const orderSchema = mongoose.Schema({
     required: true,
     default: 'processing',
   },
-  deliveredAt: Date,
-  createdAt: {
+  deliverAt: {
     type: Date,
-    default: Date.now(),
-  },
+    require: true,
+    default: null
+  }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
+// Create a virtual property 'id' that's computed from '_id'
+orderSchema.virtual('id').get(function () {
+  return this._id.toHexString();
+});
+
+// Ensure virtual fields are serialized.
+orderSchema.set('toJSON', {
+  virtuals: true
+});
+orderSchema.set('toObject', {
+  virtuals: true
+});
+
 
 module.exports = mongoose.model('Order', orderSchema);

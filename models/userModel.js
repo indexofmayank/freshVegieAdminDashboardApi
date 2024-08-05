@@ -14,7 +14,7 @@ const addressSchema = new mongoose.Schema({
 
     email: {
         type: String,
-        required: [true, 'Please enter email']
+        required: [false, 'Please enter email']
     },
 
     address: {
@@ -63,7 +63,7 @@ const userModel = mongoose.Schema({
 
     email: {
         type: String,
-        required: [true, 'Please enter an email'],
+        required: [false, 'Please enter an email'],
     },
 
     address: [

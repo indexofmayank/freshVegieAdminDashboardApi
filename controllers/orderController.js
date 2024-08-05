@@ -6,24 +6,30 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 // create new order
 exports.createNewOrder = catchAsyncError(async (req, res, next) => {
   const {
-    user,                 // Expecting an object with name and email
-    shippingInfo,         // Expecting an object with address, city, state, country, pinCode, phoneNumber
-    orderItems,           // Expecting an array of objects with name, price, quantity, image, product
-    paymentInfo,          // Expecting an object with id and status
+    shippingInfo,
+    orderItems,
+    user,
+    paymentInfo,
+    paidAt,
     itemsPrice,
+    discountPrice,
     shippingPrice,
     totalPrice,
-    paidAt
+    orderStatus,
+    deliverAt
   } = req.body;
   const order = await Order.create({
     shippingInfo,
     orderItems,
+    user,
     paymentInfo,
+    paidAt: paidAt || Date.now(),  // Default to current time if not provided
     itemsPrice,
+    discountPrice,
     shippingPrice,
     totalPrice,
-    paidAt: paidAt || Date.now(),  // Default to current time if not provided
-    user,
+    orderStatus,
+    deliverAt
   });
 
 
@@ -50,11 +56,11 @@ exports.getSingleOrder = catchAsyncError(async (req, res, next) => {
 
 // send user orders
 exports.getUserOrders = catchAsyncError(async (req, res, next) => {
-  const { email } = req.body;
-  if (!email) {
+  const {userId} = req.params;
+  if (!userId) {
     return next(new ErrorHandler('Order not found', 400));
   }
-  const order = await Order.find({ 'user.email': email });
+   const order = await Order.find({ 'user.userId': userId });
   if (!order) {
     return next(new ErrorHandler('Order not found', 200));
   }
