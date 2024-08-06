@@ -93,7 +93,10 @@ exports.getUserByPhoneNumber = catchAsyncError(async (req, res, next) => {
                 message: 'User not found'
             });
         }
-        res.json(user);
+        res.status(200).json({
+            success: true,
+            data: user
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
