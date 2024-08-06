@@ -15,7 +15,7 @@ const orderSchema = mongoose.Schema({
 
       email: {
         type: String,
-        required: [true, 'Please enter email']
+        required: [false, 'Please enter email']
       },
 
       address: {
@@ -62,7 +62,7 @@ const orderSchema = mongoose.Schema({
 
       email: {
         type: String,
-        required: [true, 'Please enter email']
+        required: [false, 'Please enter email']
       },
 
       address: {
