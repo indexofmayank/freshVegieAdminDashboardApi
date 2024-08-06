@@ -4,20 +4,18 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 
 exports.createCategory = catchAsyncError(async(req, res, next) => {
-    console.log(req.body);
-    const {name, image, status} = req.body;
-    const {public_id, url} = await cloudinary.uploader.upload(image, {
+    let {name, image, status} = req.body;
+    const {secure_url} = await cloudinary.uploader.upload(image, {
         folder: 'tomper-wear',
     });
-    image = url;
+     image = secure_url;
      const category = await Category.create({name, status, image});
      if(!category) {
         return next(new ErrorHandler('Server error', 500));
      }
-
     res.status(200).json({
         success: true,
-         data: category
+        data: category
     });
 });
 

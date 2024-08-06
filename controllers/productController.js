@@ -232,3 +232,18 @@ exports.deleteReview = catchAsyncError(async (req, res, next) => {
     message: 'Review deleted',
   });
 });
+
+exports.getProductByCategory = catchAsyncError( async (req, res, next) => {
+  const {categoryId} = req.params;
+  if(!categoryId) {
+    return next(new ErrorHandler('Category not found', 400));
+  }
+  const products = await Product.find({category: categoryId});
+  if(!products) {
+    return next(new ErrorHandler('Product not found', 200));
+  }
+  res.status(200).json({
+    success: true,
+    data: products
+  });
+});

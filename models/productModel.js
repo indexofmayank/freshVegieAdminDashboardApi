@@ -6,8 +6,9 @@ const productSchema = mongoose.Schema({
     required: [true, 'Please enter product name'],
   },
   category: {
-    type: String,
-    require: [true, 'Please enter the product category'],
+    type: mongoose.Schema.ObjectId,
+    ref: 'Category',
+    required: [true, 'Please enter the product category'],
   },
   add_ons: {
     type: String,

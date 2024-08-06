@@ -11,7 +11,7 @@ const categorySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive'],
+        enum: ['true', 'false'],
         required: [true, 'Please enter status']
     },
 }, {

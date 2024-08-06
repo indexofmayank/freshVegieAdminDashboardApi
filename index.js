@@ -17,6 +17,7 @@ const orderRouter = require('./routes/orderRouter');
 const uploadRouter = require('./routes/uploadRouter');
 const userRouter = require('./routes/userRouter');
 const categoryRouter = require('./routes/categoryRouter');
+const bannerRouter = require('./routes/bannerRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -63,6 +64,7 @@ app.use('/api/orders', orderRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/user', userRouter);
 app.use('/api/category', categoryRouter);
+app.use('/api/banner', bannerRouter);
 
 // using other middlewares
 app.use(errorMiddleware);
