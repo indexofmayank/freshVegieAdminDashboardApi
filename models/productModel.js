@@ -36,6 +36,10 @@ const productSchema = mongoose.Schema({
     type: Number,
     required: [true, 'Please enter product offerPrice']
   },
+  purchase_price: {
+    type: Number,
+    required: [true, 'please enter purchase price']
+  },
   images: [
     {
       public_id: {

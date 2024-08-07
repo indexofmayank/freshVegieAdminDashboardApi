@@ -19,3 +19,26 @@ exports.createBanner = catchAsyncError(async (req, res, next) => {
     });
 });
 
+
+exports.getAllBanner = catchAsyncError(async (req, res, next) => {
+    const banners = await Banner.find();
+    const data = banners.map((item, index) => {
+        const {
+            _id: id,
+            name,
+            image,
+            status
+        } = item;
+        const newItem = {
+            id,
+            name,
+            image,
+            status
+        };
+        return newItem;
+    });
+    res.status(200).json({
+        success: true,
+        data,
+    });
+});
