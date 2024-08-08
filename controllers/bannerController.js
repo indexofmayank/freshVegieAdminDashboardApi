@@ -119,3 +119,15 @@ exports.deleteBanner = catchAsyncError(async (req, res, next) => {
     }
 });
 
+exports.getBannerAcitveStatus = catchAsyncError(async (req, res, next) => {
+    try {
+        const banners = await Banner.findOne({status: true});
+        res.status(200).json({
+            success: true,
+            data: banners
+        });
+    } catch (error) {
+        res.status(500).json({success: false, message: 'Server error', error: error.message});
+    }
+});
+

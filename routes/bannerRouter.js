@@ -7,5 +7,6 @@ router.route('/').get(bannerController.getAllBanner);
 router.route('/:bannerId').put(bannerController.updateBanner);
 router.route('/:bannerId').get(bannerController.getBannerById);
 router.route('/:bannerId').delete(bannerController.deleteBanner);
+router.route('/active/banner').get(bannerController.getBannerAcitveStatus);
 
 module.exports = router;
