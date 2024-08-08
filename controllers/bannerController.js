@@ -24,6 +24,24 @@ exports.createBanner = catchAsyncError(async (req, res, next) => {
     }
 });
 
+exports.getBannerById = catchAsyncError(async(req, res, next) => {
+    try {
+        if(!req.params.bannerId) {
+            return next(new ErrorHandler(`Banner not found`, 400));
+        }
+        const banner = await Banner.findById(req.params.bannerId);
+        if(!banner) {
+            return next(new ErrorHandler('Banner not found', 200));
+        }
+        res.status(200).json({
+            success: true,
+            data: banner
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+});
+
 
 exports.getAllBanner = catchAsyncError(async (req, res, next) => {
     try {
@@ -55,9 +73,12 @@ exports.getAllBanner = catchAsyncError(async (req, res, next) => {
 exports.updateBanner = catchAsyncError(async (req, res, next) => {
     try {
         const { bannerId } = req.params;
-        const updateData = req.body;
+        let updateData = req.body;
+        const {secure_url} = await cloudinary.uploader.upload(updateData.image, {
+            folder: 'tomper-wear'
+        });
+        updateData.image = secure_url;
         const result = await Banner.findByIdAndUpdate(bannerId, updateData, {new: false});
-        console.log('mayank');
         if(!result) {
             return res.status(500).json({success: false, message: 'Server error'});
         } else {
@@ -78,3 +99,23 @@ exports.updateBanner = catchAsyncError(async (req, res, next) => {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 });
+
+exports.deleteBanner = catchAsyncError(async (req, res, next) => {
+    if(!req.params.bannerId) {
+        return next(new ErrorHandler('Banner not found', 400));
+    }
+    try {
+        const banner = await Banner.findById(req.params.bannerId);
+        if(!banner) {
+            return next(new ErrorHandler('Banner not found', 200));
+        }
+        await banner.remove();
+        res.status(200).json({
+            success: true,
+            message: 'Banner deleted'
+        });
+    } catch (error) {
+        res.status(500).json({success: false, message: 'Server error', error: error.message});
+    }
+});
+

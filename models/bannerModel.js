@@ -13,8 +13,7 @@ const bannerSchema = mongoose.Schema({
     },
 
     status: {
-        type: String,
-        enum: ['true', 'false'],
+        type: Boolean,
         required: [true, 'Pleae enter status']
     }
 }, {
