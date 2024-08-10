@@ -174,3 +174,41 @@ const updateStock = async (id, quantity) => {
   await product.save({ validateBeforeSave: false });
   return true;
 };
+
+// const getOrderByOrderId = async () => {
+//   try {
+//     const order = await Order.find({orderId: req.params.orderId});
+//     if(!order) {
+//       return new ErrorHandler('No order found', 500);
+//     }
+//     res.status(200).json({
+//       success: true,
+//       data: order
+//     });
+//   } catch (error) {
+//     res.status(500).json({success: false, message: 'Server error', error: error.message});
+//   }
+// };
+
+exports.getOrderByOrderId = catchAsyncError(async (req, res, next) => {
+  try {
+    const Id = req.params.orderId;
+    const order = await Order.find({orderId: Id});
+
+    if(!order || order.length === 0) {
+      return next(new ErrorHandler('No order found', 404));
+    }
+    const orderObject = order[0].toObject();
+    const {orderId, ...rest} = orderObject;
+    const reorderOrder = {orderId, ...rest};
+
+    res.status(200).json({
+      success: true,
+      data: reorderOrder
+    });
+  } catch (error) {
+    console.error('Server error', error);
+    throw new ErrorHandler('Server error', 500);
+  }
+
+});

@@ -11,4 +11,6 @@ router.route('/users/:userId').get(orderController.getUserOrders);
 // send single order
 router.route('/:id').get(orderController.getSingleOrder);
 
+router.route('/orderId/:orderId').get(orderController.getOrderByOrderId);
+
 module.exports = router;
