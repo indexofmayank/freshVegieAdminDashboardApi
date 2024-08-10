@@ -3,6 +3,33 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 
+const generateOrderId = async () => {
+  try {
+    // Find the most recent order
+    const lastOrder = await Order.findOne().sort({ createdAt: -1 });
+
+    // If no previous order is found, return the first orderId
+    if (!lastOrder || !lastOrder.orderId) {
+      return 'ORD1';
+    }
+
+    // Extract the numeric part from the last orderId
+    const lastOrderIdNumber = parseInt(lastOrder.orderId.replace('ORD', ''), 10);
+
+    // If extraction fails, start with ORD1
+    if (isNaN(lastOrderIdNumber)) {
+      return 'ORD1';
+    }
+
+    // Increment the numeric part for the new orderId
+    return `ORD${lastOrderIdNumber + 1}`;
+  } catch (error) {
+    console.error('Error generating orderId:', error);
+    throw new ErrorHandler('Unable to generate orderId', 500);
+  }
+};
+
+
 // create new order
 exports.createNewOrder = catchAsyncError(async (req, res, next) => {
   const {
@@ -18,12 +45,14 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     orderStatus,
     deliverAt
   } = req.body;
+  const orderId = await generateOrderId();
   const order = await Order.create({
+    orderId,
     shippingInfo,
     orderItems,
     user,
     paymentInfo,
-    paidAt: paidAt || Date.now(),  // Default to current time if not provided
+    paidAt: paidAt || Date.now(),  
     itemsPrice,
     discountPrice,
     shippingPrice,
@@ -31,8 +60,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     orderStatus,
     deliverAt
   });
-
-
   res.status(200).json({
     success: true,
     data: order,
