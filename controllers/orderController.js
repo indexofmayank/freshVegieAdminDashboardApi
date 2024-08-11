@@ -2,6 +2,7 @@ const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
+const mongoose = require('mongoose');
 
 const generateOrderId = async () => {
   try {
@@ -87,7 +88,28 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
   if (!userId) {
     return next(new ErrorHandler('Order not found', 400));
   }
-   const order = await Order.find({ 'user.userId': userId });
+   const order = await Order.aggregate([
+    { $match: { 'user.userId': mongoose.Types.ObjectId(userId) } }, // Match the user's orders
+    { 
+      $project: { 
+        orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
+        shippingInfo: 1,
+        user: 1,
+        paymentInfo: 1,
+        paidAt: 1,
+        itemsPrice: 1,
+        discountPrice: 1,
+        shippingPrice: 1,
+        totalPrice: 1,
+        orderStatus: 1,
+        deliverAt: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        id: 1,
+      }
+    },
+    { $sort: { createdAt: -1 } } // Sort orders by date (descending order)
+   ]);
   if (!order) {
     return next(new ErrorHandler('Order not found', 200));
   }
@@ -174,21 +196,6 @@ const updateStock = async (id, quantity) => {
   await product.save({ validateBeforeSave: false });
   return true;
 };
-
-// const getOrderByOrderId = async () => {
-//   try {
-//     const order = await Order.find({orderId: req.params.orderId});
-//     if(!order) {
-//       return new ErrorHandler('No order found', 500);
-//     }
-//     res.status(200).json({
-//       success: true,
-//       data: order
-//     });
-//   } catch (error) {
-//     res.status(500).json({success: false, message: 'Server error', error: error.message});
-//   }
-// };
 
 exports.getOrderByOrderId = catchAsyncError(async (req, res, next) => {
   try {
