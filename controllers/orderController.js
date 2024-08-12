@@ -3,6 +3,45 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
+const axios = require('axios');
+
+const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
+
+const getLatLng = async (toCheckAddress) => {
+  const { address, city, pin_code, state, landmark, locality } = toCheckAddress;
+  if (!address || !city || !pin_code || !state) {
+    return res.status(400).json({ success: false, message: 'Incomplete address information' });
+  }
+  const constructedAddress = `${address}, ${locality || ''}, ${city}, ${state}, ${pin_code}`;
+  console.log(constructedAddress);
+
+  try {
+    const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+      params: {
+        address: constructedAddress,
+        key: GOOGLE_MAPS_API_KEY
+      }
+    });
+    console.log(response);
+    const results = response.data.results;
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Address not found' });
+    }
+
+    // Extract latitude and longitude from the response
+    const location = results[0].geometry.location;
+    const { lat, lng } = location;
+
+    res.json({
+      success: true,
+      latitude: lat,
+      longitude: lng
+    });
+  } catch (error) {
+    console.log('Error occured while get lat lng', error);
+    throw new ErrorHandler('Unable to get lat lng');
+  }
+};
 
 const generateOrderId = async () => {
   try {
@@ -46,6 +85,9 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     orderStatus,
     deliverAt
   } = req.body;
+
+  getLatLng(shippingInfo.deliveryAddress);
+
   const orderId = await generateOrderId();
   const order = await Order.create({
     orderId,
@@ -53,7 +95,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     orderItems,
     user,
     paymentInfo,
-    paidAt: paidAt || Date.now(),  
+    paidAt: paidAt || Date.now(),
     itemsPrice,
     discountPrice,
     shippingPrice,
@@ -84,14 +126,14 @@ exports.getSingleOrder = catchAsyncError(async (req, res, next) => {
 
 // send user orders
 exports.getUserOrders = catchAsyncError(async (req, res, next) => {
-  const {userId} = req.params;
+  const { userId } = req.params;
   if (!userId) {
     return next(new ErrorHandler('Order not found', 400));
   }
-   const order = await Order.aggregate([
+  const order = await Order.aggregate([
     { $match: { 'user.userId': mongoose.Types.ObjectId(userId) } }, // Match the user's orders
-    { 
-      $project: { 
+    {
+      $project: {
         orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
         shippingInfo: 1,
         user: 1,
@@ -109,7 +151,7 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
       }
     },
     { $sort: { createdAt: -1 } } // Sort orders by date (descending order)
-   ]);
+  ]);
   if (!order) {
     return next(new ErrorHandler('Order not found', 200));
   }
@@ -200,14 +242,14 @@ const updateStock = async (id, quantity) => {
 exports.getOrderByOrderId = catchAsyncError(async (req, res, next) => {
   try {
     const Id = req.params.orderId;
-    const order = await Order.find({orderId: Id});
+    const order = await Order.find({ orderId: Id });
 
-    if(!order || order.length === 0) {
+    if (!order || order.length === 0) {
       return next(new ErrorHandler('No order found', 404));
     }
     const orderObject = order[0].toObject();
-    const {orderId, ...rest} = orderObject;
-    const reorderOrder = {orderId, ...rest};
+    const { orderId, ...rest } = orderObject;
+    const reorderOrder = { orderId, ...rest };
 
     res.status(200).json({
       success: true,
