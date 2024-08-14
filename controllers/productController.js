@@ -75,43 +75,29 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 });
 
 // send all product details
-exports.getAllProducts = catchAsyncError(async (req, res) => {
-  const products = await Product.find();
-  const data = products.map((item, index) => {
-    const {
-      _id: id,
-      name,
-      price,
-      offer_price,
-      images,
-      colors,
-      company,
-      description,
-      category,
-      stock,
-      shipping,
-      featured,
-    } = item;
-    const newItem = {
-      id,
-      name,
-      price,
-      offer_price,
-      image: images[0].secure_url,
-      colors,
-      company,
-      description,
-      category,
-      stock,
-      shipping,
-      featured,
-    };
-    return newItem;
-  });
+exports.getAllProducts = catchAsyncError(async (req, res, next) => {
+  const products = await Product.aggregate([
+    {
+      $project: {
+        name: 1,
+        category: 1,
+        add_ons: 1,
+        search_tags: 1,
+        selling_method: 1,
+        description: 1,
+        price: 1,
+        offer_price: 1,
+        images: {$arrayElemAt: ["$images.secure_url", 0]},
+      }
+    },
+    {$sort: {name: 1}}
+
+  ]);
   res.status(200).json({
     success: true,
-    data,
+    data: products
   });
+
 });
 
 // send only a single product detaisl
