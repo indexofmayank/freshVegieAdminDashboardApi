@@ -163,11 +163,48 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
 
 // send all orders
 exports.getAllOrders = catchAsyncError(async (req, res, next) => {
-  const orders = await Order.find();
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const orders = await Order.aggregate([
+    {
+      $project: {
+        orderId: 1,
+        orderItems: {
+          $map: {
+            input: "$orderItems",
+            as: "item",
+            in: {
+              name: "$$item.name",
+              price: "$$item.price",
+              image: "$$item.image"
+            }
+          }
+        },
+        user: {
+          name: 1,
+        },
+        paymentInfo: {
+          status: 1,
+        },
+        totalPrice: 1,
+        orderStatus: 1,
+        createdAt: 1,
+      }
+    },
+    {$sort: {createAt: 1}},
+    {$skip: skip},
+    {$limit: limit}
+  ]);
+  const totalOrders = await Order.countDocuments();
   res.status(200).json({
-    success: true,
-    data: orders,
-  });
+    success: true, 
+    page,
+    limit,
+    totalPages: Math.ceil(totalOrders / limit),
+    totalOrders,
+    data: orders
+  })
 });
 
 // update order status
