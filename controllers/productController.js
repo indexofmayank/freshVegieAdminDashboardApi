@@ -97,7 +97,6 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
     success: true,
     data: products
   });
-
 });
 
 // send only a single product detaisl
