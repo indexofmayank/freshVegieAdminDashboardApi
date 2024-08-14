@@ -97,7 +97,7 @@ exports.getAllProducts = catchAsyncError(async (req, res) => {
       name,
       price,
       offer_price,
-      image: images[0].url,
+      image: images[0].secure_url,
       colors,
       company,
       description,
@@ -247,3 +247,5 @@ exports.getProductByCategory = catchAsyncError( async (req, res, next) => {
     data: products
   });
 });
+
+
