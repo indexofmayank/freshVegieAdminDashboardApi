@@ -87,7 +87,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
         description: 1,
         price: 1,
         offer_price: 1,
-        images: {$arrayElemAt: ["$images.secure_url", 0]},
+        image: {$arrayElemAt: ["$images.secure_url", 0]},
       }
     },
     {$sort: {name: 1}}
