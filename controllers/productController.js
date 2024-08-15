@@ -76,26 +76,51 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 
 // send all product details
 exports.getAllProducts = catchAsyncError(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
   const products = await Product.aggregate([
+    {
+      $lookup: {
+        from: 'categories', // Collection name for Category
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryDetails',
+      },
+    },
+    {
+      $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+    },
     {
       $project: {
         name: 1,
-        category: 1,
+        category: '$categoryDetails.name', // Project the category name instead of the ObjectId
         add_ons: 1,
         search_tags: 1,
         selling_method: 1,
         description: 1,
         price: 1,
         offer_price: 1,
-        image: {$arrayElemAt: ["$images.secure_url", 0]},
-      }
+        stock: 1,
+        image: { $arrayElemAt: ['$images.secure_url', 0] },
+      },
     },
-    {$sort: {name: 1}}
-
+    {
+      $sort: { name: 1 },
+    },
+    {$skip: skip},
+    {$limit: limit},
   ]);
+
+  const totalProducts = await Product.countDocuments();
+  
   res.status(200).json({
     success: true,
-    data: products
+    page,
+    limit,
+    totalPage: Math.ceil(totalProducts / limit),
+    totalProducts,
+    data: products,
   });
 });
 

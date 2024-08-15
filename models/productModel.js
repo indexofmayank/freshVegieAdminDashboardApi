@@ -5,6 +5,10 @@ const productSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please enter product name'],
   },
+  product_status: {
+    type: Boolean,
+    required: [true, 'Please enter product status'],
+  },
   category: {
     type: mongoose.Schema.ObjectId,
     ref: 'Category',
@@ -34,7 +38,7 @@ const productSchema = mongoose.Schema({
 
   offer_price: {
     type: Number,
-    required: [true, 'Please enter product offerPrice']
+    required: [true, 'Please enter product offer price']
   },
   purchase_price: {
     type: Number,
@@ -64,27 +68,27 @@ const productSchema = mongoose.Schema({
   },
 
   stock: {
-    type: String,
+    type: Number,
     required: [true, 'Please enter a stock'],
   },
 
   stock_notify: {
-    type: String,
+    type: Number,
     required: [true, 'Please enter a stock notify'],
   },
 
   tax: {
-    type: String,
+    type: Number,
     required: [true, 'Please enter a tax'],
   },
 
   product_detail_min: {
-    type: String,
+    type: Number,
     required: [true, 'Please enter a product detail min']
   },
 
   product_detail_max: {
-    type: String,
+    type: Number,
     required: [true, 'Please enter a product detail max']
   }
 

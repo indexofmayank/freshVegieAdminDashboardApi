@@ -70,8 +70,7 @@ const generateOrderId = async () => {
 };
 
 
-// create new order
-exports.createNewOrder = catchAsyncError(async (req, res, next) => {
+exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
   const {
     shippingInfo,
     orderItems,
@@ -85,28 +84,51 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     orderStatus,
     deliverAt
   } = req.body;
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    for(let item of orderItems) {
+      const product = await Product.findById(item.id).session(session);
+      const subSession = await mongoose.startSession();
+      subSession.startTransaction();
+      try {
+        if(parseInt(product.stock) < parseInt(item.quantity)) {
+          throw new ErrorHandler(`Not enough stock for product ${product.name}`);
+        }
+        product.stock -= item.quantity;
+        await product.save({subSession});
+      } catch (error) {
+        await subSession.abortTransaction();
+        console.error(error.message);
+      }
+    }
 
-  getLatLng(shippingInfo.deliveryAddress);
+    const newOrder = new Order({
+      shippingInfo,
+      orderItems,
+      user,
+      paymentInfo,
+      paidAt,
+      itemsPrice,
+      discountPrice,
+      shippingPrice,
+      totalPrice,
+      orderStatus,
+      deliverAt    
+    });
 
-  const orderId = await generateOrderId();
-  const order = await Order.create({
-    orderId,
-    shippingInfo,
-    orderItems,
-    user,
-    paymentInfo,
-    paidAt: paidAt || Date.now(),
-    itemsPrice,
-    discountPrice,
-    shippingPrice,
-    totalPrice,
-    orderStatus,
-    deliverAt
-  });
-  res.status(200).json({
-    success: true,
-    data: order,
-  });
+    const result = await newOrder.save({session});
+    await session.commitTransaction();
+    session.endSession();
+    res.status(201).json({
+      success: true,
+      message: 'new order created successfully',
+      data: newOrder
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.log(error);
+  }
 });
 
 // send single order
@@ -196,6 +218,9 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
     {$skip: skip},
     {$limit: limit}
   ]);
+  if(!orders) {
+    return next(new ErrorHandler('No order found', 400));
+  }
   const totalOrders = await Order.countDocuments();
   res.status(200).json({
     success: true, 
@@ -204,7 +229,7 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
     totalPages: Math.ceil(totalOrders / limit),
     totalOrders,
     data: orders
-  })
+  });
 });
 
 // update order status
