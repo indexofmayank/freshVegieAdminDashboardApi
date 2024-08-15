@@ -2,6 +2,7 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
+const { find } = require('../models/categoryModel');
 
 // create a new product
 exports.createProduct = catchAsyncError(async (req, res, next) => {
@@ -74,8 +75,54 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// send all product details
 exports.getAllProducts = catchAsyncError(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  try {
+    const products = await Product.aggregate([
+      {
+        $project : {
+          name: 1,
+          category: 1,
+          add_ons: 1,
+          search_tags: 1,
+          selling_method: 1,
+          description: 1,
+          price: 1,
+          offer_price: 1,
+          purchase_price: 1,
+          images: 1,
+          sku: 1,
+          barcode: 1,
+          stock: 1,
+          stock_notify: 1,
+          tax: 1,
+          product_detail_min: 1,
+          product_detail_max: 1
+        }
+      },
+      {$sort: {name: 1}},
+      {$skip: skip},
+      {$limit: limit}
+    ]);
+    const totalProducts = await Product.countDocuments();
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPage: Math.ceil(totalProducts / limit),
+      totalProducts,
+      data: products
+    })
+  } catch (error) {
+    
+  }
+
+});
+
+// send all product details
+exports.getAllProductslala = catchAsyncError(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
