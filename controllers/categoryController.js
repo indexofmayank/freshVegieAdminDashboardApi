@@ -59,23 +59,45 @@ exports.deleteCategory = catchAsyncError(async(req, res, next) => {
 });
 
 exports.updateCategory = catchAsyncError(async (req, res, next) => {
-    const { id } = req.params;
-    const { name, image, status } = req.body;
+    try {
+        const {categoryId} = req.params;
+        let updateData = req.body;
+        const {secure_url} = await cloudinary.uploader.upload(updateData.image, {
+            folder: 'tomper-wear'
+        });
+        updateData.image = secure_url;
+        const result = await Category.findByIdAndUpdate(categoryId, updateData, {new: true});
+        if(!result) {
+            return res.status(500).json({
+                success: false,
+                message: 'Server error',
+            });
+        } else {
+            try {
+                const updatedCategory = await Category.findById(categoryId);
+                if(!updatedCategory) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Server error',
+                        error: error.message
+                    });
+                }
+                return res.status(200).json({
+                    success: true,
+                    data: this.updateCategory
+                });
+            } catch (error) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Server error',
+                    error: error.message
+                });
+            }
+        }
 
-    if (!id) {
-        return next(new ErrorHandler('Category ID is required', 400));
+
+
+    } catch (error) {
+        res.status(500).json({success: false, message: 'Server error', error: error.message});                       
     }
-
-    const category = await Category.findById(id);
-    if (!category) {
-        return next(new ErrorHandler('Category not found', 404));
-    }
-
-    category.name = name || category.name;
-    await category.save();
-
-    res.status(200).json({
-        success: true,
-        data: category
-    });
 });

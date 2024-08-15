@@ -73,6 +73,27 @@ const userModel = mongoose.Schema({
         },
     ],
 
-}, {timestamps: true});
+    status: {
+        type: Boolean,
+        required: [true, 'Please enter status'],
+    },
+
+}, {
+    timestamps: true,   
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+userModel.virtual('id').get(function() {
+    return this._id.toHexString();
+});
+
+userModel.set('toJSON', {
+    virtuals: true
+});
+userModel.set('toObject', {
+    virtuals: true
+});
+
 
 module.exports = mongoose.model('User', userModel);

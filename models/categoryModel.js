@@ -10,8 +10,7 @@ const categorySchema = new mongoose.Schema({
         required: [true, 'Please enter category']
     },
     status: {
-        type: String,
-        enum: ['true', 'false'],
+        type: Boolean,
         required: [true, 'Please enter status']
     },
 }, {

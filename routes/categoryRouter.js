@@ -4,5 +4,6 @@ const categoryController = require('../controllers/categoryController');
 router.route('/').get(categoryController.getAllCategroy);
 router.route('/').post(categoryController.createCategory);
 router.route('/:id').get(categoryController.getCategoryById);
+router.route('/:categoryId').put(categoryController.updateCategory);
 
 module.exports = router;
