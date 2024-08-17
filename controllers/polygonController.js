@@ -25,63 +25,83 @@ exports.createPolygon = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllPolygon = catchAsyncError(async(req, res, next) => {
-
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     try {
-        const polygons = await Polygon.find();
-        const data = polygons.map((item, index) => {
-            const {
-                _id: id,
-                name,
-                image,
-                status, 
-                polygon
-            } = item;
-            const newItem = {
-                id,
-                name,
-                image,
-                status,
-                polygon
-            };
-            return newItem;
-        });
-
+        const polygons = await Polygon.aggregate([
+            {
+                $project : {
+                    name: 1,
+                    image: 1,
+                    status: 1,
+                }
+            },
+            {$sort: {name: 1}},
+            {$skip: skip},
+            {$limit: limit}
+        ]);
+        const totalPolygons = await Polygon.countDocuments();
         res.status(200).json({
             success: true,
-            data
+            page,
+            limit,
+            totalPage: Math.ceil(totalPolygons / limit),
+            totalPolygons,
+            data: polygons
         });
     } catch (error) {
-        res.status(500).json({success: false, message: 'Server error', error: error.message});
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+
     }
 });
 
 exports.updatePolygon = catchAsyncError(async(req, res, next) => {
     try {
-        const {polygonId} = req.params;
-        let updatedData = req.body;
-        const {secure_url} = await cloudinary.uploader.upload(updatedData.image, {
+        const {polygonId} = req.params
+        let updateData = req.body;
+        const {secure_url} = await cloudinary.uploader.upload(updateData.image, {
             folder: 'tomper-wear'
         });
-        updatedData.image = secure_url;
-        const result = await Polygon.findByIdAndUpdate(polygonId, updatedData, {new: true});
+        updateData.image = secure_url;
+        const result = await Polygon.findByIdAndUpdate(polygonId, updateData, {new: true});
         if(!result) {
-            return res.status(500).json({success: false, message: 'Server error'});
+            return res.status(500).json({
+                success: false,
+                message: 'Server error'
+            });
         } else {
             try {
-                const updatedPolygon = await Polygon.findById(polygonId);
-                if(!updatedPolygon) {
-                    return res.status(500).json({success: false, message: 'Server error', error: error.message});
-                }
+                const udpatedPolygon = await Polygon.findById(polygonId);
+                if(!udpatedPolygon) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Server error',
+                        error: error.message
+                    });
+                }   
                 return res.status(200).json({
                     success: true,
-                    data: updatedPolygon
+                    data: udpatedPolygon
                 });
             } catch (error) {
-                res.status(500).json({success: false, message: 'Server error', error: error.message});
+                res.status(500).json({
+                    success: false,
+                    message: 'Server error',
+                    error: error.message
+                });
             }
         }
     } catch (error) {
-        res.status(500).json({success: false, message: 'Server error', error: error.message});
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
     }
 });
 

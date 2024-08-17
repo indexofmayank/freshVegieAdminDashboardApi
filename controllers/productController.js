@@ -116,9 +116,12 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
       data: products
     })
   } catch (error) {
-    
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
   }
-
 });
 
 // send all product details

@@ -78,6 +78,11 @@ const userModel = mongoose.Schema({
         required: [true, 'Please enter status'],
     },
 
+    device: {
+        type: String,
+        required: [false, 'Please enter device']
+    },
+
 }, {
     timestamps: true,   
     toJSON: { virtuals: true },

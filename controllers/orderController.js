@@ -102,8 +102,9 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
         console.error(error.message);
       }
     }
-
+    const orderId = await generateOrderId();
     const newOrder = new Order({
+      orderId,
       shippingInfo,
       orderItems,
       user,
@@ -192,17 +193,7 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
     {
       $project: {
         orderId: 1,
-        orderItems: {
-          $map: {
-            input: "$orderItems",
-            as: "item",
-            in: {
-              name: "$$item.name",
-              price: "$$item.price",
-              image: "$$item.image"
-            }
-          }
-        },
+        orderItemsCount: {$size: "$orderItems"},
         user: {
           name: 1,
         },
@@ -301,25 +292,106 @@ const updateStock = async (id, quantity) => {
   return true;
 };
 
-exports.getOrderByOrderId = catchAsyncError(async (req, res, next) => {
+exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
+  console.log('we hit here --')
+    const orderId = req.params.orderId;
+    console.log(orderId);
   try {
-    const Id = req.params.orderId;
-    const order = await Order.find({ orderId: Id });
+    const orderItemsPage = parseInt(req.query.orderItemsPage) || 1;
+    const orderItemsLimit = parseInt(req.query.orderItemsLimit) || 10;
+    const orderItemsSkip = (orderItemsPage - 1) * orderItemsLimit;
+    const orderWithItems = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(orderId)}
+      },
+      {
+        $project: {
+          orderId: 1,
+          shippingInfo : {
+            deliveryAddress: {
+              name: 1,
+              phone: 1,
+              email: 1,
+              address: 1,
+              locality: 1,
+              landmark: 1,
+              city: 1,
+              pin_code: 1,
+              state: 1
+            },
+            billingAddress: {
+              name: 1,
+              phone: 1,
+              email: 1,
+              address: 1,
+              locality: 1,
+              city: 1,
+              pin_code: 1,
+              state: 1
+            }
+          },
+          orderItems: {
+            $slice: [
+              {
+                $map: {
+                  input: "$orderItems",
+                  as: "item",
+                  in: {
+                    name: "$$item.name",
+                    price: "$$item.price",
+                    quantity: "$$item.quantity",
+                    image: "$$item.image"
+                  }
+                }
+              },
+              orderItemsSkip,
+              orderItemsLimit
+            ]
+          },
+          orderItemsCount: {$size: "$orderItems"},
+          user: {
+            name: 1,
+            email: 1,
+            phone: 1,
+          },
+          paymentInfo: {
+            payment_type: 1,
+            status: 1,
+          },
+          paidAt: 1,
+          itemsPrice: 1,
+          discountPrice: 1,
+          shippingPrice: 1,
+          totalPrice: 1,
+          orderStatus: 1,
+          deliverAt: 1,
+          createdAt: 1,
+          updatedAt: 1          
+        }
+      }
+    ]);
 
-    if (!order || order.length === 0) {
-      return next(new ErrorHandler('No order found', 404));
+
+    console.log(orderWithItems);
+
+    const totalItems = orderWithItems.orderItemsCount;
+
+    if(!orderWithItems) {
+      throw new ErrorHandler('Dont found worth');
     }
-    const orderObject = order[0].toObject();
-    const { orderId, ...rest } = orderObject;
-    const reorderOrder = { orderId, ...rest };
-
-    res.status(200).json({
+    console.log(orderWithItems);
+    return res.status(200).json({
       success: true,
-      data: reorderOrder
+      orderItemsLimit,
+      orderItemsPage,
+      totalOrderPages: Math.ceil(totalItems / orderItemsLimit),
+      orderItemtotal: totalItems,
+      data: orderWithItems
     });
-  } catch (error) {
-    console.error('Server error', error);
-    throw new ErrorHandler('Server error', 500);
-  }
 
+
+  } catch (error) {
+    console.error('Error generating orderId:', error);
+    throw new ErrorHandler('Unable to generate orderId', 500);
+  }
 });

@@ -42,7 +42,7 @@ exports.getAllUser = catchAsyncError(async (req, res, next) => {
 });
 
 exports.createUser = catchAsyncError(async (req, res, next) => {
-    const { name, email, phone, address } = req.body;
+    const { name, email, phone, address, device } = req.body;
 
     // Check if the phone number already exists
     const existingUser = await User.findOne({ phone });
@@ -59,6 +59,7 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         email,
         phone,
         address,
+        device
     });
 
     res.status(201).json({

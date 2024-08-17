@@ -122,6 +122,11 @@ const orderSchema = mongoose.Schema({
         type: String,
         required: true,
       },
+      tax: {
+        type: Number,
+        required: true,
+        default: 0
+      },
       id: {
         type: mongoose.Schema.ObjectId,
         ref: 'products',
