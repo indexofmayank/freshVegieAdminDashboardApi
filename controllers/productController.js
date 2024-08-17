@@ -308,4 +308,29 @@ exports.getProductByCategory = catchAsyncError( async (req, res, next) => {
   });
 });
 
+exports.updateManyProducts = catchAsyncError(async (req, res, next) => {
+  const {updatedProducts} = req.body;
+  try {
+    const bulkOps = updatedProducts.map((product) => ({
+      updateOne: {
+        filter: {_id: product._id},
+        update: {
+          $set: {
+            stock: product.stock,
+            stock_notify: product.stock_notify,
+            price: product.price,
+            offer_price: product.offer_price
+          },
+        },
+      },
+    }));
+    await Product.bulkWrite(bulkOps);
+    res.status(200).json({message: 'Bulk update successfully'});
+  } catch (error) {
+    console.error('Error updating inventory: ', error);
+    res.status(500).json({
+      error: 'Bluk update failed'
+    });
+  }
 
+});
