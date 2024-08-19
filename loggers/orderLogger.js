@@ -9,13 +9,6 @@ const orderLogger = winston.createLogger({
     ),
 
     transports: [
-        //log to console
-        new winston.transports.Console(),
-
-        //log to a file
-        new winston.transports.File({filename: 'logs/orders.log'}),
-
-        //lot to MongoDB
         new winston.transports.MongoDB({
             level: 'info',
             db: 'mongodb+srv://admin:f0Z552lDuB8bsl34@cluster0.omelufv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/f0Z552lDuB8bsl34',
