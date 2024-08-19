@@ -12,30 +12,7 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
     if (mongoose.connection.readyState !== 1) {
       throw new Error('Mongoose is not connected');
     }
-
     const orderLogsCollection = mongoose.connection.collection('orderLogs');
-
-    // const results = await orderLogsCollection.aggregate([
-    //     {
-    //         $match: {
-    //             message: { $regex: `User ID - ${userId}`, $options: 'i' } 
-    //         }
-    //     },
-    //     {
-    //         $facet: {
-    //             paginatedResults: [
-    //                 { $project: { timestamp: 1, level: 1, message: 1 } },
-    //                 { $sort: { createAt: 1 } },
-    //                 { $skip: skip },
-    //                 { $limit: limit }
-    //             ],
-    //             totalCount: [
-    //                 { $count: 'count' }
-    //             ]
-    //         }
-    //     }
-    // ]).toArray();
-
     const results = await orderLogsCollection.aggregate([
       {
         $match: {
@@ -76,6 +53,11 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
         }
       },
       {
+        $addFields: {
+          extractedUserId: {$toObjectId: "$extractedUserId",}
+        }
+      },
+      {
         $lookup: {
           from: "users",
           localField: "extractedUserId",
@@ -84,45 +66,91 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
         }
       },
       {
+        $addFields: {
+          username: {$arrayElemAt: ["$userInfo.name", 0]}
+        }
+      },
+      {
+        $addFields: {
+          message: {
+            $replaceOne: {
+              input: "$message",
+              find: `User ID - ${userId}`,
+              replacement: { $concat: ["User ID - ", "$username"] },
+            },
+          },
+        },
+      },
+      {
         $project: {
           timestamp: 1,
           level: 1,
           message: 1,
-          extractedUserId: 1,
-          userInfo: 1,
         }
       }
     ]).toArray();
-            console.log(results);
-
-
-
-    // const totalCount = await orderLogsCollection.aggregate([
-    //     {
-    //       $match: {
-    //         message: { $regex: `User ID - ${userId}`, $options: "i" },
-    //       },
-    //     },
-    //     { $count: "count" },
-    //   ]).toArray();
-    // const count = totalCount.length > 0 ? totalCount[0].count : 0;
-    // // const totalCount = results[0]?.totalCount[0]?.count || 0;
-
+    const totalCount = await orderLogsCollection.aggregate([
+        {
+          $match: {
+            message: { $regex: `User ID - ${userId}`, $options: "i" },
+          },
+        },
+        { $count: "count" },
+      ]).toArray();
+    const count = totalCount.length > 0 ? totalCount[0].count : 0;
     if (results.length === 0) {
       return next(new ErrorHandler('No log found for this user', 400));
     }
-
-
     res.status(200).json({
       success: true,
-      // page,
-      // limit,
-      // totalPages: Math.ceil(totalLogs / limit),
-      // totalLogs: totalLogs,
-      // data: results,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+      totalLogs: count,
+      data: results,
     });
   } catch (error) {
     console.error('Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+exports.getTest = catchAsyncError(async (req, res, next) => {
+  const userId = req.params.userId;
+
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Mongoose is not connected');
+    }
+    const orderLogsCollection = mongoose.connection.collection('orderLogs');
+    const results = await orderLogsCollection.aggregate([
+      {
+        $match: {
+          message: {$regex: `User ID - ${userId}`, $options: 'i'},
+        },
+        
+      },
+      {
+        // Replace the user ID in the message with 'mayank'
+        $addFields: {
+          message: {
+            $replaceOne: {
+              input: "$message",
+              find: `User ID - ${userId}`,
+              replacement: 'User ID - mayank'
+            }
+          }
+        }
+      },
+    ]).toArray();
+    console.log(results);
+    res.status(200).json({
+      success: true,
+      data: results,
+    });
+  } catch (error) {
+    console.error('Error: ', error.message);
+    res.status(500).json({success: false, error: error.message});
+  }
+
 });

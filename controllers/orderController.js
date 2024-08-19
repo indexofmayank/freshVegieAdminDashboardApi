@@ -95,7 +95,6 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
     const result = await newOrder.save({session});
     await session.commitTransaction();
     session.endSession();
-    console.log(result);
     orderLogger.info(`Order created: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
 
     res.status(201).json({
@@ -105,7 +104,7 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    orderLogger.error(`Error creating order: {$error.message}`);
+    orderLogger.error(`Error creating order: {$error.message}, User ID - ${req.body.user.uerId}`);
     console.log(error);
   }
 });
@@ -334,12 +333,7 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
         }
       }
     ]);
-
-
-    console.log(orderWithItems);
-
     const totalItems = orderWithItems.orderItemsCount;
-
     if(!orderWithItems) {
       throw new ErrorHandler('Dont found worth');
     }
@@ -352,8 +346,6 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
       orderItemtotal: totalItems,
       data: orderWithItems
     });
-
-
   } catch (error) {
     console.error('Error generating orderId:', error);
     throw new ErrorHandler('Unable to generate orderId', 500);
