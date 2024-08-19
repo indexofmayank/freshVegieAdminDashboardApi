@@ -9,6 +9,7 @@ router.route('/new').post(orderController.createNewOrder);
 router.route('/users/:userId').get(orderController.getUserOrders);
 
 // send single order
-router.route('/orderId/:orderId').get(orderController.getOrderWithItems);
+router.route('/:orderId').get(orderController.getOrderWithItems);
+
 
 module.exports = router;

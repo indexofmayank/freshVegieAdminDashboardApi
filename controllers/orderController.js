@@ -2,6 +2,7 @@ const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
+const orderLogger = require('../loggers/orderLogger');
 const mongoose = require('mongoose');
 const axios = require('axios');
 
@@ -42,33 +43,6 @@ const getLatLng = async (toCheckAddress) => {
     throw new ErrorHandler('Unable to get lat lng');
   }
 };
-
-const generateOrderId = async () => {
-  try {
-    // Find the most recent order
-    const lastOrder = await Order.findOne().sort({ createdAt: -1 });
-
-    // If no previous order is found, return the first orderId
-    if (!lastOrder || !lastOrder.orderId) {
-      return 'ORD1';
-    }
-
-    // Extract the numeric part from the last orderId
-    const lastOrderIdNumber = parseInt(lastOrder.orderId.replace('ORD', ''), 10);
-
-    // If extraction fails, start with ORD1
-    if (isNaN(lastOrderIdNumber)) {
-      return 'ORD1';
-    }
-
-    // Increment the numeric part for the new orderId
-    return `ORD${lastOrderIdNumber + 1}`;
-  } catch (error) {
-    console.error('Error generating orderId:', error);
-    throw new ErrorHandler('Unable to generate orderId', 500);
-  }
-};
-
 
 exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
   const {
@@ -121,6 +95,9 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
     const result = await newOrder.save({session});
     await session.commitTransaction();
     session.endSession();
+    console.log(result);
+    orderLogger.info(`Order created: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
+
     res.status(201).json({
       success: true,
       message: 'new order created successfully',
@@ -128,24 +105,11 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
     });
   } catch (error) {
     await session.abortTransaction();
+    orderLogger.error(`Error creating order: {$error.message}`);
     console.log(error);
   }
 });
 
-// send single order
-exports.getSingleOrder = catchAsyncError(async (req, res, next) => {
-  if (!req.params.id) {
-    return next(new ErrorHandler('Order not found', 400));
-  }
-  const order = await Order.findById(req.params.id);
-  if (!order) {
-    return next(new ErrorHandler('Order not found', 200));
-  }
-  res.status(200).json({
-    success: true,
-    data: order,
-  });
-});
 
 // send user orders
 exports.getUserOrders = catchAsyncError(async (req, res, next) => {

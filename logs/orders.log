@@ -1,0 +1,5 @@
+{"level":"info","message":"Order created: Order ID - ORD4, User ID - 66af91ce0a0c92dcf2f0bb1f","timestamp":"2024-08-17T17:58:34.981Z"}
+{"level":"info","message":"Order created: Order ID - ORD5, User ID - 66af91ce0a0c92dcf2f0bb1f","timestamp":"2024-08-18T10:15:04.011Z"}
+{"level":"info","message":"Order created: Order ID - ORD6, User ID - 66afa300a63f372d49089b0b","timestamp":"2024-08-18T14:47:16.764Z"}
+{"level":"error","message":"Error creating order: {$error.message}","timestamp":"2024-08-18T15:25:05.781Z"}
+{"level":"error","message":"Error creating order: {$error.message}","timestamp":"2024-08-18T15:25:34.994Z"}
