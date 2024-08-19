@@ -112,39 +112,56 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
 
 // send user orders
 exports.getUserOrders = catchAsyncError(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = parseInt( page - 1 ) * limit;
   const { userId } = req.params;
   if (!userId) {
     return next(new ErrorHandler('Order not found', 400));
   }
-  const order = await Order.aggregate([
-    { $match: { 'user.userId': mongoose.Types.ObjectId(userId) } }, // Match the user's orders
-    {
-      $project: {
-        orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
-        shippingInfo: 1,
-        user: 1,
-        paymentInfo: 1,
-        paidAt: 1,
-        itemsPrice: 1,
-        discountPrice: 1,
-        shippingPrice: 1,
-        totalPrice: 1,
-        orderStatus: 1,
-        deliverAt: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        id: 1,
-      }
-    },
-    { $sort: { createdAt: -1 } } // Sort orders by date (descending order)
-  ]);
-  if (!order) {
-    return next(new ErrorHandler('Order not found', 200));
+
+  try {
+    const order = await Order.aggregate([
+      { $match: { 'user.userId': mongoose.Types.ObjectId(userId) } }, // Match the user's orders
+      {
+        $project: {
+          orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
+          shippingInfo: 1,
+          user: 1,
+          paymentInfo: 1,
+          paidAt: 1,
+          itemsPrice: 1,
+          discountPrice: 1,
+          shippingPrice: 1,
+          totalPrice: 1,
+          orderStatus: 1,
+          deliverAt: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          id: 1,
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      {$skip: skip},
+      {$limit: limit} 
+    ]);
+    if (!order) {
+      return next(new ErrorHandler('Order not found', 200));
+    }
+    const totalOrders = await Order.countDocuments();
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPages: Math.ceil(totalOrders / limit),
+      data: order
+    });
+  
+  } catch (error) {
+    console.error('Error while getting order: ', error);
+    throw new ErrorHandler('Unable to generate orderId', 500);
   }
-  res.status(200).json({
-    success: true,
-    data: order,
-  });
+
 });
 
 // send all orders
