@@ -20,7 +20,6 @@ const categoryRouter = require('./routes/categoryRouter');
 const bannerRouter = require('./routes/bannerRouter');
 const polygonRouter = require('./routes/polygonRouter');
 const inventoryRouter = require('./routes/inventoryRouter');
-const orderLogsRouter = require('./routes/orderLogRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -70,7 +69,6 @@ app.use('/api/category', categoryRouter);
 app.use('/api/banner', bannerRouter);
 app.use('/api/polygon', polygonRouter);
 app.use('/api/inventory', inventoryRouter);
-app.use('/api/orderLoggers', orderLogsRouter);
 
 // using other middlewares
 app.use(errorMiddleware);

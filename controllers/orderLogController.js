@@ -82,8 +82,19 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
         },
       },
       {
+        $addFields: {
+          timestampFormatted: {
+            $dateToString: {
+              "format" : "%d %B %Y, %H:%M:%S",
+              "date" : "$timestamp",
+              "timezone" : "UTC"
+            }
+          }
+        }
+      },
+      {
         $project: {
-          timestamp: 1,
+          timestampFormatted: 1,
           level: 1,
           message: 1,
         }

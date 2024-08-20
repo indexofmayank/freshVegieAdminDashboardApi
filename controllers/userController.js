@@ -245,16 +245,21 @@ exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
                 $match: { 'user.userId': mongoose.Types.ObjectId(userId) },
             },
             {
+                $addFields: {
+                    paymentType: "$paymentInfo.payment_type",
+                    paymentStatus: "$paymentInfo.status",
+                },
+            },
+            {
                 $project: {
                     orderId: 1,
-                    paymentInfo: {
-                        paymentType: 1,
-                        status: 1
-                    },
+                    paymentType: 1,
+                    paymentStatus: 1,
                     totalPrice: 1,
+                    paymentType: 1,
                     createdAtFormatted: {
                         "$dateToString": {
-                            "format": "%Y-%m-%d %H:%M:%S",
+                            "format": "%Y %B %d %H:%M:%S",
                             "date": "$createdAt",
                             "timezone": "UTC"
                         }
@@ -265,7 +270,7 @@ exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
             { $skip: skip },
             { $limit: limit }
         ]);
-
+        
         if (!transactionHistory) {
             throw new ErrorHandler('No transaction found', 400);
         }

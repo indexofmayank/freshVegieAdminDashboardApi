@@ -5,6 +5,8 @@ const productController = require('../controllers/productController');
 const orderController = require('../controllers/orderController');
 const userController = require('../controllers/userController');
 const categoryController = require('../controllers/categoryController');
+const orderLogController = require('../controllers/orderLogController');
+
 
 const auth = require('../middleware/Auth');
 
@@ -53,7 +55,16 @@ router
     adminController.deleteAdmin
   );
 
-// create a new product
+
+  //get product for table
+router
+  .route('/product/')
+  .get(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('moderate', 'super'),
+    productController.getAllProductForTable
+  );
+
 router
   .route('/product/new')
   .post(
@@ -138,4 +149,17 @@ router
     auth.checkAdminPrivileges('super', 'moderate'),
     categoryController.deleteCategory
   );
+
+
+  router
+    .route('/orderlogs/:userId')
+    .get(
+      auth.checkUserAuthentication,
+      auth.checkAdminPrivileges('super', 'moderate'),
+      orderLogController.getOrderLogsByUserId
+    );
+
+
 module.exports = router;
+
+//order Log Router for admin

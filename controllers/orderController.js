@@ -4,6 +4,7 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const orderLogger = require('../loggers/orderLogger');
 const axios = require('axios');
+const mongoose = require('mongoose');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
 
@@ -410,7 +411,13 @@ exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
           deliveryInfo: {
             deliveryType: 1
           },
-          createdAt: 1
+          createdAtFormatted: {
+            $dateToString: {
+              "format" : "%d %B %Y, %H:%M:%S",
+              "date" : "$createdAt",
+              "timezone" : "UTC"
+            }
+          },
         }
       },
       {$sort: {createdAt: 1}},
