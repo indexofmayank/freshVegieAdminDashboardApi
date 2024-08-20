@@ -11,6 +11,8 @@ router.route('/users/:userId').get(orderController.getUserOrders);
 // send single order
 router.route('/:orderId').get(orderController.getOrderWithItems);
 
+router.route('/history/:userId').get(orderController.getOrderHistoryByUserId);
+
 
 module.exports = router;    
     

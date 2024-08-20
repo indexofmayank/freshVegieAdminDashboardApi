@@ -11,5 +11,6 @@ router.route('/:id').put(userController.updateUser);
 router.route('/addAddress/:id').post(userController.addUserAddress);
 router.route('/updateAddress/:userId/:addressId').put(userController.editUserAddress);
 router.route('/delete/:userId/:addressId').delete(userController.deleteAddress);
+router.route('/transactions/:userId').get(userController.getUserTranscationByUserId);
 
 module.exports = router;

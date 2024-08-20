@@ -3,10 +3,18 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const orderLogger = require('../loggers/orderLogger');
-const mongoose = require('mongoose');
 const axios = require('axios');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
+
+const generateOrderId = async () => {
+  const lastOrder = await Order.findOne().sort({ createdAt: -1 });
+  if (!lastOrder || !lastOrder.orderId) {
+    return 'ORD1';
+  }
+  const lastOrderId = parseInt(lastOrder.orderId.replace('ORD', ''), 10);
+  return `ORD${lastOrderId + 1}`;
+};
 
 const getLatLng = async (toCheckAddress) => {
   const { address, city, pin_code, state, landmark, locality } = toCheckAddress;
@@ -205,45 +213,55 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
 
 // update order status
 exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
-  if (!req.params.id) {
-    return next(new ErrorHandler('Order not found', 400));
-  }
-  if (!req.body.status) {
-    return next(new ErrorHandler('Invalid request', 400));
-  }
-  const order = await Order.findById(req.params.id);
-  if (!order) {
-    return next(new ErrorHandler('Order not found', 200));
-  }
-  if (order.orderStatus === 'delivered') {
-    return next(new ErrorHandler('You have already delivered this order', 400));
-  }
-  if (req.body.status === 'confirmed') {
-    let successCount = 0;
-    let failureCount = 0;
-    let orderLength = order.orderItems.length;
-    for (let index = 0; index < orderLength; index++) {
-      const item = order.orderItems[index];
-      let success = await updateStock(item.product, item.quantity);
-      if (success) {
-        successCount += 1;
-      } else {
-        failureCount += 1;
+  try {
+    if (!req.params.id) {
+      return next(new ErrorHandler('Order not found', 400));
+    }
+    if (!req.body.status) {
+      return next(new ErrorHandler('Invalid request', 400));
+    }
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return next(new ErrorHandler('Order not found', 200));
+    }
+
+    order.orderStatus = req.body.status;
+
+    if (req.body.status === 'delivered') {
+      order.deliveredAt = Date.now();
+    }
+    const result = await order.save({ validateBeforeSave: false });
+    if(!result) {
+      throw new ErrorHandler('Not able to update');
+    }
+
+    const data = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(req.params.id)}
+      },
+      {
+        $project : {
+          orderId: 1,
+          user: {
+            userId: 1
+          },
+          orderStatus: 1
+        }
       }
+    ]);
+    if(!data) {
+      throw new ErrorHandler('Not able to update');
     }
-    if (failureCount > 0) {
-      return next(new ErrorHandler('Product out of stock', 400));
-    }
+    orderLogger.info(`Order status updated for Order ID - ${data[0].orderId} to ${data[0].orderStatus} for User ID - ${data[0].user.userId}`);
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  
+  } catch (error) {
+    console.error('Error while getting updating order', 500);
+    orderLogger.info(`Order status updation failed for Order ID - ${data[0].orderId} to ${data[0].orderStatus} for User ID - ${data[0].user.userId}`);
   }
-  order.orderStatus = req.body.status;
-  if (req.body.status === 'delivered') {
-    order.deliveredAt = Date.now();
-  }
-  await order.save({ validateBeforeSave: false });
-  res.status(200).json({
-    success: true,
-    data: order,
-  });
 });
 
 // delete order
@@ -366,5 +384,53 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
   } catch (error) {
     console.error('Error generating orderId:', error);
     throw new ErrorHandler('Unable to generate orderId', 500);
+  }
+});
+
+exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
+
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const orderHistory = await Order.aggregate([
+      {
+        $match: { 'user.userId' : mongoose.Types.ObjectId(req.params.userId)}
+      }, 
+      {
+        $project: {
+          orderId: 1,
+          orderStatus: 1,
+          paymentInfo: {
+            status: 1
+          },
+          orderItemCount: {$size: "$orderItems"},
+          totalPrice: 1,
+          deliveryInfo: {
+            deliveryType: 1
+          },
+          createdAt: 1
+        }
+      },
+      {$sort: {createdAt: 1}},
+      {$skip: skip},
+      {$limit: limit}
+    ]);
+    if(!orderHistory) {
+      throw new ErrorHandler('Some thing went wrong');
+    }
+    console.log(orderHistory);
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total: orderHistory.length,
+      totalPage: Math.ceil(orderHistory.length / limit),
+      data: orderHistory
+    });
+  } catch (error) {
+    console.error('Error while getting history of order', 500, error.message);
+    throw new ErrorHandler('Not able to get order history');
   }
 });

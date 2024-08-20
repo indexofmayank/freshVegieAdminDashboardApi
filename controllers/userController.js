@@ -1,6 +1,8 @@
 const User = require('../models/userModel');
+const Order = require('../models/orderModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
+const mongoose = require('mongoose');
 
 exports.getAllUser = catchAsyncError(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
@@ -16,12 +18,12 @@ exports.getAllUser = catchAsyncError(async (req, res, next) => {
                     status: 1
                 }
             },
-            {$sort: {createdAt: 1}},
-            {$skip: skip},
-            {$limit: limit}
+            { $sort: { createdAt: 1 } },
+            { $skip: skip },
+            { $limit: limit }
         ]);
-        
-        if(!users) {
+
+        if (!users) {
             throw new ErrorHandler('Server error', 500);
         }
 
@@ -128,7 +130,7 @@ exports.getUserByPhoneNumber = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-             message: 'Server error', error: error.message
+            message: 'Server error', error: error.message
         });
     }
 });
@@ -138,17 +140,17 @@ exports.updateUser = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
         const updateData = req.body;
         const result = await User.findByIdAndUpdate(id, updateData, { new: false });
-        if(!result) {
-            return res.status(500).json({success: false, message: 'server error'});
+        if (!result) {
+            return res.status(500).json({ success: false, message: 'server error' });
         } else {
             try {
                 const updatedUser = await User.findById(id);
-                if(!updatedUser) {
-                    return res.status(500).json({success: false, message: 'server error'});
+                if (!updatedUser) {
+                    return res.status(500).json({ success: false, message: 'server error' });
                 }
-                return res.status(200).json({success: true, data: updatedUser});
+                return res.status(200).json({ success: true, data: updatedUser });
             } catch (error) {
-                res.status(500).json({success: false, message: 'server error', error: message});
+                res.status(500).json({ success: false, message: 'server error', error: message });
             }
         }
         res.status(200).json({
@@ -156,7 +158,7 @@ exports.updateUser = catchAsyncError(async (req, res, next) => {
             data: result,
         });
     } catch (error) {
-        res.status(500).json({success: false, message: 'Server error', error: error.message });
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 });
 
@@ -188,7 +190,7 @@ exports.editUserAddress = catchAsyncError(async (req, res, next) => {
     try {
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({success: false, message: 'User not found' });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         const addressIndex = user.address.findIndex(addr => addr._id.toString() === addressId);
@@ -198,8 +200,8 @@ exports.editUserAddress = catchAsyncError(async (req, res, next) => {
 
         user.address[addressIndex] = { ...user.address[addressIndex]._doc, ...updatedAddress };
         await user.save();
-            //have to check
-        res.status(200).json({success: true, message: 'Address updated successfully', user });
+        //have to check
+        res.status(200).json({ success: true, message: 'Address updated successfully', user });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
@@ -228,3 +230,60 @@ exports.deleteAddress = async (req, res) => {
     }
 };
 
+
+exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.params.limit) || 10;
+        const skip = parseInt(page - 1) * limit;
+        const { userId } = req.params;
+        if (!userId) {
+            throw new ErrorHandler('No transaction found', 400);
+        }
+        const transactionHistory = await Order.aggregate([
+            {
+                $match: { 'user.userId': mongoose.Types.ObjectId(userId) },
+            },
+            {
+                $project: {
+                    orderId: 1,
+                    paymentInfo: {
+                        paymentType: 1,
+                        status: 1
+                    },
+                    totalPrice: 1,
+                    createdAtFormatted: {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "date": "$createdAt",
+                            "timezone": "UTC"
+                        }
+                    },
+                }
+            },
+            { $sort: { createdAt: 1 } },
+            { $skip: skip },
+            { $limit: limit }
+        ]);
+
+        if (!transactionHistory) {
+            throw new ErrorHandler('No transaction found', 400);
+        }
+
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalPages: Math.ceil(transactionHistory.length / limit),
+            totalTransactions: transactionHistory.length,
+            data: transactionHistory
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({
+            message: 'Something went wrong',
+            error
+        });
+    }
+});

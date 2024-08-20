@@ -163,6 +163,35 @@ const orderSchema = mongoose.Schema({
       required: true,
     },
   },
+  deliveryInfo: {
+    deliveryType: {
+      type: String,
+      required: false,
+      default: null
+    },
+    deliveryCost: {
+      type: String,
+      default: 0,
+      required: false
+    }, 
+    deliveryPartner: {
+      name: {
+        type: String,
+        required: false,
+        default: null
+      },
+      phone: {
+        type: Number,
+        required: false,
+        default: null
+      },
+      email: {
+        type: String,
+        required: false,
+        default: null
+      }
+    }
+  },  
   paidAt: {
     type: String,
     required: true,
