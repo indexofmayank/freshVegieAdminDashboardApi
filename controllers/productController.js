@@ -81,24 +81,24 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
   const skip = (page - 1) * limit;
   try {
     const products = await Product.aggregate([
-      {
-        $lookup: {
-          from: 'categories',
-          localField: 'category',
-          foreignField: '_id',
-          as: 'categoryDetails'
-        }
-      },
-      {
-        $unwind: {
-          path: '$categoryDetails',
-          preserveNullAndEmptyArrays: true 
-        }
-      },
+      // {
+      //   $lookup: {
+      //     from: 'categories',
+      //     localField: 'category',
+      //     foreignField: '_id',
+      //     as: 'categoryDetails'
+      //   }
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$categoryDetails',
+      //     preserveNullAndEmptyArrays: true 
+      //   }
+      // },
       {
         $project : {
           name: 1,
-          category: '$categoryDetails.name', // Replace ObjectId with category name
+          category: 1,
           add_ons: 1,
           search_tags: 1,
           selling_method: 1,
