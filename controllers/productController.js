@@ -76,9 +76,9 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllProducts = catchAsyncError(async (req, res, next) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // const page = parseInt(req.query.page) || 1;
+  // const limit = parseInt(req.query.limit) || 10;
+  // const skip = (page - 1) * limit;
   try {
     const products = await Product.aggregate([
       // {
@@ -117,16 +117,16 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
         }
       },
       {$sort: {name: 1}},
-      {$skip: skip},
-      {$limit: limit}
+      // {$skip: skip},
+      // {$limit: limit}
     ]);
     const totalProducts = await Product.countDocuments();
     res.status(200).json({
       success: true,
-      page,
-      limit,
-      totalPage: Math.ceil(totalProducts / limit),
-      totalProducts,
+      // page,
+      // limit,
+      // totalPage: Math.ceil(totalProducts / limit),
+      // totalProducts,
       data: products
     })
   } catch (error) {
