@@ -36,10 +36,10 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
   let newImages = [];
   for (let i = 0; i < images.length; i++) {
     if (typeof images[i] === 'string') {
-      const { public_id, url } = await cloudinary.uploader.upload(images[i], {
+      const { public_id, secure_url } = await cloudinary.uploader.upload(images[i], {
         folder: 'tomper-wear',
       });
-      newImages.push({ public_id, url });
+      newImages.push({ public_id, secure_url });
     } else {
       newImages.push(images[i]);
     }
