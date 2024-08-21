@@ -2,7 +2,7 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
-const { find } = require('../models/categoryModel');
+const mongoose = require('mongoose');
 
 // create a new product
 exports.createProduct = catchAsyncError(async (req, res, next) => {
@@ -167,6 +167,7 @@ exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
         offer_price: 1,
         stock: 1,
         image: { $arrayElemAt: ['$images.secure_url', 0] },
+        product_status: 1
       },
     },
     {
@@ -347,4 +348,85 @@ exports.updateManyProducts = catchAsyncError(async (req, res, next) => {
     });
   }
 
+});
+
+exports.getProductByIdForAdmin = catchAsyncError (async (req, res, next) => {
+  console.log('we hit here');
+  try {
+    const productId = req.params.id;
+    console.log(productId);
+    if(!productId) {
+      throw new ErrorHandler('product id not defined')
+    }
+    const product = await Product.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(productId)}
+      },
+      {
+        $lookup: {
+          from: 'categories', // Collection name for Category
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categoryDetails',
+        },
+      },
+      {
+        $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+      },
+      {
+        $project : {
+          name: 1,
+          category: '$categoryDetails.name', // Project the category name instead of the ObjectId
+          add_ons: 1,
+          search_tags: 1,
+          selling_method: 1,
+          description: 1,
+          price: 1,
+          offer_price: 1,
+          purchase_price: 1,
+          images: {$arrayElemAt: ['$images.secure_url', 0]},
+          sku: 1,
+          barcode: 1,
+          stock: 1,
+          stock_notify: 1,
+          tax: 1,
+          product_status: 1,
+          product_detail_min: 1,
+          product_detail_max: 1
+        }
+      },
+    ]);
+    res.status(200).json({
+      success: true,
+      data: product
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+  });
+}
+
+});
+
+exports.getProductDetailByIdForUpdate = catchAsyncError (async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    if(!productId) {
+      throw new ErrorHandler('Product not found', 400);
+    }
+    const product = await Product.findById({_id: productId});
+    console.log(product);
+    return res.status(200).json({
+      success: true,
+      data: product
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'error while getting product',
+      error: error.message
+    })
+  }
 });

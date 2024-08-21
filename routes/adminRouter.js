@@ -85,7 +85,21 @@ router
     auth.checkUserAuthentication,
     auth.checkAdminPrivileges('moderate', 'super'),
     productController.deleteProduct
+  )
+  .get(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('moderate', 'super'),
+    productController.getProductByIdForAdmin
   );
+
+  router
+    .route('/product/update/:id')
+    .get(
+      auth.checkUserAuthentication,
+      auth.checkAdminPrivileges('moderate', 'super'),
+      productController.getProductDetailByIdForUpdate  
+    );
+
 
 // delete product reviews
 router
