@@ -141,7 +141,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
 // send all product details
 exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 5;
   const skip = (page - 1) * limit;
   const products = await Product.aggregate([
     {
@@ -392,7 +392,8 @@ exports.getProductByIdForAdmin = catchAsyncError (async (req, res, next) => {
           tax: 1,
           product_status: 1,
           product_detail_min: 1,
-          product_detail_max: 1
+          product_detail_max: 1,
+          featured: 1
         }
       },
     ]);

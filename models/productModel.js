@@ -90,6 +90,11 @@ const productSchema = mongoose.Schema({
   product_detail_max: {
     type: Number,
     required: [true, 'Please enter a product detail max']
+  },
+
+  featured: {
+    type: Boolean,
+    require: [true, 'Please enter a featured']
   }
 
 });

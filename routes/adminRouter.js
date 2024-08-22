@@ -149,12 +149,21 @@ router
 
 //get, update, delete routers for admin
 router
+  .route('/category/')
+  .get(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super', 'moderate'),
+    categoryController.getAllCategoriesForTable
+  );
+
+router
   .route('/category/:id')
   .put(
     auth.checkUserAuthentication,
     auth.checkAdminPrivileges('super', 'moderate'),
     categoryController.updateCategory
   );
+
 
 router
   .route('/category/delete/:id')

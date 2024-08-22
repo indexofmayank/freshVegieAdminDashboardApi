@@ -101,3 +101,63 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
         res.status(500).json({success: false, message: 'Server error', error: error.message});                       
     }
 });
+
+exports.getAllCategoriesForTable = catchAsyncError(async (req, res, next) => {
+
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+        
+        const categories = await Category.aggregate([
+            {
+                $project: {
+                    name: 1,
+                    image: 1,
+                    status: 1
+                }
+            },
+            {
+                $sort: { name: 1 },
+            },
+            {$skip: skip},
+            {$limit: limit},    
+        ]);
+    
+        const totalCategories = await Category.countDocuments();
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalCategories,
+            totalPages: Math.ceil(totalCategories / limit),
+            data: categories
+        });
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).json({
+          error: 'Something wrong happend'
+        });    
+    }
+});
+
+exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
+    try {
+        const categoriesName = await Category.aggregate([
+            {
+                $project: {
+                    name: 1
+                }
+            }
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: categoriesName
+        });
+
+    } catch (error) {
+        console.error('Error: ', error);
+        error: 'Something went worng';
+    }
+}));
