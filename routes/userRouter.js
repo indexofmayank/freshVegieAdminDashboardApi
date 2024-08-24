@@ -12,5 +12,7 @@ router.route('/addAddress/:id').post(userController.addUserAddress);
 router.route('/updateAddress/:userId/:addressId').put(userController.editUserAddress);
 router.route('/delete/:userId/:addressId').delete(userController.deleteAddress);
 router.route('/transactions/:userId').get(userController.getUserTranscationByUserId);
+router.route('/metadata/:userId').get(userController.getUserMetaDataByUserId);
+router.route('/address/:userId').get(userController.getUserAllAddressByUserId);
 
 module.exports = router;

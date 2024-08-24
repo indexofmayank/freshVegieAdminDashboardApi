@@ -164,14 +164,14 @@ exports.updateUser = catchAsyncError(async (req, res, next) => {
 
 exports.addUserAddress = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
-    const { name, phone, email, address, locality, landmark, city, pin_code, state } = req.body;
+    const {address_name, name, phone, email, address, locality, landmark, city, pin_code, state } = req.body;
     try {
         const user = await User.findById(id);
         if (!user) {
             return next(new ErrorHandler('User not found', 200));
         }
         const result = user.address.push(
-            { name, phone, email, address, locality, landmark, city, pin_code, state }
+            { address_name, name, phone, email, address, locality, landmark, city, pin_code, state }
         );
         await user.save();
         return res.status(200).json({
@@ -234,7 +234,7 @@ exports.deleteAddress = async (req, res) => {
 exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.params.limit) || 10;
+        const limit = parseInt(req.query.limit) || 10;
         const skip = parseInt(page - 1) * limit;
         const { userId } = req.params;
         if (!userId) {
@@ -246,24 +246,22 @@ exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
             },
             {
                 $addFields: {
-                    paymentType: "$paymentInfo.payment_type",
-                    paymentStatus: "$paymentInfo.status",
+                    timestampFormatted: {
+                        $dateToString: {
+                            format: "%d %B %Y, %H:%M:%S",
+                            date: "$createdAt",
+                            timezone: "UTC"
+                        }
+                    }
                 },
             },
             {
                 $project: {
-                    orderId: 1,
-                    paymentType: 1,
-                    paymentStatus: 1,
-                    totalPrice: 1,
-                    paymentType: 1,
-                    createdAtFormatted: {
-                        "$dateToString": {
-                            "format": "%Y %B %d %H:%M:%S",
-                            "date": "$createdAt",
-                            "timezone": "UTC"
-                        }
-                    },
+                    orderId: { $ifNull: ["$orderId", "N/A"]},
+                    paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"]},
+                    paymentStatus: { $ifNull: ["$paymentInfo.status", "N/A"]},
+                    totalPrice: { $ifNull: ["$totalPrice", "N/A"]},
+                    timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"]}
                 }
             },
             { $sort: { createdAt: 1 } },
@@ -290,5 +288,80 @@ exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
             message: 'Something went wrong',
             error
         });
+    }
+});
+
+exports.getUserMetaDataByUserId = catchAsyncError(async (req, res, next) => {
+    const userId = req.params.userId;
+    try {
+        if(!userId) {
+            throw new ErrorHandler('User not found', 404);
+        }
+        const userMetaData = await User.aggregate([
+            {
+                $match: {_id: mongoose.Types.ObjectId(userId)}
+            },
+            {
+                $project: {
+                    name: { $ifNull: ["$name", "N/A"]},
+                    email: { $ifNull: ["$email", "N/A"]},
+                    phone: { $ifNull: ["$phone", "N/A"]}
+                }
+            }
+        ]);
+        res.status(200).json({
+            success: true,
+            data: userMetaData[0]
+        });
+    } catch (error) {
+        console.error(error.message);
+        throw new ErrorHandler('something went wrong', 500);
+    }
+});
+
+exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
+    const userId = req.params.userId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = parseInt(page - 1) * limit;
+    try {
+        if(!userId) {
+            throw new ErrorHandler('User not found', 404);
+        }
+        const userAddresses = await User.aggregate([
+            {
+                $match: {_id: mongoose.Types.ObjectId(userId)}
+            },
+            {
+                $project: {
+                    address_name: { $ifNull: ["$address.address_name", "N/A"]},
+                    name: { $ifNull: ["$address.name", "N/A"]},
+                    phone : { $ifNull: ["$address.phone", "N/A"]},
+                    email: { $ifNull: ["$address.email", "N/A"]},
+                    address: { $ifNull: ["address.address", "N/A"]},
+                    locality: { $ifNull: ["address.locality", "N/A"]},
+                    landmark: { $ifNull: ["address.landmark", "N/A"]},
+                    city: { $ifNull: ["address.city", "N/A"]},
+                    state: { $ifNull: ["address.state", "N/A"]},
+                    pin_code: {$ifNull: ["address.pin_code", "N/A"]},
+                    state: { $ifNull: ["address.state", "N/A"]}
+                }
+            },
+            {$sort: {createdAt: 1}},
+            {$skip: skip},
+            {$limit: limit}
+        ]);
+        if(!userAddresses) {
+            throw new ErrorHandler('Server error', 500);
+        }
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            data: userAddresses
+        });
+    } catch (error) {
+        console.error(error.message);
+        throw new ErrorHandler('Something went wrong', 500);
     }
 });

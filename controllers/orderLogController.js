@@ -16,7 +16,7 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
     const results = await orderLogsCollection.aggregate([
       {
         $match: {
-          message: {$regex: `User ID - ${userId}`, $options: 'i'},
+          message: { $regex: `User ID - ${userId}`, $options: 'i' },
         },
       },
       {
@@ -54,7 +54,7 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
       },
       {
         $addFields: {
-          extractedUserId: {$toObjectId: "$extractedUserId",}
+          extractedUserId: { $toObjectId: "$extractedUserId", }
         }
       },
       {
@@ -67,7 +67,7 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
       },
       {
         $addFields: {
-          username: {$arrayElemAt: ["$userInfo.name", 0]}
+          username: { $arrayElemAt: ["$userInfo.name", 0] }
         }
       },
       {
@@ -85,29 +85,32 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
         $addFields: {
           timestampFormatted: {
             $dateToString: {
-              "format" : "%d %B %Y, %H:%M:%S",
-              "date" : "$timestamp",
-              "timezone" : "UTC"
+              "format": "%d %B %Y, %H:%M:%S",
+              "date": "$timestamp",
+              "timezone": "UTC"
             }
           }
         }
       },
       {
         $project: {
-          timestampFormatted: 1,
-          level: 1,
-          message: 1,
+          timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+          message: { $ifNull: ["$message", "N/A"] },
         }
-      }
+      },
+      {
+        $sort: { timestamp: -1 } // Changed to -1 for sorting newest to oldest
+      }, { $skip: skip },
+      { $limit: limit }
     ]).toArray();
     const totalCount = await orderLogsCollection.aggregate([
-        {
-          $match: {
-            message: { $regex: `User ID - ${userId}`, $options: "i" },
-          },
+      {
+        $match: {
+          message: { $regex: `User ID - ${userId}`, $options: "i" },
         },
-        { $count: "count" },
-      ]).toArray();
+      },
+      { $count: "count" },
+    ]).toArray();
     const count = totalCount.length > 0 ? totalCount[0].count : 0;
     if (results.length === 0) {
       return next(new ErrorHandler('No log found for this user', 400));
@@ -137,9 +140,9 @@ exports.getTest = catchAsyncError(async (req, res, next) => {
     const results = await orderLogsCollection.aggregate([
       {
         $match: {
-          message: {$regex: `User ID - ${userId}`, $options: 'i'},
+          message: { $regex: `User ID - ${userId}`, $options: 'i' },
         },
-        
+
       },
       {
         // Replace the user ID in the message with 'mayank'
@@ -161,7 +164,7 @@ exports.getTest = catchAsyncError(async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error: ', error.message);
-    res.status(500).json({success: false, error: error.message});
+    res.status(500).json({ success: false, error: error.message });
   }
 
 });

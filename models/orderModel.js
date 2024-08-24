@@ -108,29 +108,49 @@ const orderSchema = mongoose.Schema({
     {
       name: {
         type: String,
-        required: true,
-      },
-      price: {
-        type: Number,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
+        required: false,
       },
       image: {
         type: String,
-        required: true,
+        required: false,
+      },
+      quantity: {
+        type: Number,
+        required: false,
+      },
+      item_price: {
+        type: Number,
+        required: false,
+      },
+      offer_price: {
+        type: Number,
+        require: false,
+        default: 0,
       },
       tax: {
         type: Number,
-        required: true,
+        required: false,
+        default: 0,
+      },
+      item_total: {
+        type: Number,
+        required: false,
+        default: 0,
+      },
+      item_total_discount: {
+        type: Number,
+        required: false,
+        default: 0,
+      },
+      item_total_tax: {
+        type: Number,
+        required: false,
         default: 0
       },
       id: {
         type: mongoose.Schema.ObjectId,
         ref: 'products',
-        required: true,
+        required: false,
       },
     },
   ],
@@ -161,7 +181,13 @@ const orderSchema = mongoose.Schema({
     status: {
       type: String,
       required: true,
+      default: 'pending'
     },
+    amount: {
+      type: Number,
+      require: false,
+      default: 0
+    }
   },
   deliveryInfo: {
     deliveryType: {
@@ -194,36 +220,51 @@ const orderSchema = mongoose.Schema({
   },  
   paidAt: {
     type: String,
-    required: true,
+    required: false,
   },
-  itemsPrice: {
+  total_quantity: {
     type: Number,
-    required: true,
+    required: false,
+    default: 0
+  },
+  total_item_count: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  items_grand_total: {
+    type: Number,
+    required: false,
     default: 0,
   },
-  discountPrice: {
+  total_discount: {
     type: Number,
-    required: true,
+    required: false,
+    default: 0,
+  },
+  total_tax: {
+    type: Number,
+    required: false,
     default: 0,
   },
   shippingPrice: {
     type: Number,
-    required: true,
+    required: false,
     default: 0,
   },
-  totalPrice: {
+  grandTotal: {
     type: Number,
-    required: true,
+    required: false,
     default: 0,
   },
   orderStatus: {
     type: String,
-    required: true,
-    default: 'processing',
+    required: false,
+    default: 'received',
   },
   deliverAt: {
     type: Date,
-    require: true,
+    require: false,
     default: null
   }
 }, {
@@ -231,6 +272,64 @@ const orderSchema = mongoose.Schema({
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
+
+orderSchema.pre('save', function (next) {
+  const order = this;
+
+
+  //for total item price
+  order.orderItems.forEach( item => {
+    if(item.offer_price && item.offer_price > 0) {
+      item.item_total = item.offer_price *  item.quantity;
+    } else {
+      item.item_total = item.item_price * item.quantity;
+    }
+  });
+
+  //for total item total discount
+  order.orderItems.forEach( item => {
+    if(item.offer_price && item.offer_price > 0) {
+    item.item_total_discount = item.item_price * item.quantity - item.offer_price * item.quantity;
+    }
+  });
+
+  //for total item tax
+  order.orderItems.forEach( item => {
+    item.item_total_tax = item.tax * item.quantity;
+  });
+
+  //for total quantity
+  const totalQuantityCount = order.orderItems.reduce((acc, item) => {
+    return acc + item.quantity;
+  }, 0);
+  order.total_quantity = totalQuantityCount;
+
+  //for total item count
+  const totalItemCount = order.orderItems.length;
+  order.total_item_count = totalItemCount;
+
+  const itemTotal = order.orderItems.reduce((acc, item) => {
+    return acc + item.item_total;
+  }, 0);
+  order.items_grand_total = itemTotal;
+
+  const totalTax = order.orderItems.reduce((acc, item) => {
+    return acc + item.item_total_tax
+  }, 0);
+  order.total_tax = totalTax;
+
+  const itemDiscountTotal = order.orderItems.reduce((acc, item) => {
+    return acc + item.item_total_discount;
+  }, 0);
+  order.total_discount = itemDiscountTotal;
+
+  order.grandTotal = itemTotal + totalTax + order.shippingPrice;
+
+  next();
+});
+
+
+
 // Create a virtual property 'id' that's computed from '_id'
 orderSchema.virtual('id').get(function () {
   return this._id.toHexString();

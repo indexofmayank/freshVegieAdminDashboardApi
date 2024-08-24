@@ -5,6 +5,7 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const orderLogger = require('../loggers/orderLogger');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const { format } = require('winston');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
 
@@ -180,21 +181,31 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
   const skip = (page - 1) * limit;
   const orders = await Order.aggregate([
     {
+      $addFields: {
+        timestampFormatted: {
+          $dateToString: {
+            format: "%d %B %Y, %H:%M:%S",
+            date: "$createdAt",
+            timezone: 'UTC'
+          }
+        }
+      } 
+    },
+    {
       $project: {
-        orderId: 1,
-        orderItemsCount: {$size: "$orderItems"},
-        user: {
-          name: 1,
-        },
-        paymentInfo: {
-          status: 1,
-        },
-        totalPrice: 1,
-        orderStatus: 1,
-        createdAt: 1,
+        orderId: {$ifNull: ["$orderId", 'N/A']},
+        timestampFormatted: {$ifNull: ["$timestampFormatted", "N/A"]},
+        user: {$ifNull: ["$user.name", "N/A"]},
+        totalItems: {$ifNull: [{$size: "$orderItems"}, "N/A"]},
+        weight: {$ifNull: ["$total_quantity", "N/A"]},
+        location: {$ifNull: ["$shippingInfo.deliveryAddress.state", "N/A"]},
+        payment_status: {$ifNull: ["$paymentInfo.status", "N/A"]},
+        order_status: {$ifNull: ["$orderStatus", "N/A"]},
+        grand_total: {$ifNull: ["$grandTotal", "N/A"]},
+        createdAt: 1
       }
     },
-    {$sort: {createAt: 1}},
+    {$sort: {createdAt: -1}},
     {$skip: skip},
     {$limit: limit}
   ]);
@@ -296,39 +307,15 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
     const orderId = req.params.orderId;
     console.log(orderId);
   try {
-    const orderItemsPage = parseInt(req.query.orderItemsPage) || 1;
-    const orderItemsLimit = parseInt(req.query.orderItemsLimit) || 10;
-    const orderItemsSkip = (orderItemsPage - 1) * orderItemsLimit;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     const orderWithItems = await Order.aggregate([
       {
         $match: {_id: mongoose.Types.ObjectId(orderId)}
       },
       {
         $project: {
-          orderId: 1,
-          shippingInfo : {
-            deliveryAddress: {
-              name: 1,
-              phone: 1,
-              email: 1,
-              address: 1,
-              locality: 1,
-              landmark: 1,
-              city: 1,
-              pin_code: 1,
-              state: 1
-            },
-            billingAddress: {
-              name: 1,
-              phone: 1,
-              email: 1,
-              address: 1,
-              locality: 1,
-              city: 1,
-              pin_code: 1,
-              state: 1
-            }
-          },
           orderItems: {
             $slice: [
               {
@@ -336,50 +323,38 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
                   input: "$orderItems",
                   as: "item",
                   in: {
-                    name: "$$item.name",
-                    price: "$$item.price",
-                    quantity: "$$item.quantity",
-                    image: "$$item.image"
+                    name: { $ifNull: ["$$item.name", "N/A"]},
+                    item_price: { $ifNull: ["$$item.item_price", "N/A"]},
+                    quantity: {$ifNull: ["$$item.quantity", "N/A"]},
+                    image: {$ifNull: ["$$item.image", "N/A"]},
+                    item_total_discount: {$ifNull:  ["$$item.item_total_discount", "N/A"]},
+                    item_total_tax: {$ifNull: ["$$item.item_total_tax", "N/A"]},
+                    item_total: {$ifNull: ["$$item.item_total", "N/A"]}
                   }
                 }
               },
-              orderItemsSkip,
-              orderItemsLimit
+              skip,
+              limit
             ]
           },
-          orderItemsCount: {$size: "$orderItems"},
-          user: {
-            name: 1,
-            email: 1,
-            phone: 1,
-          },
-          paymentInfo: {
-            payment_type: 1,
-            status: 1,
-          },
-          paidAt: 1,
-          itemsPrice: 1,
-          discountPrice: 1,
-          shippingPrice: 1,
-          totalPrice: 1,
-          orderStatus: 1,
-          deliverAt: 1,
-          createdAt: 1,
-          updatedAt: 1          
+          total_discount: { $ifNull: ["$total_discount", "N/A"]},
+          total_item_count: {$ifNull: ["$total_item_count", "N/A"]},
+          total_tax: {$ifNull: ["$total_tax", "N/A"]},
+          items_grand_total: {$ifNull: ["$items_grand_total", "N/A"]},
+          grand_total: {$ifNull: ["$grandTotal", "N/A"]}
         }
-      }
+      }    
     ]);
-    const totalItems = orderWithItems.orderItemsCount;
     if(!orderWithItems) {
       throw new ErrorHandler('Dont found worth');
     }
-    console.log(orderWithItems);
+    const totalItems = orderWithItems[0].orderItems.length;
     return res.status(200).json({
       success: true,
-      orderItemsLimit,
-      orderItemsPage,
-      totalOrderPages: Math.ceil(totalItems / orderItemsLimit),
-      orderItemtotal: totalItems,
+      page,
+      limit,
+      totalPage: Math.ceil(totalItems / limit),
+      totalItems: totalItems,
       data: orderWithItems
     });
   } catch (error) {
@@ -397,32 +372,32 @@ exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
 
     const orderHistory = await Order.aggregate([
       {
-        $match: { 'user.userId' : mongoose.Types.ObjectId(req.params.userId)}
-      }, 
+        $match: { 'user.userId': mongoose.Types.ObjectId(req.params.userId) }
+      },
       {
-        $project: {
-          orderId: 1,
-          orderStatus: 1,
-          paymentInfo: {
-            status: 1
-          },
-          orderItemCount: {$size: "$orderItems"},
-          totalPrice: 1,
-          deliveryInfo: {
-            deliveryType: 1
-          },
-          createdAtFormatted: {
+        $addFields: {
+          timestampFormatted: {
             $dateToString: {
-              "format" : "%d %B %Y, %H:%M:%S",
-              "date" : "$createdAt",
-              "timezone" : "UTC"
+              format: "%d %B %Y, %H:%M:%S",
+              date: "$createdAt",
+              timezone: "UTC"
             }
-          },
+          }
         }
       },
-      {$sort: {createdAt: 1}},
-      {$skip: skip},
-      {$limit: limit}
+      {
+        $project: {
+          orderId: { $ifNull: ["$orderId", "N/A"] },
+          timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+          totalItems: { $ifNull: [{ $size: "$orderItems" }, "N/A"] },
+          orderStatus: { $ifNull: ["$orderStatus", "N/A"] },
+          deliveryType: { $ifNull: ["$deliveryType", "N/A"] },
+          totalPrice: {$ifNull: ["$totalPrice", "N/A"]}
+        }
+      },
+      { $sort: { createdAt: 1 } },
+      { $skip: skip },
+      { $limit: limit }
     ]);
     if(!orderHistory) {
       throw new ErrorHandler('Some thing went wrong');
@@ -441,3 +416,230 @@ exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
     throw new ErrorHandler('Not able to get order history');
   }
 });
+
+exports.getUserBillingInfoByOrderId = catchAsyncError(async (req, res, next) => {
+  const orderId = req.params.orderId;
+  if(!orderId) {
+    throw new ErrorHandler('Order not found', 400);
+  }
+try {
+    const userBillingInfo = await Order.aggregate([
+      {
+        $match: {_id:  mongoose.Types.ObjectId(orderId)}
+      },
+      {
+        $project: {
+          _id: 0, // Exclude the _id field
+          name: {$ifNull: ['$shippingInfo.billingAddress.name', 'N/A']},
+          phone: {$ifNull: ['$shippingInfo.billingAddress.phone', 'N/A']},
+          email: {$ifNull: ['$shippingInfo.billingAddress.email', 'N/A']},
+          address: {$ifNull: ['$shippingInfo.billingAddress.address', 'N/A']},
+          locality: {$ifNull: ['$shippingInfo.billingAddress.locality', 'N/A']},
+          landmark: {$ifNull: ['$shippingInfo.billingAddress.landmark', 'N/A']},
+          city: {$ifNull: ['$shippingInfo.billingAddress.city', 'N/A']},
+          pin_code: {$ifNull: ['$shippingInfo.billingAddress.pin_code', 'N/A']},
+          state: {$ifNull: ['$shippingInfo.billingAddress.state', 'N/A']}
+        }
+      }
+    ]);
+    if (!userBillingInfo.length) {
+      return next(new ErrorHandler('Billing information not found', 404));
+    }
+    res.status(200).json({
+      success: true,
+      userBillingInfo: userBillingInfo
+    });
+} catch (error) {
+  console.error('Error while getting user history of order', 500, error.message);
+  throw new ErrorHandler('Not able to get user history');
+}
+});
+
+exports.getUserPaymentDetailByOrderId = catchAsyncError(async (req, res, next) => {
+  const orderId = req.params.orderId;
+  if(!orderId) {
+    throw new ErrorHandler('Order not found', 400);
+  }
+  try {
+    const userPaymentDetail = await Order.aggregate([
+      {
+        $match : {_id: mongoose.Types.ObjectId(orderId)}
+      }, 
+      {
+        $project: {
+          _id: 0,
+          paymentType: {$ifNull: ["$paymentInfo.payment_type", "N/A"]},
+          status: {$ifNull: ["$paymentInfo.status", "N/A"]},
+          amount: {$ifNull: ["$paymentInfo.amount", "N/A"]}
+        }
+      }
+    ]);
+    if(!userPaymentDetail.length) {
+      return next(new ErrorHandler('User payment status not found', 404));
+    }
+    res.status(200).json({
+      success: true,
+      userPaymentDetail: userPaymentDetail[0]
+    });
+  } catch (error) {
+    console.error('Error while getting user history of order', 500, error.message);
+    throw new ErrorHandler('Not able to get user history');  
+  }
+});
+
+exports.getUserDeliveryInfoByOrderId = catchAsyncError(async (req, res, next) => {
+  const orderId = req.params.orderId;
+  if(!orderId) {
+    throw new ErrorHandler('Order not found', 404);
+  }
+  try {
+    const userDeliveryDetail = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(orderId)}
+      },
+      {
+        $project: {
+          _id: 0,
+          deliveryType: {$ifNull: ["$deliveryInfo.deliveryType", "N/A"]},
+          deliveryCost: {$ifNull: ["$deliveryInfo.deliveryCost", "N/A"]},
+          name: {$ifNull: ["$deliveryInfo.deliveryPartner.name", "N/A"]},
+          phone: {$ifNull: ["$deliveryInfo.deliveryPartner.phone", "N/A"]},
+          email: {$ifNull: ["$deliveryInfo.deliveryPartner.phone", "N/A"]}
+        }
+      }
+    ]);
+    if(!userDeliveryDetail.length) {
+      return next(new ErrorHandler('Delivery detail not found', 404));
+    }
+    res.status(200).json({
+      success: true,
+      userDeliveryDetail: userDeliveryDetail[0]
+    })
+  } catch (error) {
+    console.error('Error while getting user delivery details of the order', 500, error.message);
+    throw new ErrorHandler('Not able to get user delivery info');  
+  }
+});
+
+exports.getCustomOrderIdByOrderId = (catchAsyncError (async (req, res, next) => {
+
+  const orderId = req.params.orderId;
+  try {
+    const customOrderId = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(orderId)}
+      },
+      {
+        $project: {
+          orderId: {$ifNull: ["$orderId", "N/A"]}
+        }
+      }
+    ]);
+    if(!customOrderId) {
+      throw new ErrorHandler('Order not found', 404);
+    }
+    res.status(200).json({
+      success: true,
+      data: customOrderId[0]
+    });
+  } catch (error) {
+    console.log(error.message);
+    throw new ErrorHandler('Something wrong happend', 400);
+  }
+}));
+
+exports.updatePaymentStatusByOrderId = catchAsyncError (async (req, res, next) => {
+  console.log('we hit here');
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    let {amount} = req.body;
+    
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status is required in the request body'
+      });
+    }
+
+    // Find the order by orderId and update the paymentInfo.status
+    const updatedOrder = await Order.findOneAndUpdate(
+      {_id: orderId }, // Find by orderId
+      { 'paymentInfo.status': status,
+        'paymentInfo.amount': amount
+       }, // Update paymentInfo.status with the value from req.body
+      { new: true, runValidators: true } // Return the updated document and run validators
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Payment status updated to ${status}`,
+      order: updatedOrder
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+});
+
+exports.getQuantityWiseOrderByOrderId = (catchAsyncError (async (req, res, next) => {
+
+  try {
+    const orderId = req.params.orderId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const quantityWiseOrder = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(orderId)}
+      },
+      {
+        $project: {
+          orderItems: {
+            $slice: [
+              {
+                $map: {
+                  input: "$orderItems",
+                  as: "item",
+                  in : {
+                    name: {$ifNull: ["$$item.name", "N/A"]},
+                    quantity: {$ifNull: ["$$item.quantity", "N/A"]},
+                    image: {$ifNull: ["$$item.image", "N/A"]}
+                  }
+                }
+              },
+              skip,
+              limit
+            ]
+          },
+          total_quantity: {$ifNull: ["$total_quantity" , "N/A"]}
+        }
+      }
+    ]);
+    if(!quantityWiseOrder){
+     throw new ErrorHandler('Not found', 500);
+    }
+   const totalItems = quantityWiseOrder[0].orderItems.length;
+   return res.status(200).json({
+    success: true,
+    page,
+    limit,
+    totalPage: Math.ceil(totalItems / limit),
+    totalItems: totalItems,
+    data: quantityWiseOrder[0]
+   });
+  } catch (error) {
+    console.error(error.message);
+    throw new ErrorHandler('Something went wrong', 400);
+  }
+}));

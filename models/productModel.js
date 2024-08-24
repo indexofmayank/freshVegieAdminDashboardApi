@@ -94,8 +94,9 @@ const productSchema = mongoose.Schema({
 
   featured: {
     type: Boolean,
-    require: [true, 'Please enter a featured']
-  }
+    require: [true, 'Please enter a featured'],
+    default: true
+  },
 
 });
 
