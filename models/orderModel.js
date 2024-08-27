@@ -104,6 +104,16 @@ const orderSchema = mongoose.Schema({
 
     }
   },
+  discountPrice: {
+    type: String,
+    required: [true, 'Please enter discount price'],
+    default: 0
+  },
+  itemsPrice: {
+    type: String,
+    required: [true, 'Please enter items price'],
+    default: 0
+  },
   orderItems: [
     {
       name: {

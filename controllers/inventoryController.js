@@ -76,3 +76,30 @@ exports.updateProductForInventory = catchAsyncError(async (req, res, next) => {
       }
 
 });
+
+exports.getProductByNameForInventory = (catchAsyncError (async (req, res, next) => {
+  try {
+    const {query} = req.query;
+    console.log(query);
+    const productsByName = await Product.aggregate([
+      {
+        
+      },
+      {
+        $project: {
+          name: {$ifNull: ['$name', 'N/A']}
+        }
+      },
+      {
+        $sort: {name: 1}
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: productsByName
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler({success: false, message: error.message});
+  }
+}))
