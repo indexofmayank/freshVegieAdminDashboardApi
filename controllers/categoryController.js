@@ -146,7 +146,7 @@ exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
         const categoriesName = await Category.aggregate([
             {
                 $project: {
-                    name: 1
+                    name: {$ifNull: ["$name", "N/A"]}
                 }
             }
         ]);
@@ -158,6 +158,6 @@ exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
 
     } catch (error) {
         console.error('Error: ', error);
-        error: 'Something went worng';
+        error: 'Something went wrong';
     }
 }));
