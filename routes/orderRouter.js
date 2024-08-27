@@ -7,7 +7,7 @@ router.route('/new').post(orderController.createNewOrder);
 
 // send user orders
 router.route('/users/:userId').get(orderController.getUserOrders);
-
+router.route('/:orderId').get(orderController.getOrderByOrderIdForUser);
 // send single order
 router.route('/orderItems/:orderId').get(orderController.getOrderWithItems);
 

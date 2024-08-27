@@ -752,3 +752,21 @@ exports.markOrderStatusAsDeliveredByOrderId = (catchAsyncError (async (req, res,
     throw new ErrorHandler('Something went wrong', 404);
   }
 }));
+
+exports.getOrderByOrderIdForUser = (catchAsyncError (async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId
+    if(!orderId) {
+      throw new ErrorHandler('orderId not valid', 404);
+    }
+    const OrderForUser = await Order.findById({_id: orderId});
+
+    return res.status(200).json({
+      success: true,
+      data: OrderForUser
+    });
+  } catch (error) {
+    console.error('error while getting, order by Id');
+    throw new ErrorHandler('Some thing went wrong while getting order by order Id');
+  }
+}));
