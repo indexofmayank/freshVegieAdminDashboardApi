@@ -431,3 +431,40 @@ exports.getProductDetailByIdForUpdate = catchAsyncError (async (req, res, next) 
     })
   }
 });
+
+exports.getProductForDropdown = catchAsyncError (async (req, res, next) => {
+  try {
+    const {name, category} = req.query;
+    console.log(name, category);
+    const matchCriteria = {};
+    if(name) {
+      matchCriteria.name = {$regex: name, $options: 'i'}
+    }
+    if(category) {
+      matchCriteria.category = mongoose.Types.ObjectId(category);
+    }
+    const productListForDropdown = await Product.aggregate([
+      {
+       $match: matchCriteria
+      },
+      {
+        $project: {
+          name: {$ifNull: ['$name', 'N/A']}
+        }
+      },
+      {
+        $sort: {name: 1}
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: productListForDropdown,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'error while getting product',
+      error: error.message
+    });
+  }
+});
