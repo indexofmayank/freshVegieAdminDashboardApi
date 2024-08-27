@@ -122,9 +122,6 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
 
 // send user orders
 exports.getUserOrders = catchAsyncError(async (req, res, next) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = parseInt( page - 1 ) * limit;
   const { userId } = req.params;
   if (!userId) {
     return next(new ErrorHandler('Order not found', 400));
@@ -134,7 +131,9 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
     const order = await Order.aggregate([
       { $match: { 'user.userId': mongoose.Types.ObjectId(userId) } }, // Match the user's orders
       {
+
         $project: {
+          orderId: 1,
           orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
           shippingInfo: 1,
           user: 1,
@@ -152,8 +151,6 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
         }
       },
       { $sort: { createdAt: -1 } },
-      {$skip: skip},
-      {$limit: limit} 
     ]);
     if (!order) {
       return next(new ErrorHandler('Order not found', 200));
