@@ -117,10 +117,12 @@ const orderSchema = mongoose.Schema({
       quantity: {
         type: Number,
         required: false,
+        default: 0,
       },
       item_price: {
         type: Number,
         required: false,
+        default: 0
       },
       offer_price: {
         type: Number,
@@ -161,7 +163,7 @@ const orderSchema = mongoose.Schema({
     },
     email: {
       type: String,
-      required: true,
+      required: false,
     },
     phone: {
       type: String,
@@ -180,7 +182,7 @@ const orderSchema = mongoose.Schema({
     },
     status: {
       type: String,
-      required: true,
+      required: false,
       default: 'pending'
     },
     amount: {

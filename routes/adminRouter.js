@@ -133,6 +133,14 @@ router
     orderController.deleteOrder
   );
 
+  router
+    .route('/order/markcancelled/:orderId')
+    .put(
+      auth.checkUserAuthentication,
+      auth.checkAdminPrivileges('moderate', 'super'),
+      orderController.markOrderStatusToCancelledByOrderId
+    );
+
   // delete user
   router.route('/user/:id')
   .delete(

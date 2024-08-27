@@ -18,7 +18,9 @@ router.route('/deliveryInfo/:orderId').get(orderController.getUserDeliveryInfoBy
 router.route('/customOrderId/:orderId').get(orderController.getCustomOrderIdByOrderId);
 router.route('/paymentstatus/:orderId').put(orderController.updatePaymentStatusByOrderId);
 router.route('/quantitywise/:orderId').get(orderController.getQuantityWiseOrderByOrderId);
-
+router.route('/markpaid/:orderId').put(orderController.markOrderStatusPaidByOrderId);
+router.route('/orderstatus/:orderId').get(orderController.getSingleOrderStatusByOrderId);
+router.route('/markdelivered/:orderId').put(orderController.markOrderStatusAsDeliveredByOrderId);
 
 module.exports = router;    
     

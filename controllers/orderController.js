@@ -549,12 +549,10 @@ exports.getCustomOrderIdByOrderId = (catchAsyncError (async (req, res, next) => 
 }));
 
 exports.updatePaymentStatusByOrderId = catchAsyncError (async (req, res, next) => {
-  console.log('we hit here');
   try {
     const { orderId } = req.params;
     const { status } = req.body;
-    let {amount} = req.body;
-    
+
     if (!status) {
       return res.status(400).json({
         success: false,
@@ -564,17 +562,16 @@ exports.updatePaymentStatusByOrderId = catchAsyncError (async (req, res, next) =
 
     // Find the order by orderId and update the paymentInfo.status
     const updatedOrder = await Order.findOneAndUpdate(
-      {_id: orderId }, // Find by orderId
-      { 'paymentInfo.status': status,
-        'paymentInfo.amount': amount
-       }, // Update paymentInfo.status with the value from req.body
-      { new: true, runValidators: true } // Return the updated document and run validators
+      {_id: orderId },
+      { 'paymentInfo.status': status
+       }, 
+      { new: true, runValidators: true } 
     );
 
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,
-        message: 'Order not found'
+        message: 'Something wrong happened while updating order'
       });
     }
 
@@ -641,5 +638,117 @@ exports.getQuantityWiseOrderByOrderId = (catchAsyncError (async (req, res, next)
   } catch (error) {
     console.error(error.message);
     throw new ErrorHandler('Something went wrong', 400);
+  }
+}));
+
+exports.markOrderStatusPaidByOrderId = (catchAsyncError (async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+    const {amount} = req.body;
+    console.log(amount);
+    if(!amount) {
+      return res.status(400).json({
+        success: false,
+        message: 'amount is required in the request body'
+      });
+    }
+    const updatedOrder = await Order.findOneAndUpdate(
+      {_id: orderId},
+      {'paymentInfo.status': "completed",
+        'paymentInfo.amount': amount
+      },
+      { new : true, runValidators: true}
+    );
+    console.log(updatedOrder);
+    if(!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Something wrong happened while updating order',
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to Paid`,
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something wrong happend while updating order status');
+  }
+}));
+
+exports.markOrderStatusToCancelledByOrderId = (catchAsyncError (async (req, res, next) => {
+  try {
+    const {orderId} = req.params;
+    const cancelledOrder = await Order.findOneAndUpdate(
+      {_id: orderId},
+      {'orderStatus': 'cancelled'},
+      { new: true, runValidators: true}
+    );
+    if(!cancelledOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'something wrong happed while updating order status to cancelled'
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Updated successfully',
+      data: cancelledOrder
+    });
+
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Some thing wrong happed while updating order status');
+  }
+}));
+
+exports.getSingleOrderStatusByOrderId = (catchAsyncError (async (req, res, next) => {
+  try {
+    const {orderId} = req.params;
+    console.log(orderId);
+    const orderStatus = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(orderId)}
+      },
+      {
+        $project: {
+          status: {$ifNull: ["$orderStatus", "N/A"]}
+        }
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: orderStatus[0]
+    });
+  } catch (error) {
+    console.error(error.message);
+    throw new ErrorHandler('Something went wrong while getting order status');
+  }
+}));
+
+exports.markOrderStatusAsDeliveredByOrderId = (catchAsyncError (async (req, res, next) => {
+  try {
+    const {orderId} = req.params;
+    const deliveredStatusOrder = await Order.findOneAndUpdate(
+      {_id: orderId},
+      {
+        'orderStatus' : 'delivered',
+        'deliverAt' : Date.now()
+      }
+    );
+    if(!deliveredStatusOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Not able to marked order status as delivered'
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: deliveredStatusOrder
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong', 404);
   }
 }));
