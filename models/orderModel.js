@@ -111,8 +111,7 @@ const orderSchema = mongoose.Schema({
   },
   itemsPrice: {
     type: String,
-    required: [true, 'Please enter items price'],
-    default: 0
+    required: [true, 'Please enter items price']
   },
   orderItems: [
     {

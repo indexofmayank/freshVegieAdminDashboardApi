@@ -133,7 +133,7 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
       {
 
         $project: {
-          orderId: 1,
+          // orderId: 1,
           orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
           shippingInfo: 1,
           user: 1,
@@ -158,9 +158,6 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
     const totalOrders = await Order.countDocuments();
     res.status(200).json({
       success: true,
-      page,
-      limit,
-      totalPages: Math.ceil(totalOrders / limit),
       data: order
     });
   
