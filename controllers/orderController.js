@@ -133,7 +133,7 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
       {
 
         $project: {
-          // orderId: 1,
+          orderId: 1,
           orderItems: { $sortArray: { input: "$orderItems", sortBy: { name: 1 } } }, // Sort orderItems alphabetically by name
           shippingInfo: 1,
           user: 1,

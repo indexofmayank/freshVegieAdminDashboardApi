@@ -79,11 +79,15 @@ exports.updateProductForInventory = catchAsyncError(async (req, res, next) => {
 
 exports.getProductByNameForInventory = (catchAsyncError (async (req, res, next) => {
   try {
-    const {query} = req.query;
-    console.log(query);
+    const {name} = req.query;
+    console.log(req.query);
+    const matchCriteria = {};
+    if(name) {
+       matchCriteria.name = {$regex: name, $options: 'i'};
+    }
     const productsByName = await Product.aggregate([
       {
-        
+        $match: matchCriteria
       },
       {
         $project: {
