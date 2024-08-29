@@ -79,8 +79,8 @@ exports.updateProductForInventory = catchAsyncError(async (req, res, next) => {
 
 exports.getProductByNameForInventory = (catchAsyncError (async (req, res, next) => {
   try {
-    const {name} = req.query;
-    console.log(req.query);
+    const {name, category} = req.query;
+    console.log(category);
     const matchCriteria = {};
     if(name) {
        matchCriteria.name = {$regex: name, $options: 'i'};
@@ -98,6 +98,7 @@ exports.getProductByNameForInventory = (catchAsyncError (async (req, res, next) 
         $sort: {name: 1}
       }
     ]);
+    console.log(productsByName);
     return res.status(200).json({
       success: true,
       data: productsByName
