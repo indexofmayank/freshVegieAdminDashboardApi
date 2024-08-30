@@ -21,6 +21,7 @@ const bannerRouter = require('./routes/bannerRouter');
 const polygonRouter = require('./routes/polygonRouter');
 const inventoryRouter = require('./routes/inventoryRouter');
 const notificationRouter = require('./routes/notificationRotuer');
+const deliveryPartnerRouter = require('./routes/deliveryRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -71,6 +72,7 @@ app.use('/api/banner', bannerRouter);
 app.use('/api/polygon', polygonRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/notification', notificationRouter);
+app.use('/api/deliveryPartner', deliveryPartnerRouter);
 
 // using other middlewares
 app.use(errorMiddleware);

@@ -498,7 +498,7 @@ exports.getUserDeliveryInfoByOrderId = catchAsyncError(async (req, res, next) =>
           deliveryCost: {$ifNull: ["$deliveryInfo.deliveryCost", "N/A"]},
           name: {$ifNull: ["$deliveryInfo.deliveryPartner.name", "N/A"]},
           phone: {$ifNull: ["$deliveryInfo.deliveryPartner.phone", "N/A"]},
-          email: {$ifNull: ["$deliveryInfo.deliveryPartner.phone", "N/A"]}
+          email: {$ifNull: ["$deliveryInfo.deliveryPartner.email", "N/A"]}
         }
       }
     ]);
@@ -762,5 +762,39 @@ exports.getOrderByOrderIdForUser = (catchAsyncError (async (req, res, next) => {
   } catch (error) {
     console.error('error while getting, order by Id');
     throw new ErrorHandler('Some thing went wrong while getting order by order Id');
+  }
+}));
+
+exports.updateDeliveryDetailsToOrder = (catchAsyncError (async (req, res, next) => {
+  try {
+    const {orderId} = req.params;
+    const {
+      type,
+      name,
+      phone,
+      email
+    } = req.body;
+    const deliveryPartnerDetails = await Order.findOneAndUpdate(
+      {_id: orderId},
+      {
+        'deliveryInfo.deliveryType' : type === '1' ? 'Third party delivery partner' : 'In house delivery partner' || null,
+        'deliveryInfo.deliveryPartner.name' : name || null,
+        'deliveryInfo.deliveryPartner.phone': isNaN(phone) ? null : phone,
+        'deliveryInfo.deliveryPartner.email' : email || null
+      }
+    );
+    if(!deliveryPartnerDetails) {
+      return res.status(404).json({
+        success: false,
+        message: 'Not able to update delivery partner details'
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: deliveryPartnerDetails
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while updating delivery partner details');
   }
 }));

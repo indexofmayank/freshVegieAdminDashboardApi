@@ -21,6 +21,7 @@ router.route('/quantitywise/:orderId').get(orderController.getQuantityWiseOrderB
 router.route('/markpaid/:orderId').put(orderController.markOrderStatusPaidByOrderId);
 router.route('/orderstatus/:orderId').get(orderController.getSingleOrderStatusByOrderId);
 router.route('/markdelivered/:orderId').put(orderController.markOrderStatusAsDeliveredByOrderId);
+router.route('/deliverypartnerdetails/:orderId').put(orderController.updateDeliveryDetailsToOrder);
 
 module.exports = router;    
     

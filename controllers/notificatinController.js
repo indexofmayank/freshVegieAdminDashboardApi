@@ -10,6 +10,7 @@ const User = require('../models/userModel');
 
 exports.createNoficiation = catchAsyncError (async (req, res, next) => {
 try {
+    console.log(req.body);
     let {name, heading, message, redirect_to, specific_product, specific_category, link, audience, branch, customFilters, customers, status, image} = req.body;
     const {secure_url} = await cloudinary.uploader.upload(image, {
         folder: 'tomper-wear'
@@ -97,23 +98,27 @@ exports.getAllNotificationForTable = catchAsyncError(async (req, res, next) => {
 
 exports.getNotificationById = catchAsyncError (async (req, res, next) => {
     try {
-        const notificationId = req.params;
+        const {notificationId} = req.params;
         const notification = await Notification.aggregate([
             {
                 $match: {_id: mongoose.Types.ObjectId(notificationId)}
             },
             {
-                $project: {
                     $project: {
                         name: {$ifNull: ["$name", "N/A"]},
+                        heading: {$ifNull: ["$heading", "N/A"]},
+                        message: {$ifNull: ["$message",, "N/A"]},
                         redirect_to: {$ifNull: ["$redirect_to", "N/A"]},
+                        specific_product: {$ifNull: ["$specific_product", "N/A"]},
+                        specific_category: {$ifNull: ["$specific_category", "N/A"]},
+                        link: {$ifNull: ["$link", "N/A"]},
                         audience: {$ifNull: ["$audience", "N/A"]},
                         banner: {$ifNull: ["$image", "N/A"]},
+                        customFilters: {$ifNull: ["$customFilters", "N/A"]},
+                        //customers are left to take
                         status: {$ifNull: ["$status", "N/A"]},
                         // lastLive: {$ifNull: ["$timestampFormatted", "N/A"]}
                     }
-    
-                }
             }
         ]);
         if(!notification) {
