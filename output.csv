@@ -1,0 +1,7 @@
+Order No,Product Name,Product Price,Quantity,Grand Total,Customer,Address,Mobile,Delivery Type,Payment Type,Ordered Date,Tax,Total Tax
+ORD2,Paracetamol Tablet,33,4,104,Mayank Tiwari,"85, sk deb road Kolkata shreebhumi Patipukur West Bengal 700489",555555555,N/A,cash on delivery,"23 August 2024, 18:35:34",12,12
+ORD2,Weed,300,4,1120,Mayank Tiwari,"85, sk deb road Kolkata shreebhumi Patipukur West Bengal 700489",555555555,N/A,cash on delivery,"23 August 2024, 18:35:34",16,16
+ORD2,Aspirin,43,2,86,Mayank Tiwari,"85, sk deb road Kolkata shreebhumi Patipukur West Bengal 700489",555555555,N/A,cash on delivery,"23 August 2024, 18:35:34",0,0
+ORD3,Paracetamol Tablet,33,4,104,Mayank Tiwari,"85, sk deb road Kolkata shreebhumi Patipukur West Bengal 700489",555555555,N/A,N/A,"23 August 2024, 18:37:12",12,12
+ORD3,Weed,300,4,1120,Mayank Tiwari,"85, sk deb road Kolkata shreebhumi Patipukur West Bengal 700489",555555555,N/A,N/A,"23 August 2024, 18:37:12",16,16
+ORD3,Synthetic tobacco ,259,2,518,Mayank Tiwari,"85, sk deb road Kolkata shreebhumi Patipukur West Bengal 700489",555555555,N/A,N/A,"23 August 2024, 18:37:12",0,0

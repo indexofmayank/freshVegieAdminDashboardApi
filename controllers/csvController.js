@@ -103,20 +103,10 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
 
       })
     });
-    await csvWriter.writeRecords(records);
-    res.download(csvFilePath, 'Orders.csv', (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
-        return res.status(500).send('Error downloading file');
-      } else {
-        // Delete the file after sending it
-        fs.unlink(csvFilePath, (err) => {
-          if (err) {
-            console.error('Error deleting file:', err);
-          }
-        });
-      }
-    });
+    const csvContent = await csvWriter.writeRecords(records);
+    res.header('Content-Type', 'text/csv');
+    res.attachment('Orders.csv');
+    res.send(csvContent);
   } catch (error) {
     console.error(error);
     next(new ErrorHandler('Something went wrong while generating the CSV file', 500));
