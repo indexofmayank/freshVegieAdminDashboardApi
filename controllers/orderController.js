@@ -798,3 +798,4 @@ exports.updateDeliveryDetailsToOrder = (catchAsyncError (async (req, res, next) 
     throw new ErrorHandler('Something went wrong while updating delivery partner details');
   }
 }));
+
