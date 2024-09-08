@@ -44,7 +44,7 @@ exports.getAllUser = catchAsyncError(async (req, res, next) => {
 });
 
 exports.createUser = catchAsyncError(async (req, res, next) => {
-    // const { name, email, phone, address, device, userInfo } = req.body;
+    console.log(req.body);
     const { name, email, phone, address, device, userInfo } = req.body;
 
 
@@ -63,8 +63,10 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         email,
         phone,
         address,
-        device
+        device,
+        userInfo
     });
+    console.log(user);
 
     res.status(201).json({
         success: true,

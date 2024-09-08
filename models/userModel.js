@@ -43,17 +43,6 @@ const addressSchema = new mongoose.Schema({
     },
 });
 
-const userInfoSchema = new mongoose.Schema({
-    key: {
-        type: String,
-        required: [true, 'Please enter key']
-    },
-    value: {
-        type: mongoose.Schema.Types.Mixed, // Can store various types (String, Number, Object, etc.)
-        required: [true, 'Please enter value']
-    }
-});
-
 const userModel = new mongoose.Schema({
     name: {
         type: String,
@@ -83,11 +72,10 @@ const userModel = new mongoose.Schema({
     },
     userInfo: [
         {
-            type: userInfoSchema, // Storing the array of JSON objects
+            type: mongoose.Schema.Types.Mixed,  // Allows any type of data (string, object, array, etc.)
             required: false
         }
-    ]
-}, {
+    ]}, {
     timestamps: true,   
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
