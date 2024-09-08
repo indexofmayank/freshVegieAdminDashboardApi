@@ -44,7 +44,9 @@ exports.getAllUser = catchAsyncError(async (req, res, next) => {
 });
 
 exports.createUser = catchAsyncError(async (req, res, next) => {
-    const { name, email, phone, address, device } = req.body;
+    // const { name, email, phone, address, device, userInfo } = req.body;
+    const { name, email, phone, address, device, userInfo } = req.body;
+
 
     // Check if the phone number already exists
     const existingUser = await User.findOne({ phone });
@@ -363,5 +365,29 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         console.error(error.message);
         throw new ErrorHandler('Something went wrong', 500);
+    }
+});
+
+exports.getUserNameDropdownForCreateOrder = catchAsyncError(async (req, res, next) => {
+    try {
+        const { name } = req.query;
+        const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};    
+        const usernames = await User.aggregate([
+            {
+                $match: matchCondition
+            },
+            {
+                $project: {
+                    name: { $ifNull: ["$name", "N/A"] }, // Handle missing product name
+                }
+            }
+        ]);
+        return res.status(200).json({
+            success: true,
+            data: usernames
+        });
+    } catch (error) {
+        console.error(error);
+        throw new ErrorHandler('Something wentn wrong', 500);
     }
 });

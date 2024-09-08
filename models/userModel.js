@@ -1,93 +1,92 @@
 const mongoose = require('mongoose');
 
 const addressSchema = new mongoose.Schema({
-
     address_name: {
         type: String,
         required: [true, 'Please enter address name']
     },
-
     name: {
         type: String,
-        required: [true, 'Pleae enter name']
-    },  
-
+        required: [true, 'Please enter name']
+    },
     phone: {
         type: String,
         required: [true, 'Please enter phone']
     },
-
     email: {
         type: String,
         required: [false, 'Please enter email']
     },
-
     address: {
         type: String,
-        required: [true, 'please enter address']
+        required: [true, 'Please enter address']
     },
-
     locality: {
         type: String,
         required: [false, 'Please enter locality']
     },
-
     landmark: {
         type: String,
-        required: [false, 'Pleae enter landmark']
+        required: [false, 'Please enter landmark']
     },
-
     city: {
         type: String,
         required: [true, 'Please enter city']
     },
-
     pin_code: {
         type: String,
         required: [true, 'Please enter pin code']
     },
-
     state: {
         type: String,
         required: [true, 'Please enter state']
     },
-
 });
 
-const userModel = mongoose.Schema({
+const userInfoSchema = new mongoose.Schema({
+    key: {
+        type: String,
+        required: [true, 'Please enter key']
+    },
+    value: {
+        type: mongoose.Schema.Types.Mixed, // Can store various types (String, Number, Object, etc.)
+        required: [true, 'Please enter value']
+    }
+});
 
+const userModel = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'Please enter name'],
+        required: [false, 'Please enter name']
     },
-
     phone: {
         type: String,
-        required: [true, 'Please enter phone'],
+        required: [true, 'Please enter phone']
     },
-
     email: {
         type: String,
-        required: [false, 'Please enter an email'],
+        required: [false, 'Please enter email']
     },
-
     address: [
         {
             type: addressSchema,
-            required: [false, 'Please enter an address']
-        },
+            required: [false, 'Please enter address']
+        }
     ],
-
     status: {
         type: Boolean,
-        required: [true, 'Please enter status'],
+        required: [false, 'Please enter status']
     },
-
     device: {
         type: String,
         required: [false, 'Please enter device']
     },
-
+    userInfo: [
+        {
+            type: userInfoSchema, // Storing the array of JSON objects
+            required: false
+        }
+    ]
 }, {
     timestamps: true,   
     toJSON: { virtuals: true },
@@ -104,6 +103,5 @@ userModel.set('toJSON', {
 userModel.set('toObject', {
     virtuals: true
 });
-
 
 module.exports = mongoose.model('User', userModel);

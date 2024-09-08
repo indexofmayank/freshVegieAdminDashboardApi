@@ -14,5 +14,6 @@ router.route('/delete/:userId/:addressId').delete(userController.deleteAddress);
 router.route('/transactions/:userId').get(userController.getUserTranscationByUserId);
 router.route('/metadata/:userId').get(userController.getUserMetaDataByUserId);
 router.route('/address/:userId').get(userController.getUserAllAddressByUserId);
+router.route('/dropdown/createOrder').get(userController.getUserNameDropdownForCreateOrder);
 
 module.exports = router;

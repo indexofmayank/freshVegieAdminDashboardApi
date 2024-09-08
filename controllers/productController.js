@@ -468,3 +468,36 @@ exports.getProductForDropdown = catchAsyncError (async (req, res, next) => {
     });
   }
 });
+
+exports.getProductDropdownForCreateOrder = catchAsyncError(async (req, res, next) => {
+  try {
+    const { name } = req.query;
+    const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};
+
+    const Products = await Product.aggregate([
+      {
+        $match: matchCondition
+      },
+      {
+        $project: {
+          name: { $ifNull: ["$name", "N/A"] }, // Handle missing product name
+          image: { $ifNull: ["$images.secure_url", "N/A"] }, // Handle missing image
+          price: {
+            $ifNull: [
+              { $ifNull: ["$offer_price", "$price"] }, 
+              "N/A"
+            ]
+          }
+        },
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: Products,
+    });
+
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while getting dropdown');
+  }
+});
