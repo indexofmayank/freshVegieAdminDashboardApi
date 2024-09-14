@@ -138,6 +138,25 @@ const orderSchema = mongoose.Schema({
         require: false,
         default: 0,
       },
+      incrementvalue:{
+        type: Number,
+        require: false,
+        default: 0,
+      },
+      maxquantity:{
+        type: Number,
+        require: false,
+        default: 0,
+      },
+      minquantity:{
+        type: Number,
+        require: false,
+        default: 0,
+      },
+      unit:{
+        type: String,
+        required: false,
+      },
       tax: {
         type: Number,
         required: false,
