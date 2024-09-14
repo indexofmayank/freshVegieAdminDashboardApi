@@ -91,6 +91,10 @@ const productSchema = mongoose.Schema({
     type: Number,
     required: [true, 'Please enter a product detail max']
   },
+  increment_value: {
+    type: Number,
+    required: [true, 'Please enter a Increment value']
+  },
 
   featured: {
     type: Boolean,

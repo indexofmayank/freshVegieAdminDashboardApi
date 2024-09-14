@@ -113,7 +113,8 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
           stock_notify: 1,
           tax: 1,
           product_detail_min: 1,
-          product_detail_max: 1
+          product_detail_max: 1,
+          increment_value: 1,
         }
       },
       {$sort: {name: 1}},
@@ -393,6 +394,7 @@ exports.getProductByIdForAdmin = catchAsyncError (async (req, res, next) => {
           product_status: 1,
           product_detail_min: 1,
           product_detail_max: 1,
+          increment_value: 1,
           featured: 1
         }
       },
@@ -480,14 +482,10 @@ exports.getProductDropdownForCreateOrder = catchAsyncError(async (req, res, next
       },
       {
         $project: {
-          name: { $ifNull: ["$name", "N/A"] }, // Handle missing product name
-          image: { $ifNull: ["$images.secure_url", "N/A"] }, // Handle missing image
-          price: {
-            $ifNull: [
-              { $ifNull: ["$offer_price", "$price"] }, 
-              "N/A"
-            ]
-          }
+          name: { $ifNull: ["$name", "N/A"] }, 
+          image: { $ifNull: ["$images.secure_url", "N/A"] },
+          offer_price: {$ifNull: ["$offer_price", "N/A"]},
+          price: {$ifNull: ["$price", "N/A"]}
         },
       }
     ]);
