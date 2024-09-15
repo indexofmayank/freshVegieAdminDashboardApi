@@ -99,7 +99,7 @@ exports.getOrderLogsByUserId = catchAsyncError(async (req, res, next) => {
         }
       },
       {
-        $sort: { timestamp: -1 } // Changed to -1 for sorting newest to oldest
+        $sort: { timestampFormatted: 1 } // Changed to -1 for sorting newest to oldest
       }, { $skip: skip },
       { $limit: limit }
     ]).toArray();

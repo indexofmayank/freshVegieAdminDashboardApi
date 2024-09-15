@@ -54,7 +54,7 @@ const getLatLng = async (toCheckAddress) => {
   }
 };
 
-exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
+exports.createNewOrder = catchAsyncError(async (req, res, next) => {
   const {
     shippingInfo,
     orderItems,
@@ -71,16 +71,16 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    for(let item of orderItems) {
+    for (let item of orderItems) {
       const product = await Product.findById(item.id).session(session);
       const subSession = await mongoose.startSession();
       subSession.startTransaction();
       try {
-        if(parseInt(product.stock) < parseInt(item.quantity)) {
+        if (parseInt(product.stock) < parseInt(item.quantity)) {
           throw new ErrorHandler(`Not enough stock for product ${product.name}`);
         }
         product.stock -= item.quantity;
-        await product.save({subSession});
+        await product.save({ subSession });
       } catch (error) {
         await subSession.abortTransaction();
         console.error(error.message);
@@ -99,10 +99,10 @@ exports.createNewOrder = catchAsyncError(async ( req, res, next) => {
       shippingPrice,
       totalPrice,
       orderStatus,
-      deliverAt    
+      deliverAt
     });
 
-    const result = await newOrder.save({session});
+    const result = await newOrder.save({ session });
     await session.commitTransaction();
     session.endSession();
     orderLogger.info(`Order created: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
@@ -160,7 +160,7 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
       success: true,
       data: order
     });
-  
+
   } catch (error) {
     console.error('Error while getting order: ', error);
     throw new ErrorHandler('Unable to generate orderId', 500);
@@ -183,32 +183,32 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
             timezone: 'UTC'
           }
         }
-      } 
+      }
     },
     {
       $project: {
-        orderId: {$ifNull: ["$orderId", 'N/A']},
-        timestampFormatted: {$ifNull: ["$timestampFormatted", "N/A"]},
-        user: {$ifNull: ["$user.name", "N/A"]},
-        totalItems: {$ifNull: [{$size: "$orderItems"}, "N/A"]},
-        weight: {$ifNull: ["$total_quantity", "N/A"]},
-        location: {$ifNull: ["$shippingInfo.deliveryAddress.state", "N/A"]},
-        payment_status: {$ifNull: ["$paymentInfo.status", "N/A"]},
-        order_status: {$ifNull: ["$orderStatus", "N/A"]},
-        grand_total: {$ifNull: ["$grandTotal", "N/A"]},
+        orderId: { $ifNull: ["$orderId", 'N/A'] },
+        timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+        user: { $ifNull: ["$user.name", "N/A"] },
+        totalItems: { $ifNull: [{ $size: "$orderItems" }, "N/A"] },
+        weight: { $ifNull: ["$total_quantity", "N/A"] },
+        location: { $ifNull: ["$shippingInfo.deliveryAddress.state", "N/A"] },
+        payment_status: { $ifNull: ["$paymentInfo.status", "N/A"] },
+        order_status: { $ifNull: ["$orderStatus", "N/A"] },
+        grand_total: { $ifNull: ["$grandTotal", "N/A"] },
         createdAt: 1
       }
     },
-    {$sort: {createdAt: -1}},
-    {$skip: skip},
-    {$limit: limit}
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit }
   ]);
-  if(!orders) {
+  if (!orders) {
     return next(new ErrorHandler('No order found', 400));
   }
   const totalOrders = await Order.countDocuments();
   res.status(200).json({
-    success: true, 
+    success: true,
     page,
     limit,
     totalPages: Math.ceil(totalOrders / limit),
@@ -237,16 +237,16 @@ exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
       order.deliveredAt = Date.now();
     }
     const result = await order.save({ validateBeforeSave: false });
-    if(!result) {
+    if (!result) {
       throw new ErrorHandler('Not able to update');
     }
 
     const data = await Order.aggregate([
       {
-        $match: {_id: mongoose.Types.ObjectId(req.params.id)}
+        $match: { _id: mongoose.Types.ObjectId(req.params.id) }
       },
       {
-        $project : {
+        $project: {
           orderId: 1,
           user: {
             userId: 1
@@ -255,7 +255,7 @@ exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
         }
       }
     ]);
-    if(!data) {
+    if (!data) {
       throw new ErrorHandler('Not able to update');
     }
     orderLogger.info(`Order status updated for Order ID - ${data[0].orderId} to ${data[0].orderStatus} for User ID - ${data[0].user.userId}`);
@@ -263,7 +263,7 @@ exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
       success: true,
       data: result,
     });
-  
+
   } catch (error) {
     console.error('Error while getting updating order', 500);
     orderLogger.info(`Order status updation failed for Order ID - ${data[0].orderId} to ${data[0].orderStatus} for User ID - ${data[0].user.userId}`);
@@ -298,15 +298,15 @@ const updateStock = async (id, quantity) => {
 
 exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
   console.log('we hit here --')
-    const orderId = req.params.orderId;
-    console.log(orderId);
+  const orderId = req.params.orderId;
+  console.log(orderId);
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     const orderWithItems = await Order.aggregate([
       {
-        $match: {_id: mongoose.Types.ObjectId(orderId)}
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
       },
       {
         $project: {
@@ -317,13 +317,13 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
                   input: "$orderItems",
                   as: "item",
                   in: {
-                    name: { $ifNull: ["$$item.name", "N/A"]},
-                    item_price: { $ifNull: ["$$item.item_price", "N/A"]},
-                    quantity: {$ifNull: ["$$item.quantity", "N/A"]},
-                    image: {$ifNull: ["$$item.image", "N/A"]},
-                    item_total_discount: {$ifNull:  ["$$item.item_total_discount", "N/A"]},
-                    item_total_tax: {$ifNull: ["$$item.item_total_tax", "N/A"]},
-                    item_total: {$ifNull: ["$$item.item_total", "N/A"]}
+                    name: { $ifNull: ["$$item.name", "N/A"] },
+                    item_price: { $ifNull: ["$$item.item_price", "N/A"] },
+                    quantity: { $ifNull: ["$$item.quantity", "N/A"] },
+                    image: { $ifNull: ["$$item.image", "N/A"] },
+                    item_total_discount: { $ifNull: ["$$item.item_total_discount", "N/A"] },
+                    item_total_tax: { $ifNull: ["$$item.item_total_tax", "N/A"] },
+                    item_total: { $ifNull: ["$$item.item_total", "N/A"] }
                   }
                 }
               },
@@ -331,15 +331,15 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
               limit
             ]
           },
-          total_discount: { $ifNull: ["$total_discount", "N/A"]},
-          total_item_count: {$ifNull: ["$total_item_count", "N/A"]},
-          total_tax: {$ifNull: ["$total_tax", "N/A"]},
-          items_grand_total: {$ifNull: ["$items_grand_total", "N/A"]},
-          grand_total: {$ifNull: ["$grandTotal", "N/A"]}
+          total_discount: { $ifNull: ["$total_discount", "N/A"] },
+          total_item_count: { $ifNull: ["$total_item_count", "N/A"] },
+          total_tax: { $ifNull: ["$total_tax", "N/A"] },
+          items_grand_total: { $ifNull: ["$items_grand_total", "N/A"] },
+          grand_total: { $ifNull: ["$grandTotal", "N/A"] }
         }
-      }    
+      }
     ]);
-    if(!orderWithItems) {
+    if (!orderWithItems) {
       throw new ErrorHandler('Dont found worth');
     }
     const totalItems = orderWithItems[0].orderItems.length;
@@ -357,7 +357,7 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
   }
 });
 
-exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
+exports.getOrderHistoryByUserId = catchAsyncError(async (req, res, next) => {
 
   try {
     const page = parseInt(req.query.page) || 1;
@@ -386,14 +386,14 @@ exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
           totalItems: { $ifNull: [{ $size: "$orderItems" }, "N/A"] },
           orderStatus: { $ifNull: ["$orderStatus", "N/A"] },
           deliveryType: { $ifNull: ["$deliveryType", "N/A"] },
-          totalPrice: {$ifNull: ["$totalPrice", "N/A"]}
+          totalPrice: { $ifNull: ["$totalPrice", "N/A"] }
         }
       },
       { $sort: { createdAt: 1 } },
       { $skip: skip },
       { $limit: limit }
     ]);
-    if(!orderHistory) {
+    if (!orderHistory) {
       throw new ErrorHandler('Some thing went wrong');
     }
     console.log(orderHistory);
@@ -413,26 +413,26 @@ exports.getOrderHistoryByUserId = catchAsyncError (async (req, res, next) => {
 
 exports.getUserBillingInfoByOrderId = catchAsyncError(async (req, res, next) => {
   const orderId = req.params.orderId;
-  if(!orderId) {
+  if (!orderId) {
     throw new ErrorHandler('Order not found', 400);
   }
-try {
+  try {
     const userBillingInfo = await Order.aggregate([
       {
-        $match: {_id:  mongoose.Types.ObjectId(orderId)}
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
       },
       {
         $project: {
           _id: 0, // Exclude the _id field
-          name: {$ifNull: ['$shippingInfo.billingAddress.name', 'N/A']},
-          phone: {$ifNull: ['$shippingInfo.billingAddress.phone', 'N/A']},
-          email: {$ifNull: ['$shippingInfo.billingAddress.email', 'N/A']},
-          address: {$ifNull: ['$shippingInfo.billingAddress.address', 'N/A']},
-          locality: {$ifNull: ['$shippingInfo.billingAddress.locality', 'N/A']},
-          landmark: {$ifNull: ['$shippingInfo.billingAddress.landmark', 'N/A']},
-          city: {$ifNull: ['$shippingInfo.billingAddress.city', 'N/A']},
-          pin_code: {$ifNull: ['$shippingInfo.billingAddress.pin_code', 'N/A']},
-          state: {$ifNull: ['$shippingInfo.billingAddress.state', 'N/A']}
+          name: { $ifNull: ['$shippingInfo.billingAddress.name', 'N/A'] },
+          phone: { $ifNull: ['$shippingInfo.billingAddress.phone', 'N/A'] },
+          email: { $ifNull: ['$shippingInfo.billingAddress.email', 'N/A'] },
+          address: { $ifNull: ['$shippingInfo.billingAddress.address', 'N/A'] },
+          locality: { $ifNull: ['$shippingInfo.billingAddress.locality', 'N/A'] },
+          landmark: { $ifNull: ['$shippingInfo.billingAddress.landmark', 'N/A'] },
+          city: { $ifNull: ['$shippingInfo.billingAddress.city', 'N/A'] },
+          pin_code: { $ifNull: ['$shippingInfo.billingAddress.pin_code', 'N/A'] },
+          state: { $ifNull: ['$shippingInfo.billingAddress.state', 'N/A'] }
         }
       }
     ]);
@@ -443,32 +443,32 @@ try {
       success: true,
       userBillingInfo: userBillingInfo
     });
-} catch (error) {
-  console.error('Error while getting user history of order', 500, error.message);
-  throw new ErrorHandler('Not able to get user history');
-}
+  } catch (error) {
+    console.error('Error while getting user history of order', 500, error.message);
+    throw new ErrorHandler('Not able to get user history');
+  }
 });
 
 exports.getUserPaymentDetailByOrderId = catchAsyncError(async (req, res, next) => {
   const orderId = req.params.orderId;
-  if(!orderId) {
+  if (!orderId) {
     throw new ErrorHandler('Order not found', 400);
   }
   try {
     const userPaymentDetail = await Order.aggregate([
       {
-        $match : {_id: mongoose.Types.ObjectId(orderId)}
-      }, 
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
+      },
       {
         $project: {
           _id: 0,
-          paymentType: {$ifNull: ["$paymentInfo.payment_type", "N/A"]},
-          status: {$ifNull: ["$paymentInfo.status", "N/A"]},
-          amount: {$ifNull: ["$paymentInfo.amount", "N/A"]}
+          paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
+          status: { $ifNull: ["$paymentInfo.status", "N/A"] },
+          amount: { $ifNull: ["$paymentInfo.amount", "N/A"] }
         }
       }
     ]);
-    if(!userPaymentDetail.length) {
+    if (!userPaymentDetail.length) {
       return next(new ErrorHandler('User payment status not found', 404));
     }
     res.status(200).json({
@@ -477,32 +477,32 @@ exports.getUserPaymentDetailByOrderId = catchAsyncError(async (req, res, next) =
     });
   } catch (error) {
     console.error('Error while getting user history of order', 500, error.message);
-    throw new ErrorHandler('Not able to get user history');  
+    throw new ErrorHandler('Not able to get user history');
   }
 });
 
 exports.getUserDeliveryInfoByOrderId = catchAsyncError(async (req, res, next) => {
   const orderId = req.params.orderId;
-  if(!orderId) {
+  if (!orderId) {
     throw new ErrorHandler('Order not found', 404);
   }
   try {
     const userDeliveryDetail = await Order.aggregate([
       {
-        $match: {_id: mongoose.Types.ObjectId(orderId)}
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
       },
       {
         $project: {
           _id: 0,
-          deliveryType: {$ifNull: ["$deliveryInfo.deliveryType", "N/A"]},
-          deliveryCost: {$ifNull: ["$deliveryInfo.deliveryCost", "N/A"]},
-          name: {$ifNull: ["$deliveryInfo.deliveryPartner.name", "N/A"]},
-          phone: {$ifNull: ["$deliveryInfo.deliveryPartner.phone", "N/A"]},
-          email: {$ifNull: ["$deliveryInfo.deliveryPartner.email", "N/A"]}
+          deliveryType: { $ifNull: ["$deliveryInfo.deliveryType", "N/A"] },
+          deliveryCost: { $ifNull: ["$deliveryInfo.deliveryCost", "N/A"] },
+          name: { $ifNull: ["$deliveryInfo.deliveryPartner.name", "N/A"] },
+          phone: { $ifNull: ["$deliveryInfo.deliveryPartner.phone", "N/A"] },
+          email: { $ifNull: ["$deliveryInfo.deliveryPartner.email", "N/A"] }
         }
       }
     ]);
-    if(!userDeliveryDetail.length) {
+    if (!userDeliveryDetail.length) {
       return next(new ErrorHandler('Delivery detail not found', 404));
     }
     res.status(200).json({
@@ -511,25 +511,25 @@ exports.getUserDeliveryInfoByOrderId = catchAsyncError(async (req, res, next) =>
     })
   } catch (error) {
     console.error('Error while getting user delivery details of the order', 500, error.message);
-    throw new ErrorHandler('Not able to get user delivery info');  
+    throw new ErrorHandler('Not able to get user delivery info');
   }
 });
 
-exports.getCustomOrderIdByOrderId = (catchAsyncError (async (req, res, next) => {
+exports.getCustomOrderIdByOrderId = (catchAsyncError(async (req, res, next) => {
 
   const orderId = req.params.orderId;
   try {
     const customOrderId = await Order.aggregate([
       {
-        $match: {_id: mongoose.Types.ObjectId(orderId)}
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
       },
       {
         $project: {
-          orderId: {$ifNull: ["$orderId", "N/A"]}
+          orderId: { $ifNull: ["$orderId", "N/A"] }
         }
       }
     ]);
-    if(!customOrderId) {
+    if (!customOrderId) {
       throw new ErrorHandler('Order not found', 404);
     }
     res.status(200).json({
@@ -542,7 +542,7 @@ exports.getCustomOrderIdByOrderId = (catchAsyncError (async (req, res, next) => 
   }
 }));
 
-exports.updatePaymentStatusByOrderId = catchAsyncError (async (req, res, next) => {
+exports.updatePaymentStatusByOrderId = catchAsyncError(async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
@@ -556,10 +556,11 @@ exports.updatePaymentStatusByOrderId = catchAsyncError (async (req, res, next) =
 
     // Find the order by orderId and update the paymentInfo.status
     const updatedOrder = await Order.findOneAndUpdate(
-      {_id: orderId },
-      { 'paymentInfo.status': status
-       }, 
-      { new: true, runValidators: true } 
+      { _id: orderId },
+      {
+        'paymentInfo.status': status
+      },
+      { new: true, runValidators: true }
     );
 
     if (!updatedOrder) {
@@ -583,7 +584,7 @@ exports.updatePaymentStatusByOrderId = catchAsyncError (async (req, res, next) =
   }
 });
 
-exports.getQuantityWiseOrderByOrderId = (catchAsyncError (async (req, res, next) => {
+exports.getQuantityWiseOrderByOrderId = (catchAsyncError(async (req, res, next) => {
 
   try {
     const orderId = req.params.orderId;
@@ -592,7 +593,7 @@ exports.getQuantityWiseOrderByOrderId = (catchAsyncError (async (req, res, next)
     const skip = (page - 1) * limit;
     const quantityWiseOrder = await Order.aggregate([
       {
-        $match: {_id: mongoose.Types.ObjectId(orderId)}
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
       },
       {
         $project: {
@@ -602,10 +603,10 @@ exports.getQuantityWiseOrderByOrderId = (catchAsyncError (async (req, res, next)
                 $map: {
                   input: "$orderItems",
                   as: "item",
-                  in : {
-                    name: {$ifNull: ["$$item.name", "N/A"]},
-                    quantity: {$ifNull: ["$$item.quantity", "N/A"]},
-                    image: {$ifNull: ["$$item.image", "N/A"]}
+                  in: {
+                    name: { $ifNull: ["$$item.name", "N/A"] },
+                    quantity: { $ifNull: ["$$item.quantity", "N/A"] },
+                    image: { $ifNull: ["$$item.image", "N/A"] }
                   }
                 }
               },
@@ -613,48 +614,49 @@ exports.getQuantityWiseOrderByOrderId = (catchAsyncError (async (req, res, next)
               limit
             ]
           },
-          total_quantity: {$ifNull: ["$total_quantity" , "N/A"]}
+          total_quantity: { $ifNull: ["$total_quantity", "N/A"] }
         }
       }
     ]);
-    if(!quantityWiseOrder){
-     throw new ErrorHandler('Not found', 500);
+    if (!quantityWiseOrder) {
+      throw new ErrorHandler('Not found', 500);
     }
-   const totalItems = quantityWiseOrder[0].orderItems.length;
-   return res.status(200).json({
-    success: true,
-    page,
-    limit,
-    totalPage: Math.ceil(totalItems / limit),
-    totalItems: totalItems,
-    data: quantityWiseOrder[0]
-   });
+    const totalItems = quantityWiseOrder[0].orderItems.length;
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPage: Math.ceil(totalItems / limit),
+      totalItems: totalItems,
+      data: quantityWiseOrder[0]
+    });
   } catch (error) {
     console.error(error.message);
     throw new ErrorHandler('Something went wrong', 400);
   }
 }));
 
-exports.markOrderStatusPaidByOrderId = (catchAsyncError (async (req, res, next) => {
+exports.markOrderStatusPaidByOrderId = (catchAsyncError(async (req, res, next) => {
   try {
     const orderId = req.params.orderId;
-    const {amount} = req.body;
+    const { amount } = req.body;
     console.log(amount);
-    if(!amount) {
+    if (!amount) {
       return res.status(400).json({
         success: false,
         message: 'amount is required in the request body'
       });
     }
     const updatedOrder = await Order.findOneAndUpdate(
-      {_id: orderId},
-      {'paymentInfo.status': "completed",
+      { _id: orderId },
+      {
+        'paymentInfo.status': "completed",
         'paymentInfo.amount': amount
       },
-      { new : true, runValidators: true}
+      { new: true, runValidators: true }
     );
     console.log(updatedOrder);
-    if(!updatedOrder) {
+    if (!updatedOrder) {
       return res.status(404).json({
         success: false,
         message: 'Something wrong happened while updating order',
@@ -671,15 +673,15 @@ exports.markOrderStatusPaidByOrderId = (catchAsyncError (async (req, res, next) 
   }
 }));
 
-exports.markOrderStatusToCancelledByOrderId = (catchAsyncError (async (req, res, next) => {
+exports.markOrderStatusToCancelledByOrderId = (catchAsyncError(async (req, res, next) => {
   try {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     const cancelledOrder = await Order.findOneAndUpdate(
-      {_id: orderId},
-      {'orderStatus': 'cancelled'},
-      { new: true, runValidators: true}
+      { _id: orderId },
+      { 'orderStatus': 'cancelled' },
+      { new: true, runValidators: true }
     );
-    if(!cancelledOrder) {
+    if (!cancelledOrder) {
       return res.status(404).json({
         success: false,
         message: 'something wrong happed while updating order status to cancelled'
@@ -697,17 +699,17 @@ exports.markOrderStatusToCancelledByOrderId = (catchAsyncError (async (req, res,
   }
 }));
 
-exports.getSingleOrderStatusByOrderId = (catchAsyncError (async (req, res, next) => {
+exports.getSingleOrderStatusByOrderId = (catchAsyncError(async (req, res, next) => {
   try {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     console.log(orderId);
     const orderStatus = await Order.aggregate([
       {
-        $match: {_id: mongoose.Types.ObjectId(orderId)}
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
       },
       {
         $project: {
-          status: {$ifNull: ["$orderStatus", "N/A"]}
+          status: { $ifNull: ["$orderStatus", "N/A"] }
         }
       }
     ]);
@@ -721,17 +723,17 @@ exports.getSingleOrderStatusByOrderId = (catchAsyncError (async (req, res, next)
   }
 }));
 
-exports.markOrderStatusAsDeliveredByOrderId = (catchAsyncError (async (req, res, next) => {
+exports.markOrderStatusAsDeliveredByOrderId = (catchAsyncError(async (req, res, next) => {
   try {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     const deliveredStatusOrder = await Order.findOneAndUpdate(
-      {_id: orderId},
+      { _id: orderId },
       {
-        'orderStatus' : 'delivered',
-        'deliverAt' : Date.now()
+        'orderStatus': 'delivered',
+        'deliverAt': Date.now()
       }
     );
-    if(!deliveredStatusOrder) {
+    if (!deliveredStatusOrder) {
       return res.status(404).json({
         success: false,
         message: 'Not able to marked order status as delivered'
@@ -747,17 +749,72 @@ exports.markOrderStatusAsDeliveredByOrderId = (catchAsyncError (async (req, res,
   }
 }));
 
-exports.getOrderByOrderIdForUser = (catchAsyncError (async (req, res, next) => {
+exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
   try {
-    const orderId = req.params.orderId
-    if(!orderId) {
+    const orderId = req.params.orderId;
+    let logs;
+    if (!orderId) {
       throw new ErrorHandler('orderId not valid', 404);
     }
-    const OrderForUser = await Order.findById({_id: orderId});
-
-    return res.status(200).json({
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    const OrderForUser = await Order.findById({ _id: orderId }).session(session);
+    if (!OrderForUser) {
+      throw new ErrorHandler('Not found');
+    }
+    console.log(OrderForUser);
+    const subSession = await mongoose.startSession();
+    subSession.startTransaction();
+    try {
+      const orderLogCollection = mongoose.connection.collection('orderLogs');
+      logs = await orderLogCollection.aggregate([
+        {
+          $match: {
+            message: { $regex: `Order ID - ${OrderForUser.orderId}`, $options: 'i' },
+          },
+        },
+        {
+          $addFields: {
+            status: {
+              $switch: {
+                branches: [
+                  { case: { $regexMatch: { input: "$message", regex: /Order created:/ } }, then: "Created" },
+                  { case: { $regexMatch: { input: "$message", regex: /Assign Delivery/ } }, then: "Assign Delivery" },
+                  { case: { $regexMatch: { input: "$message", regex: /Packed/ } }, then: "Packed" },
+                  { case: { $regexMatch: { input: "$message", regex: /Rejected/ } }, then: "Rejected" },
+                  { case: { $regexMatch: { input: "$message", regex: /Failed/ } }, then: "Failed" }
+                ],
+                default: "Unknown"
+              }
+            },
+            time: {
+              $dateToString: {
+                format: "%Y-%m-%d %H:%M:%S",
+                date: "$timestamp"
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            status: 1,
+            time: 1
+          }
+        },
+        {$sort: {time: -1}}
+      ]).toArray();
+      console.log(logs);
+      await subSession.endSession();
+    } catch (error) {
+      await subSession.abortTransaction();
+      console.log(error.message);
+      throw new ErrorHandler('Something went wrong');
+    }
+    await session.endSession();
+    res.status(200).json({
       success: true,
-      data: OrderForUser
+      logs: logs,
+      data: OrderForUser,
     });
   } catch (error) {
     console.error('error while getting, order by Id');
@@ -765,9 +822,9 @@ exports.getOrderByOrderIdForUser = (catchAsyncError (async (req, res, next) => {
   }
 }));
 
-exports.updateDeliveryDetailsToOrder = (catchAsyncError (async (req, res, next) => {
+exports.updateDeliveryDetailsToOrder = (catchAsyncError(async (req, res, next) => {
   try {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     const {
       type,
       name,
@@ -775,15 +832,15 @@ exports.updateDeliveryDetailsToOrder = (catchAsyncError (async (req, res, next) 
       email
     } = req.body;
     const deliveryPartnerDetails = await Order.findOneAndUpdate(
-      {_id: orderId},
+      { _id: orderId },
       {
-        'deliveryInfo.deliveryType' : type === '1' ? 'Third party delivery partner' : 'In house delivery partner' || null,
-        'deliveryInfo.deliveryPartner.name' : name || null,
+        'deliveryInfo.deliveryType': type === '1' ? 'Third party delivery partner' : 'In house delivery partner' || null,
+        'deliveryInfo.deliveryPartner.name': name || null,
         'deliveryInfo.deliveryPartner.phone': isNaN(phone) ? null : phone,
-        'deliveryInfo.deliveryPartner.email' : email || null
+        'deliveryInfo.deliveryPartner.email': email || null
       }
     );
-    if(!deliveryPartnerDetails) {
+    if (!deliveryPartnerDetails) {
       return res.status(404).json({
         success: false,
         message: 'Not able to update delivery partner details'
