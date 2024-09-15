@@ -140,4 +140,20 @@ exports.getPolygonById = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         res.status(500).json({success: false, message: 'Server error', error: error.message});
     }
-}); 
+});
+
+exports.getActivePolygon = catchAsyncError( async (req, res, next) => {
+    try {
+        const activePolygon = await Polygon.findOne({'status': true});
+        if(!activePolygon){
+            throw new ErrorHandler('Not found', 400);
+        }
+        return res.status(200).json({
+            success: true,
+            data: activePolygon
+        });
+    } catch (error) {
+        console.log('Something went wrong while getting the active polygon');
+        throw new ErrorHandler('Something went wrong while getting the polygon', 404);
+    }
+});

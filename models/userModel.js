@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const addressSchema = new mongoose.Schema({
     address_name: {
         type: String,
-        required: [true, 'Please enter address name']
+        required: [false, 'Please enter address name']
     },
     name: {
         type: String,
@@ -19,7 +19,7 @@ const addressSchema = new mongoose.Schema({
     },
     address: {
         type: String,
-        required: [true, 'Please enter address']
+        required: [false, 'Please enter address']
     },
     locality: {
         type: String,
@@ -72,7 +72,7 @@ const userModel = new mongoose.Schema({
     },
     userInfo: [
         {
-            type: mongoose.Schema.Types.Mixed,  // Allows any type of data (string, object, array, etc.)
+            type: mongoose.Schema.Types.Mixed, 
             required: false
         }
     ]}, {

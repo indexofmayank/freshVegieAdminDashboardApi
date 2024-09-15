@@ -6,4 +6,5 @@ router.route('/').get(polygonController.getAllPolygon);
 router.route('/:polygonId').put(polygonController.updatePolygon);
 router.route('/:polygonId').delete(polygonController.deletePolygon);
 router.route('/:polygonId').get(polygonController.getPolygonById);
+router.route('/active/polygon').get(polygonController.getActivePolygon);
 module.exports = router;
