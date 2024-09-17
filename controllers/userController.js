@@ -168,7 +168,7 @@ exports.updateUser = catchAsyncError(async (req, res, next) => {
 
 exports.addUserAddress = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
-    const {address_name, name, phone, email, address, locality, landmark, city, pin_code, state } = req.body;
+    const { address_name, name, phone, email, address, locality, landmark, city, pin_code, state } = req.body;
     try {
         const user = await User.findById(id);
         if (!user) {
@@ -261,18 +261,18 @@ exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
             },
             {
                 $project: {
-                    orderId: { $ifNull: ["$orderId", "N/A"]},
-                    paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"]},
-                    paymentStatus: { $ifNull: ["$paymentInfo.status", "N/A"]},
-                    totalPrice: { $ifNull: ["$totalPrice", "N/A"]},
-                    timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"]}
+                    orderId: { $ifNull: ["$orderId", "N/A"] },
+                    paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
+                    paymentStatus: { $ifNull: ["$paymentInfo.status", "N/A"] },
+                    totalPrice: { $ifNull: ["$totalPrice", "N/A"] },
+                    timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] }
                 }
             },
             { $sort: { createdAt: 1 } },
             { $skip: skip },
             { $limit: limit }
         ]);
-        
+
         if (!transactionHistory) {
             throw new ErrorHandler('No transaction found', 400);
         }
@@ -298,18 +298,18 @@ exports.getUserTranscationByUserId = catchAsyncError(async (req, res, next) => {
 exports.getUserMetaDataByUserId = catchAsyncError(async (req, res, next) => {
     const userId = req.params.userId;
     try {
-        if(!userId) {
+        if (!userId) {
             throw new ErrorHandler('User not found', 404);
         }
         const userMetaData = await User.aggregate([
             {
-                $match: {_id: mongoose.Types.ObjectId(userId)}
+                $match: { _id: mongoose.Types.ObjectId(userId) }
             },
             {
                 $project: {
-                    name: { $ifNull: ["$name", "N/A"]},
-                    email: { $ifNull: ["$email", "N/A"]},
-                    phone: { $ifNull: ["$phone", "N/A"]}
+                    name: { $ifNull: ["$name", "N/A"] },
+                    email: { $ifNull: ["$email", "N/A"] },
+                    phone: { $ifNull: ["$phone", "N/A"] }
                 }
             }
         ]);
@@ -367,13 +367,12 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         console.error(error.message);
         throw new ErrorHandler('Something went wrong', 500);
-    }
-});
+    }});
 
 exports.getUserNameDropdownForCreateOrder = catchAsyncError(async (req, res, next) => {
     try {
         const { name } = req.query;
-        const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};    
+        const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};
         const usernames = await User.aggregate([
             {
                 $match: matchCondition
@@ -391,5 +390,94 @@ exports.getUserNameDropdownForCreateOrder = catchAsyncError(async (req, res, nex
     } catch (error) {
         console.error(error);
         throw new ErrorHandler('Something wentn wrong', 500);
+    }
+});
+
+exports.getUserAllAddressByUserIdForCreateOrder = catchAsyncError(async (req, res, next) => {
+    const userId = req.params.userId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = parseInt(page - 1) * limit;
+    try {
+        if (!userId) {
+            throw new ErrorHandler('User not found', 404);
+        }
+        const userAddresses = await User.aggregate([
+            {
+                $match: { _id: mongoose.Types.ObjectId(userId) }
+            },
+            {
+                $project: {
+                    address: {
+                        $slice: [
+                            {
+                                $map: {
+                                    input: "$address",
+                                    as: "data",
+                                    in: {
+                                        address_name: { $ifNull: ["$$data.address_name", "N/A"] },
+                                        name: { $ifNull: ["$$data.name", "N/A"] },
+                                        phone: { $ifNull: ["$$data.phone", "N/A"] },
+                                        email: { $ifNull: ["$$data.email", "N/A"] },
+                                        address: { $ifNull: ["$$data.address", "N/A"] },
+                                        locality: { $ifNull: ["$$data.locality", "N/A"] },
+                                        landmark: { $ifNull: ["$$data.landmark", "N/A"] },
+                                        city: { $ifNull: ["$$data.city", "N/A"] },
+                                        state: { $ifNull: ["$$data.state", "N/A"] },
+                                        pin_code: { $ifNull: ["$$data.pin_code", "N/A"] },
+                                        state: { $ifNull: ["$$data.state", "N/A"] }
+
+                                    }
+                                }
+                            },
+                            skip,
+                            limit
+                        ]
+                    }
+                }
+            },
+            // { $sort: { createdAt: 1 } },
+            // { $skip: skip },
+            // { $limit: limit }
+        ]);
+        console.log(userAddresses);
+        if (!userAddresses) {
+            throw new ErrorHandler('Server error', 500);
+        }
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            data: userAddresses
+        });
+    } catch (error) {
+        console.error(error.message);
+        throw new ErrorHandler('Something went wrong', 500);
+    }
+});
+
+exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) => {
+    try {
+        const userMetaInfo = await User.aggregate([
+            {
+                $match: {_id: mongoose.Types.ObjectId(req.params.userId)}
+            },
+            {
+                $project: {
+                    name: {$ifNull: ['$name', 'N/a']},
+                    phone: {$ifNull: ['$phone', 'N/a']},
+                    email: {$ifNull: ["email", 'N/a']}
+                }
+            }
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: userMetaInfo
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        throw new ErrorHandler('Something went wrong', 500);
     }
 });

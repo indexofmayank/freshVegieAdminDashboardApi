@@ -55,6 +55,7 @@ const getLatLng = async (toCheckAddress) => {
 };
 
 exports.createNewOrder = catchAsyncError(async (req, res, next) => {
+  console.log('we can hre')
   const {
     shippingInfo,
     orderItems,
@@ -855,6 +856,7 @@ exports.updateDeliveryDetailsToOrder = (catchAsyncError(async (req, res, next) =
     throw new ErrorHandler('Something went wrong while updating delivery partner details');
   }
 }));
+
 
 
 

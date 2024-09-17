@@ -12,12 +12,12 @@ const orderSchema = mongoose.Schema({
     deliveryAddress: {
       name: {
         type: String,
-        required: [true, 'Pleae enter name']
+        required: [false, 'Pleae enter name']
       },
 
       phone: {
         type: String,
-        required: [true, 'Please enter phone']
+        required: [false, 'Please enter phone']
       },
 
       email: {
@@ -27,7 +27,7 @@ const orderSchema = mongoose.Schema({
 
       address: {
         type: String,
-        required: [true, 'please enter address']
+        required: [false, 'please enter address']
       },
 
       locality: {
@@ -42,29 +42,29 @@ const orderSchema = mongoose.Schema({
 
       city: {
         type: String,
-        required: [true, 'Please enter city']
+        required: [false, 'Please enter city']
       },
 
       pin_code: {
         type: String,
-        required: [true, 'Please enter pin code']
+        required: [false, 'Please enter pin code']
       },
 
       state: {
         type: String,
-        required: [true, 'Please enter state']
+        required: [false, 'Please enter state']
       },
 
     },
     billingAddress: {
       name: {
         type: String,
-        required: [true, 'Pleae enter name']
+        required: [false, 'Pleae enter name']
       },
 
       phone: {
         type: String,
-        required: [true, 'Please enter phone']
+        required: [false, 'Please enter phone']
       },
 
       email: {
@@ -74,7 +74,7 @@ const orderSchema = mongoose.Schema({
 
       address: {
         type: String,
-        required: [true, 'please enter address']
+        required: [false, 'please enter address']
       },
 
       locality: {
@@ -89,29 +89,29 @@ const orderSchema = mongoose.Schema({
 
       city: {
         type: String,
-        required: [true, 'Please enter city']
+        required: [false, 'Please enter city']
       },
 
       pin_code: {
         type: String,
-        required: [true, 'Please enter pin code']
+        required: [false, 'Please enter pin code']
       },
 
       state: {
         type: String,
-        required: [true, 'Please enter state']
+        required: [false, 'Please enter state']
       },
 
     }
   },
   discountPrice: {
     type: String,
-    required: [true, 'Please enter discount price'],
+    required: [false, 'Please enter discount price'],
     default: 0
   },
   itemsPrice: {
     type: String,
-    required: [true, 'Please enter items price']
+    required: [false, 'Please enter items price']
   },
   orderItems: [
     {
@@ -206,7 +206,7 @@ const orderSchema = mongoose.Schema({
   paymentInfo: {
     payment_type: {
       type: String,
-      required: true,
+      required: false,
     },
     status: {
       type: String,

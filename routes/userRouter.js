@@ -15,5 +15,7 @@ router.route('/transactions/:userId').get(userController.getUserTranscationByUse
 router.route('/metadata/:userId').get(userController.getUserMetaDataByUserId);
 router.route('/address/:userId').get(userController.getUserAllAddressByUserId);
 router.route('/dropdown/createOrder').get(userController.getUserNameDropdownForCreateOrder);
+router.route('/address-for-create-order/:userId').get(userController.getUserAllAddressByUserIdForCreateOrder);
+router.route('/meta-data-for-create-order/:userId').get(userController.getUserMetaDataForCreateOrder);
 
 module.exports = router;
