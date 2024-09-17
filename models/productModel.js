@@ -96,10 +96,28 @@ const productSchema = mongoose.Schema({
     required: [true, 'Please enter a Increment value']
   },
 
+  variant_type: {
+    type: String,
+    require: [false]
+  },
+    variant_value: {
+      type: String,
+      require: [false]
+  },
+  product_weight_type: {
+    type: String,
+    require: [false],
+    default: 0
+  },
+  product_weight: {
+    type: Number,
+    require: [false],
+    default: 0
+  },
   featured: {
     type: Boolean,
     require: [true, 'Please enter a featured'],
-    default: true
+    default: false
   },
 
 });
