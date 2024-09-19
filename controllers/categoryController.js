@@ -20,16 +20,16 @@ exports.createCategory = catchAsyncError(async(req, res, next) => {
 });
 
 exports.getAllCategroy = catchAsyncError(async(req, res, next) => {
-    // const categories = await Category.find();
+    const categories = await Category.find({status: true});
 
-    const categories = await Category.aggregate([
-        {
-            $project: {
-                name: {$ifNull: ['$name', 'N/a']},
-                image: {$ifNull: ['$image', 'N/a']}
-            }
-        }
-    ]);
+    // const categories = await Category.aggregate([
+    //     {
+    //         $project: {
+    //             name: {$ifNull: ['$name', 'N/a']},
+    //             image: {$ifNull: ['$image', 'N/a']}
+    //         }
+    //     }
+    // ]);
     res.status(200).json({
         success: true,
         data: categories
