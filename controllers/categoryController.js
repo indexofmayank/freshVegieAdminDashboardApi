@@ -24,9 +24,6 @@ exports.getAllCategroy = catchAsyncError(async(req, res, next) => {
 
     const categories = await Category.aggregate([
         {
-            $match: {'status': 'active'}
-        },
-        {
             $project: {
                 name: {$ifNull: ['name', 'N/a']},
                 image: {$ifNull: ['image', 'N/a']}
@@ -122,9 +119,6 @@ exports.getAllCategoriesForTable = catchAsyncError(async (req, res, next) => {
         
         const categories = await Category.aggregate([
             {
-                $match: {'status': 'active'}
-            },
-            {
                 $project: {
                     name: 1,
                     image: 1,
@@ -159,7 +153,7 @@ exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
     try {
         const categoriesName = await Category.aggregate([
             {
-                $match: {'status': 'active'}
+                $match: {'status': 'true'}
             },
             {
                 $project: {
