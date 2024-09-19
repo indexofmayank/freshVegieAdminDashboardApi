@@ -152,9 +152,9 @@ exports.getAllCategoriesForTable = catchAsyncError(async (req, res, next) => {
 exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
     try {
         const categoriesName = await Category.aggregate([
-            {
-                $match: {'status': 'true'}
-            },
+            // {
+            //     $match: {'status': 'true'}
+            // },
             {
                 $project: {
                     name: {$ifNull: ["$name", "N/A"]}
