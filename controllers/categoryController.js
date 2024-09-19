@@ -25,8 +25,8 @@ exports.getAllCategroy = catchAsyncError(async(req, res, next) => {
     const categories = await Category.aggregate([
         {
             $project: {
-                name: {$ifNull: ['name', 'N/a']},
-                image: {$ifNull: ['image', 'N/a']}
+                name: {$ifNull: ['$name', 'N/a']},
+                image: {$ifNull: ['$image', 'N/a']}
             }
         }
     ]);
