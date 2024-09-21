@@ -503,24 +503,24 @@ exports.getProductDropdownForCreateOrder = catchAsyncError(async (req, res, next
 });
 
 
-// exports.getActiveProductNameForDropdown = catchAsyncError(async (req, res, next) => {
-//   try {
-//     const products = await Product.aggregate([
-//       {
-//         $match: {'product_status' : true}
-//       },
-//       {
-//         $project: {
-//           name: {$ifNull: ["$name", "N/a"]}
-//         }
-//       }
-//     ]);
-//     return res.status(200).json({
-//       success: true,
-//       data: products
-//     })
-//   } catch (error) {
-//     console.error(error);
-//     throw new ErrorHandler('Something went wrong while getting the dropdown');
-//   }
-// });
+exports.getActiveProductNameForDropdown = catchAsyncError(async (req, res, next) => {
+  try {
+    const products = await Product.aggregate([
+      {
+        $match: {'product_status' : true}
+      },
+      {
+        $project: {
+          name: {$ifNull: ["$name", "N/a"]}
+        }
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: products
+    })
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while getting the dropdown');
+  }
+});

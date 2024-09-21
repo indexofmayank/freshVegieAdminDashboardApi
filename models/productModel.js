@@ -16,23 +16,23 @@ const productSchema = mongoose.Schema({
   },
   add_ons: {
     type: String,
-    required: [true, 'Please enter the add ons'],
+    required: false,
   },
   search_tags: {
     type: String,
-    required: [true, 'Please enter a search tag'],
+    required: false,
   },
   selling_method: {
     type: String,
-    require: [true, 'Please enter a selling method'],
+    require: false,
   },
   information:{
     type: String,
-    required: [true, 'Please enter product information'],
+    required: false,
   },
   description: {
     type: String,
-    required: [true, 'Please enter product description'],
+    required: false,
   },
   price: {
     type: Number,
@@ -63,59 +63,69 @@ const productSchema = mongoose.Schema({
 
   sku: {
     type: String,
-    required: [true, "Please enter a sku"]
+    required: false,
+    default: null
   },
 
   barcode: {
     type: String,
-    required: [true, 'please enter a barcode']
+    required: false,
+    default: null
   },
 
   stock: {
     type: Number,
-    required: [true, 'Please enter a stock'],
+    required: false,
+    default: 0
   },
 
   stock_notify: {
     type: Number,
-    required: [true, 'Please enter a stock notify'],
+    required: false,
+    default: 0
   },
 
   tax: {
     type: Number,
-    required: [true, 'Please enter a tax'],
+    required: false,
+    default: 0
   },
 
   product_detail_min: {
     type: Number,
-    required: [true, 'Please enter a product detail min']
+    required: false,
+    default: 0
   },
 
   product_detail_max: {
     type: Number,
-    required: [true, 'Please enter a product detail max']
+    required: false,
+    default: 0
   },
   increment_value: {
     type: Number,
-    required: [true, 'Please enter a Increment value']
+    required: false,
+    default: 0
   },
 
   variant_type: {
     type: String,
-    require: [false]
+    require: false,
+    default: null
   },
     variant_value: {
       type: String,
-      require: [false]
+      require: false,
+      default: null
   },
   product_weight_type: {
     type: String,
-    require: [false],
-    default: 0
+    require: false,
+    default: null
   },
   product_weight: {
     type: Number,
-    require: [false],
+    require: false,
     default: 0
   },
   featured: {

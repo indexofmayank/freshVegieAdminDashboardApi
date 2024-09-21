@@ -780,11 +780,13 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             status: {
               $switch: {
                 branches: [
-                  { case: { $regexMatch: { input: "$message", regex: /Order created:/ } }, then: "Created" },
-                  { case: { $regexMatch: { input: "$message", regex: /Assign Delivery/ } }, then: "Assign Delivery" },
-                  { case: { $regexMatch: { input: "$message", regex: /Packed/ } }, then: "Packed" },
-                  { case: { $regexMatch: { input: "$message", regex: /Rejected/ } }, then: "Rejected" },
-                  { case: { $regexMatch: { input: "$message", regex: /Failed/ } }, then: "Failed" }
+                  { case: { $regexMatch: { input: "$message", regex: /received/ } }, then: "Created" },
+                  { case: { $regexMatch: { input: "$message", regex: /assign delivery/ } }, then: "Assign Delivery" },
+                  { case: { $regexMatch: { input: "$message", regex: /packed/ } }, then: "Packed" },
+                  { case: { $regexMatch: { input: "$message", regex: /rejected/ } }, then: "Rejected" },
+                  { case: { $regexMatch: { input: "$message", regex: /failed/ } }, then: "Failed" },
+                  {case: {$regexMatch: {input: "$message", regex: /cancelled/}}, then: 'Cancelled'},
+                  {case: {$regexMatch: {input: "$message", regex: /delivered/}}, then: 'Delivered'}
                 ],
                 default: "Unknown"
               }
@@ -803,7 +805,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             time: 1
           }
         },
-        {$sort: {time: -1}}
+        {$sort: {time: 1}}
       ]).toArray();
       console.log(logs);
       await subSession.endSession();

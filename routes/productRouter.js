@@ -16,5 +16,6 @@ router.route('/reviews/:id').get(productController.getAllReviews);
 router.route('/category/:categoryId', ).get(productController.getProductByCategory);
 router.route('/dropdown/getProductForDropdown').get(productController.getProductForDropdown);
 router.route('/dropdown/getProductForCreateOrder').get(productController.getProductDropdownForCreateOrder);
+router.route('/dropdown-name/name/').get(productController.getActiveProductNameForDropdown);
 
 module.exports = router;
