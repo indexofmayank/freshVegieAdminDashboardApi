@@ -64,7 +64,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       }
     ]);
     const csvFilePath = path.join(__dirname, '../output.csv');
-    console.log(csvFilePath);
+    // console.log(csvFilePath);
     const csvStringifier = createObjectCsvStringifier({
       // path: csvFilePath,
       header: [
@@ -84,7 +84,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       ],
     });
     const records = [];
-    console.log(Orders);
+    // console.log(Orders);
     Orders.forEach(order => {
       order.orderItems.forEach(item => {
         records.push({
