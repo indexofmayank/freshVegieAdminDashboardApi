@@ -64,6 +64,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       }
     ]);
     const csvFilePath = path.join(__dirname, '../output.csv');
+    console.log(csvFilePath);
     const csvWriter = createObjectCsvWriter({
       path: csvFilePath,
       header: [
@@ -83,6 +84,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       ],
     });
     const records = [];
+    console.log(Orders);
     Orders.forEach(order => {
       order.orderItems.forEach(item => {
         records.push({
@@ -106,7 +108,15 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
     const csvContent = await csvWriter.writeRecords(records);
     res.header('Content-Type', 'text/csv');
     res.attachment('Orders.csv');
-    res.send(csvContent);
+
+    const csvFileStream = fs.createReadStream(csvFilePath);
+    csvFileStream.pipe(res).on('finish', () => {
+      // Optionally, delete the file after sending it
+      fs.unlinkSync(csvFilePath);
+    });
+    // res.header('Content-Type', 'text/csv');
+    // res.attachment('Orders.csv');
+    // res.send(csvContent);
   } catch (error) {
     console.error(error);
     next(new ErrorHandler('Something went wrong while generating the CSV file', 500));
