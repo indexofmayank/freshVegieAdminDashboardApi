@@ -4,7 +4,7 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
-const { createObjectCsvWriter } = require('csv-writer');
+const { createObjectCsvWriter,createObjectCsvStringifier } = require('csv-writer');
 
 exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
   try {
@@ -65,8 +65,8 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
     ]);
     const csvFilePath = path.join(__dirname, '../output.csv');
     console.log(csvFilePath);
-    const csvWriter = createObjectCsvWriter({
-      path: csvFilePath,
+    const csvStringifier = createObjectCsvStringifier({
+      // path: csvFilePath,
       header: [
         { id: 'orderNo', title: 'Order No' },
         { id: 'productName', title: 'Product Name' },
@@ -105,15 +105,21 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
 
       })
     });
-    const csvContent = await csvWriter.writeRecords(records);
+    const csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
+
+    // Send CSV as response
     res.header('Content-Type', 'text/csv');
     res.attachment('Orders.csv');
+    res.send(csvContent);
+    // const csvContent = await csvWriter.writeRecords(records);
+    // res.header('Content-Type', 'text/csv');
+    // res.attachment('Orders.csv');
 
-    const csvFileStream = fs.createReadStream(csvFilePath);
-    csvFileStream.pipe(res).on('finish', () => {
-      // Optionally, delete the file after sending it
-      fs.unlinkSync(csvFilePath);
-    });
+    // const csvFileStream = fs.createReadStream(csvFilePath);
+    // csvFileStream.pipe(res).on('finish', () => {
+    //   // Optionally, delete the file after sending it
+    //   fs.unlinkSync(csvFilePath);
+    // });
     // res.header('Content-Type', 'text/csv');
     // res.attachment('Orders.csv');
     // res.send(csvContent);
