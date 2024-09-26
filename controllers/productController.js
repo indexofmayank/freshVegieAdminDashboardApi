@@ -116,6 +116,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
           product_detail_min: 1,
           product_detail_max: 1,
           increment_value: 1,
+          featured:1,
         }
       },
       {$sort: {name: 1}},
