@@ -26,6 +26,7 @@ const csvRouter = require('./routes/csvRouter');
 const orderStatusRouter = require('./routes/orderStatsRouter');
 const orderTableRouter = require('./routes/orderTableRouter');
 const dealOfTheDayRouter = require('./routes/dealofthedayRouter');
+const dashboardRouter = require('./routes/dashboardRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -81,6 +82,7 @@ app.use('/api/csv', csvRouter);
 app.use('/api/orderstatus', orderStatusRouter);
 app.use('/api/ordertable', orderTableRouter);
 app.use('/api/dealoftheday', dealOfTheDayRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // using other middlewares
 app.use(errorMiddleware);
