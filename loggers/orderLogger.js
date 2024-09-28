@@ -11,7 +11,7 @@ const orderLogger = winston.createLogger({
     transports: [
         new winston.transports.MongoDB({
             level: 'info',
-            db: 'mongodb+srv://admin:f0Z552lDuB8bsl34@cluster0.omelufv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/f0Z552lDuB8bsl34',
+            db: process.env.DB_URI,
             collection: 'orderLogs',
             tryReconnect: true,
             options: {useUnifiedTopology: true}
