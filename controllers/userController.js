@@ -334,34 +334,53 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
         }
         const userAddresses = await User.aggregate([
             {
-                $match: {_id: mongoose.Types.ObjectId(userId)}
+                $match: { _id: mongoose.Types.ObjectId(userId) }
             },
             {
                 $project: {
-                    address_name: { $ifNull: ["$address.address_name", "N/A"]},
-                    name: { $ifNull: ["$address.name", "N/A"]},
-                    phone : { $ifNull: ["$address.phone", "N/A"]},
-                    email: { $ifNull: ["$address.email", "N/A"]},
-                    address: { $ifNull: ["address.address", "N/A"]},
-                    locality: { $ifNull: ["address.locality", "N/A"]},
-                    landmark: { $ifNull: ["address.landmark", "N/A"]},
-                    city: { $ifNull: ["address.city", "N/A"]},
-                    state: { $ifNull: ["address.state", "N/A"]},
-                    pin_code: {$ifNull: ["address.pin_code", "N/A"]},
-                    state: { $ifNull: ["address.state", "N/A"]}
+                    address: {
+                        $slice: [
+                            {
+                                $map: {
+                                    input: "$address",
+                                    as: "data",
+                                    in: {
+                                        address_name: { $ifNull: ["$$data.address_name", "N/A"] },
+                                        name: { $ifNull: ["$$data.name", "N/A"] },
+                                        phone: { $ifNull: ["$$data.phone", "N/A"] },
+                                        email: { $ifNull: ["$$data.email", "N/A"] },
+                                        address: { $ifNull: ["$$data.address", "N/A"] },
+                                        locality: { $ifNull: ["$$data.locality", "N/A"] },
+                                        landmark: { $ifNull: ["$$data.landmark", "N/A"] },
+                                        city: { $ifNull: ["$$data.city", "N/A"] },
+                                        state: { $ifNull: ["$$data.state", "N/A"] },
+                                        pin_code: { $ifNull: ["$$data.pin_code", "N/A"] },
+                                        state: { $ifNull: ["$$data.state", "N/A"] }
+
+                                    }
+                                }
+                            },
+                            skip,
+                            limit
+                        ]
+                    }
                 }
             },
-            {$sort: {createdAt: 1}},
-            {$skip: skip},
-            {$limit: limit}
+            // { $sort: { createdAt: 1 } },
+            // { $skip: skip },
+            // { $limit: limit }
         ]);
         if(!userAddresses) {
             throw new ErrorHandler('Server error', 500);
         }
+
+        console.log(userAddresses);
         res.status(200).json({
             success: true,
             page,
             limit,
+            totalAddress: userAddresses.length,
+            totalPage: Math.ceil(userAddresses.length / limit),
             data: userAddresses
         });
     } catch (error) {

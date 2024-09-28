@@ -8,9 +8,11 @@ exports.getOrderStatus = catchAsyncError(async (req, res, next) => {
         const { period, startDate, endDate } = req.query;
         let matchCondition = {};
         const currentDate = new Date();
-
+        
+        console.log(startDate)
+        console.log(endDate);
         // Determine the matchCondition based on the period or custom date range
-        if (startDate && endDate) {
+        if (period === 'custom' && startDate && endDate) {
             // Custom date range
             matchCondition.createdAt = {
                 $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
@@ -54,8 +56,21 @@ exports.getOrderStatus = catchAsyncError(async (req, res, next) => {
             }
         }
 
-        // Aggregation pipeline for each order status
-        const statuses = ['received', 'accepted', 'packed', 'accepted delivery', 'out for delivery', 'delivered', 'cancelled', 'failed', 'return'];
+        console.log(matchCondition);
+
+        const statuses = [
+            'verifying payment',
+            'received',
+            'accepted',
+            'processing',
+            'packed',
+            'assign_delivery',
+            'out for delivery',
+            'transit',
+            'delivered',
+            'canceled',
+            'failed'
+        ];
         const orderStatusCounts = await Promise.all(
             statuses.map(async (status) => {
                 const result = await Order.aggregate([

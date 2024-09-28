@@ -780,13 +780,17 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             status: {
               $switch: {
                 branches: [
-                  { case: { $regexMatch: { input: "$message", regex: /received/ } }, then: "Created" },
-                  { case: { $regexMatch: { input: "$message", regex: /assign delivery/ } }, then: "Assign Delivery" },
-                  { case: { $regexMatch: { input: "$message", regex: /packed/ } }, then: "Packed" },
-                  { case: { $regexMatch: { input: "$message", regex: /rejected/ } }, then: "Rejected" },
-                  { case: { $regexMatch: { input: "$message", regex: /failed/ } }, then: "Failed" },
-                  {case: {$regexMatch: {input: "$message", regex: /cancelled/}}, then: 'Cancelled'},
-                  {case: {$regexMatch: {input: "$message", regex: /delivered/}}, then: 'Delivered'}
+                  {case: {$regexMatch: {input: "$message", regex: /verifying payment/}, then: 'verifying payment'}},
+                  {case: {$regexMatch: {input: "$message", regex: /received/}}, then: 'received'},
+                  {case: {$regexMatch: {input: "$message", regex: /accepted/}}, then: 'accepted'},
+                  {case: {$regexMatch: {input: "$message", regex: /processing/}}, then: 'processing'},
+                  {case: {$regexMatch: {input: "$message", regex: /packed/}}, then: 'packed'},
+                  {case: {$regexMatch: {input: "$message", regex: /assign_delivery/}}, then: 'assign_delivery'},
+                  {case: {$regexMatch: {input: "$messgae", regex: /out for delivery/}}, then: 'out for delivery'},
+                  {case: {$regexMatch: {input: "$message", regex: /transit/}}, then: 'transit'},
+                  {case: {$regexMatch: {input: "$message", regex: /delivered/}}, then: 'delivered'},
+                  {case: {$regexMatch: {input: "$message", regex: /canceled/}}, then: 'canceled'},
+                  {case: {$regexMatch: {input: "$message", regex: /failed/}}, then: 'failed'}
                 ],
                 default: "Unknown"
               }
