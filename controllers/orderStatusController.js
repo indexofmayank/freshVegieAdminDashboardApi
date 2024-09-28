@@ -315,3 +315,48 @@ exports.getTotalSales = catchAsyncError(async (req, res, next) => {
         throw new ErrorHandler('Something went wrong while getting total sales');
     }
 });
+
+exports.getDeliveredOrderNumber = catchAsyncError(async (req, res, next) => {
+    try {
+        const totalNumberOfDeliveredOrdered = await Order.aggregate([
+            {
+                $match: {"orderStatus" : "delivered"}
+            },
+            {
+                $group: {
+                    _id: "$orderStatus",
+                    count: {$sum: 1}
+                }
+            }
+        ]);
+        return res.status(200).json({
+            success: true,
+            data: totalNumberOfDeliveredOrdered
+        });
+    } catch (error) {   
+        throw new ErrorHandler('Something went wrong while getting the total delivered order number');
+    }
+});
+
+exports.getPendingOrderNumber = catchAsyncError(async (req, res, next) => {
+    try {
+        const totalNumberOfPendingOrder = await Order.aggregate([
+            {
+                $match: {"orderStatus" : "received"}
+            },
+            {
+                $group: {
+                    _id: "$orderStatus",
+                    count: {$sum: 1}
+                }
+            }
+        ]);
+        return res.status(200).json({
+            success: true,
+            data: totalNumberOfPendingOrder
+        });
+    } catch (error) {
+        throw new ErrorHandler('Something went wrong while getting the total pending order number');
+    }
+})
+
