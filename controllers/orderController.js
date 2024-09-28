@@ -780,7 +780,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             status: {
               $switch: {
                 branches: [
-                  {case: {$regexMatch: {input: "$message", regex: /verifying payment/}, then: 'verifying payment'}},
+                  {case: {$regexMatch: {input: "$message", regex: /verifying payment/}}, then: 'verifying payment'},
                   {case: {$regexMatch: {input: "$message", regex: /received/}}, then: 'received'},
                   {case: {$regexMatch: {input: "$message", regex: /accepted/}}, then: 'accepted'},
                   {case: {$regexMatch: {input: "$message", regex: /processing/}}, then: 'processing'},
