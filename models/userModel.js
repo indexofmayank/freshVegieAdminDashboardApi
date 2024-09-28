@@ -64,7 +64,8 @@ const userModel = new mongoose.Schema({
     ],
     status: {
         type: Boolean,
-        required: [false, 'Please enter status']
+        required: [false, 'Please enter status'],
+        default: true
     },
     device: {
         type: String,

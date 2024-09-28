@@ -786,7 +786,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
                   {case: {$regexMatch: {input: "$message", regex: /processing/}}, then: 'processing'},
                   {case: {$regexMatch: {input: "$message", regex: /packed/}}, then: 'packed'},
                   {case: {$regexMatch: {input: "$message", regex: /assign_delivery/}}, then: 'assign_delivery'},
-                  {case: {$regexMatch: {input: "$messgae", regex: /out for delivery/}}, then: 'out for delivery'},
+                  {case: {$regexMatch: {input: "$message", regex: /out for delivery/}}, then: 'out for delivery'},
                   {case: {$regexMatch: {input: "$message", regex: /transit/}}, then: 'transit'},
                   {case: {$regexMatch: {input: "$message", regex: /delivered/}}, then: 'delivered'},
                   {case: {$regexMatch: {input: "$message", regex: /canceled/}}, then: 'canceled'},

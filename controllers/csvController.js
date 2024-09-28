@@ -4,13 +4,65 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
-const { createObjectCsvWriter,createObjectCsvStringifier } = require('csv-writer');
+const { createObjectCsvWriter, createObjectCsvStringifier } = require('csv-writer');
 
 exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
   try {
+    const filter = req.query.filter;
+    const period = req.query.period;
+    const startDate = req.query.startDate;
+    const endDate= req.query.endDate;
+    let matchCondition = {};
+    const currentDate = new Date();
+    console.log(filter);
+
+    if (period === 'custom' && startDate && endDate) {
+      matchCondition.createdAt = {
+        $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+        $lt: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+      }
+    } else {
+      switch (filter) {
+        case 'Day':
+          matchCondition.createdAt = {
+            $gte: new Date(currentDate.setHours(0, 0, 0, 0)),
+            $lt: new Date(currentDate.setHours(23, 59, 59, 999))
+          };
+          break;
+
+        case 'Week':
+          const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+          const endOfWeek = new Date(currentDate.setDate(startOfWeek.getDate() + 6));
+          matchCondition.createdAt = {
+            $gte: new Date(startOfWeek.setHours(0, 0, 0, 0)),
+            $lt: new Date(endOfWeek.setHours(23, 59, 59, 999))
+          };
+          break;
+        case 'Month':
+          const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+          const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+          matchCondition.createdAt = {
+            $gte: new Date(startOfMonth.setHours(0, 0, 0, 0)),
+            $lt: new Date(endOfMonth.setHours(23, 59, 59, 999))
+          };
+          break;
+        case 'Year':
+          const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+          const endOfYear = new Date(currentDate.getFullYear(), 11, 31);
+          matchCondition.createdAt = {
+            $gte: new Date(startOfYear.setHours(0, 0, 0, 0)),
+            $lt: new Date(endOfYear.setHours(23, 59, 59, 999))
+          };
+          break;
+        default:
+          break;
+
+      }
+    }
+
     const Orders = await Order.aggregate([
       {
-        $match: { orderStatus: 'received' }
+        $match: { ...matchCondition }
       },
       {
         $lookup: {
@@ -56,13 +108,15 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
           },
           customer: { $ifNull: ["$user.name", "N/A"] },
           customer_address: { $ifNull: ["$shippingInfo.deliveryAddress", "N/A"] },
-          mobile: {$toString: { $ifNull: ["$userDetails.phone", "N/A"] }},
+          mobile: { $toString: { $ifNull: ["$userDetails.phone", "N/A"] } },
           delivery_type: { $ifNull: ["$deliveryTpye", "N/A"] },
           payment_type: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
           ordered_date: { $ifNull: ["$createdAtTimesFormatted", "N/A"] }
         }
       }
     ]);
+
+    console.log(Orders);
     const csvFilePath = path.join(__dirname, '../output.csv');
     // console.log(csvFilePath);
     const csvStringifier = createObjectCsvStringifier({
