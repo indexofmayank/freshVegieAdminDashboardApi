@@ -106,7 +106,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     const result = await newOrder.save({ session });
     await session.commitTransaction();
     session.endSession();
-    orderLogger.info(`Order created: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
+    orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
 
     res.status(201).json({
       success: true,
