@@ -30,7 +30,8 @@ exports.getAllProductsForInventory = catchAsyncError(async (req, res, next) => {
       { $skip: skip },
       { $limit: limit },
     ]);
-    const totalProducts = await Product.countDocuments();
+    const totalProducts = await Product.countDocuments({category: mongoose.Types.ObjectId(categoryId)});
+    console.log(totalProducts);
     return res.status(200).json({
       success: true,
       page,
@@ -61,7 +62,7 @@ exports.getAllProductsForInventory = catchAsyncError(async (req, res, next) => {
       { $skip: skip },
       { $limit: limit },
     ]);
-    const totalProducts = await Product.countDocuments();
+    const totalProducts = await Product.countDocuments({_id: mongoose.Types.ObjectId(categoryId)});
     return res.status(200).json({
       success: true,
       page,
@@ -97,6 +98,7 @@ exports.getAllProductsForInventory = catchAsyncError(async (req, res, next) => {
     totalProducts,
     data: products
   });
+
 });
 
 exports.updateProductForInventory = catchAsyncError(async (req, res, next) => {
