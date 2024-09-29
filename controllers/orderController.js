@@ -834,7 +834,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             time: {
               $dateToString: {
                 format: "%Y-%m-%d %H:%M:%S",
-                date: "$timestamp"
+                date: { $add: ["$timestamp", 19800000] } // Add 5 hours 30 minutes (in milliseconds)
               }
             }
           }
