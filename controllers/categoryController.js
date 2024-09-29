@@ -4,12 +4,12 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 
 exports.createCategory = catchAsyncError(async(req, res, next) => {
-    let {name, image, status} = req.body;
+    let {name, image, status, order} = req.body;
     const {secure_url} = await cloudinary.uploader.upload(image, {
         folder: 'tomper-wear',
     });
      image = secure_url;
-     const category = await Category.create({name, status, image});
+     const category = await Category.create({name, status, image, order});
      if(!category) {
         return next(new ErrorHandler('Server error', 500));
      }
@@ -70,6 +70,7 @@ exports.updateCategory = catchAsyncError(async (req, res, next) => {
     try {
         const {categoryId} = req.params;
         let updateData = req.body;
+        console.log(updateData);
         const {secure_url} = await cloudinary.uploader.upload(updateData.image, {
             folder: 'tomper-wear'
         });
@@ -122,12 +123,14 @@ exports.getAllCategoriesForTable = catchAsyncError(async (req, res, next) => {
                 $project: {
                     name: 1,
                     image: 1,
-                    status: 1
+                    status: 1,
+                    order: 1
                 }
             },
             {
                 $sort: { name: 1 },
             },
+            {$sort : {order: 1}},
             {$skip: skip},
             {$limit: limit},    
         ]);
@@ -159,7 +162,8 @@ exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
                 $project: {
                     name: {$ifNull: ["$name", "N/A"]}
                 }
-            }
+            },
+            {$sort: {order: -1}}
         ]);
 
         return res.status(200).json({

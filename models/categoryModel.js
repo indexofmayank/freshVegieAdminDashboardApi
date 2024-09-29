@@ -13,6 +13,10 @@ const categorySchema = new mongoose.Schema({
         type: Boolean,
         required: [true, 'Please enter status']
     },
+    order: {
+        type: Number,
+        required: [true, 'Please enter order']
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

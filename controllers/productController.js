@@ -116,6 +116,10 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
           product_detail_min: 1,
           product_detail_max: 1,
           increment_value: 1,
+          variant_type: 1,
+          variant_value: 1,
+          product_weight_type: 1,
+          product_weight: 1,
           featured:1,
         }
       },
