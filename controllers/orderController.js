@@ -260,7 +260,7 @@ exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
     if (!data) {
       throw new ErrorHandler('Not able to update');
     }
-    orderLogger.info(`Order status updated for Order ID - ${data[0].orderId} to ${data[0].orderStatus} for User ID - ${data[0].user.userId}`);
+    orderLogger.info(`Order status updated for Order ID - ${data[0].orderId} to ${req.body.status} for User ID - ${data[0].user.userId}`);
     res.status(200).json({
       success: true,
       data: result,
@@ -680,7 +680,7 @@ exports.markOrderStatusToCancelledByOrderId = (catchAsyncError(async (req, res, 
     const { orderId } = req.params;
     const cancelledOrder = await Order.findOneAndUpdate(
       { _id: orderId },
-      { 'orderStatus': 'cancelled' },
+      { 'orderStatus': 'canceled' },
       { new: true, runValidators: true }
     );
     if (!cancelledOrder) {
@@ -689,6 +689,24 @@ exports.markOrderStatusToCancelledByOrderId = (catchAsyncError(async (req, res, 
         message: 'something wrong happed while updating order status to cancelled'
       });
     }
+    const data = await Order.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
+      },
+      {
+        $project: {
+          orderId: 1,
+          user: {
+            userId: 1
+          },
+          orderStatus: 1
+        }
+      }
+    ]);
+    if (!data) {
+      throw new ErrorHandler('Not able to update');
+    }
+    orderLogger.info(`Order status updated for Order ID - ${data[0].orderId} to canceled for User ID - ${data[0].user.userId}`);
     return res.status(200).json({
       success: true,
       message: 'Updated successfully',
@@ -741,6 +759,24 @@ exports.markOrderStatusAsDeliveredByOrderId = (catchAsyncError(async (req, res, 
         message: 'Not able to marked order status as delivered'
       });
     }
+    const data = await Order.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
+      },
+      {
+        $project: {
+          orderId: 1,
+          user: {
+            userId: 1
+          },
+          orderStatus: 1
+        }
+      }
+    ]);
+    if (!data) {
+      throw new ErrorHandler('Not able to update');
+    }
+    orderLogger.info(`Order status updated for Order ID - ${data[0].orderId} to delivered for User ID - ${data[0].user.userId}`);
     return res.status(200).json({
       success: true,
       data: deliveredStatusOrder
