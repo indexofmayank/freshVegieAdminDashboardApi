@@ -74,7 +74,7 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         let isUnique = false;
 
         while (!isUnique) {
-            referralCode = 'REF' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
             const existingReferral = await Referral.findOne({ referralCode });
             if (!existingReferral) {
                 isUnique = true;
