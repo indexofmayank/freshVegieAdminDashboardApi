@@ -50,6 +50,8 @@ const userModel = new mongoose.Schema({
     },
     phone: {
         type: String,
+        min: 10,
+        max: 10,
         required: [true, 'Please enter phone']
     },
     email: {
@@ -71,18 +73,46 @@ const userModel = new mongoose.Schema({
         type: String,
         required: [false, 'Please enter device']
     },
+    userReferrInfo: {
+        referralCode: {
+            type: String,
+            required: false,
+        },
+        referralAmount: {
+            type: Number,
+            required: false,
+            default: 20
+        },
+        referredTo: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+                required: false
+            },
+            {
+                type: Date,
+                default: new Date()
+            }
+        ],
+    },
+    userWalledInfo: {
+        type: Number,
+        required: false,
+        default: 0
+    },
     userInfo: [
         {
-            type: mongoose.Schema.Types.Mixed, 
+            type: mongoose.Schema.Types.Mixed,
             required: false
         }
-    ]}, {
-    timestamps: true,   
+    ]
+}, {
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
 
-userModel.virtual('id').get(function() {
+userModel.virtual('id').get(function () {
     return this._id.toHexString();
 });
 

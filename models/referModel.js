@@ -26,7 +26,7 @@ const referralSchema = new mongoose.Schema({
 
     reward: {
         type: Number,
-        default: 20
+        default: process.env.DEFAULT_REWARD_AMOUNT
     }
 }, { timestamps: true });
 

@@ -59,15 +59,6 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
     }
 
     // Create a new user
-    const user = await User.create({
-        name,
-        email,
-        phone,
-        address,
-        device,
-        userInfo
-    });
-    console.log(user);
     // Function to generate a unique referral code using Referral collection
     const generateUniqueReferralCode = async () => {
         let referralCode;
@@ -75,22 +66,27 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
 
         while (!isUnique) {
             referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-            const existingReferral = await Referral.findOne({ referralCode });
+            const existingReferral = await User.findOne({ 'userReferrInfo.referralCode': referralCode });
             if (!existingReferral) {
                 isUnique = true;
             }
         }
-
         return referralCode;
     };
-
     // Generate and save a unique referral code to the Referral collection
     const referralCode = await generateUniqueReferralCode();
-    const newReferral = await Referral.create({
-        referralCode,
-        referrerId: user._id, // Link the referral to the newly created user
+    const user = await User.create({
+        name,
+        email,
+        phone,
+        address,
+        device,
+        userInfo,
+        userReferrInfo: {
+            referralCode: referralCode
+        }
     });
-
+    console.log(user);
     console.log('Unique Referral Code:', referralCode);
 
     res.status(201).json({
@@ -101,6 +97,8 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
             email: user.email,
             phone: user.phone,
             address: user.address,
+            referralCode: user.userReferrInfo.referralCode,
+            referralAmount: user.userReferrInfo.referralAmount
         },
     });
 });
@@ -526,3 +524,52 @@ exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) =
         throw new ErrorHandler('Something went wrong', 500);
     }
 });
+
+exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
+    try {
+        // Find the user by ID
+        const user = await User.findById(req.params.id);
+        const secondUser = await User.findById(req.params.userId);
+
+        // If the main user is not found, return an error
+        if (!user) {
+            return next(new ErrorHandler('User not found', 404));
+        }
+
+        // If the second user is not found, return an error
+        if (!secondUser) {
+            return next(new ErrorHandler('Second user not found', 404));
+        }
+
+        // Initialize userReferrInfo if it doesn't exist
+        if (!user.userReferrInfo) {
+            user.userReferrInfo = { referredTo: [] }; // Initialize if undefined
+        }
+
+        // Check if the userId is already in the referredTo array
+        if (user.userReferrInfo.referredTo.includes(secondUser._id.toString())) {
+            return next(new ErrorHandler('User ID already referred', 400));
+        }
+
+        // Push the new referred ID into the referredTo array
+        user.userReferrInfo.referredTo.push(secondUser._id);
+
+        // Update user walled info
+        user.userWalledInfo += process.env.DEFAULT_REWARD_AMOUNT || 20;
+        secondUser.userWalledInfo += process.env.DEFAULT_REWARD_AMOUNT || 20;
+
+        // Save the updated user documents
+        await user.save();
+        await secondUser.save();
+
+        // Return success response
+        return res.status(200).json({
+            success: true,
+            data: user // Return the updated user or relevant information
+        });
+    } catch (error) {
+        console.error(error.message);
+        return next(new ErrorHandler('Something went wrong', 500));
+    }
+});
+
