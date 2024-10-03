@@ -3,6 +3,7 @@ const Order = require('../models/orderModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
+const Referral = require('../models/referModel');
 
 exports.getAllUser = catchAsyncError(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
@@ -67,6 +68,30 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         userInfo
     });
     console.log(user);
+    // Function to generate a unique referral code using Referral collection
+    const generateUniqueReferralCode = async () => {
+        let referralCode;
+        let isUnique = false;
+
+        while (!isUnique) {
+            referralCode = 'REF' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const existingReferral = await Referral.findOne({ referralCode });
+            if (!existingReferral) {
+                isUnique = true;
+            }
+        }
+
+        return referralCode;
+    };
+
+    // Generate and save a unique referral code to the Referral collection
+    const referralCode = await generateUniqueReferralCode();
+    const newReferral = await Referral.create({
+        referralCode,
+        referrerId: user._id, // Link the referral to the newly created user
+    });
+
+    console.log('Unique Referral Code:', referralCode);
 
     res.status(201).json({
         success: true,
@@ -329,7 +354,7 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = parseInt(page - 1) * limit;
     try {
-        if(!userId) {
+        if (!userId) {
             throw new ErrorHandler('User not found', 404);
         }
         const userAddresses = await User.aggregate([
@@ -370,7 +395,7 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
             // { $skip: skip },
             // { $limit: limit }
         ]);
-        if(!userAddresses) {
+        if (!userAddresses) {
             throw new ErrorHandler('Server error', 500);
         }
 
@@ -386,7 +411,8 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         console.error(error.message);
         throw new ErrorHandler('Something went wrong', 500);
-    }});
+    }
+});
 
 exports.getUserNameDropdownForCreateOrder = catchAsyncError(async (req, res, next) => {
     try {
@@ -479,13 +505,13 @@ exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) =
     try {
         const userMetaInfo = await User.aggregate([
             {
-                $match: {_id: mongoose.Types.ObjectId(req.params.userId)}
+                $match: { _id: mongoose.Types.ObjectId(req.params.userId) }
             },
             {
                 $project: {
-                    name: {$ifNull: ['$name', 'N/a']},
-                    phone: {$ifNull: ['$phone', 'N/a']},
-                    email: {$ifNull: ["email", 'N/a']}
+                    name: { $ifNull: ['$name', 'N/a'] },
+                    phone: { $ifNull: ['$phone', 'N/a'] },
+                    email: { $ifNull: ["email", 'N/a'] }
                 }
             }
         ]);

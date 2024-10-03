@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
@@ -6,6 +7,7 @@ const orderLogger = require('../loggers/orderLogger');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const { format } = require('winston');
+const nodemailer = require('nodemailer');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
 
@@ -108,7 +110,38 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     session.endSession();
     orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
 
-    res.status(201).json({
+    //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
+    const transporter = nodemailer.createTransport({
+      host: "smtp.protonmail.com",
+      port: 465, // Use 465 for SSL or 587 for TLS
+      secure: true, // True for SSL
+      auth: {
+        user: "mayankdevtiwari@proton.me", // Your ProtonMail email address
+        pass: "Superfan@1234", // The app-specific password generated earlier
+      },
+    });
+
+    const mailOptions = {
+      from: '"Sender Name" <mayankdevtiwari@proton.me>', // Sender address
+      to: 'maimayanmanu@gmail.com',
+      subject: 'Hello with Environment Variables!',
+      text: 'This email was sent using environment variables.'
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('Error occurred: ' + error.message);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
+
+
+
+    //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+    return res.status(201).json({
       success: true,
       message: 'new order created successfully',
       data: newOrder
@@ -171,7 +204,7 @@ exports.getUserOrders = catchAsyncError(async (req, res, next) => {
 
 // send all orders
 exports.getAllOrders = catchAsyncError(async (req, res, next) => {
-  
+
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -816,17 +849,17 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             status: {
               $switch: {
                 branches: [
-                  {case: {$regexMatch: {input: "$message", regex: /verifying payment/}}, then: 'verifying payment'},
-                  {case: {$regexMatch: {input: "$message", regex: /received/}}, then: 'received'},
-                  {case: {$regexMatch: {input: "$message", regex: /accepted/}}, then: 'accepted'},
-                  {case: {$regexMatch: {input: "$message", regex: /processing/}}, then: 'processing'},
-                  {case: {$regexMatch: {input: "$message", regex: /packed/}}, then: 'packed'},
-                  {case: {$regexMatch: {input: "$message", regex: /assign_delivery/}}, then: 'assign_delivery'},
-                  {case: {$regexMatch: {input: "$message", regex: /out for delivery/}}, then: 'out for delivery'},
-                  {case: {$regexMatch: {input: "$message", regex: /transit/}}, then: 'transit'},
-                  {case: {$regexMatch: {input: "$message", regex: /delivered/}}, then: 'delivered'},
-                  {case: {$regexMatch: {input: "$message", regex: /canceled/}}, then: 'canceled'},
-                  {case: {$regexMatch: {input: "$message", regex: /failed/}}, then: 'failed'}
+                  { case: { $regexMatch: { input: "$message", regex: /verifying payment/ } }, then: 'verifying payment' },
+                  { case: { $regexMatch: { input: "$message", regex: /received/ } }, then: 'received' },
+                  { case: { $regexMatch: { input: "$message", regex: /accepted/ } }, then: 'accepted' },
+                  { case: { $regexMatch: { input: "$message", regex: /processing/ } }, then: 'processing' },
+                  { case: { $regexMatch: { input: "$message", regex: /packed/ } }, then: 'packed' },
+                  { case: { $regexMatch: { input: "$message", regex: /assign_delivery/ } }, then: 'assign_delivery' },
+                  { case: { $regexMatch: { input: "$message", regex: /out for delivery/ } }, then: 'out for delivery' },
+                  { case: { $regexMatch: { input: "$message", regex: /transit/ } }, then: 'transit' },
+                  { case: { $regexMatch: { input: "$message", regex: /delivered/ } }, then: 'delivered' },
+                  { case: { $regexMatch: { input: "$message", regex: /canceled/ } }, then: 'canceled' },
+                  { case: { $regexMatch: { input: "$message", regex: /failed/ } }, then: 'failed' }
                 ],
                 default: "Unknown"
               }
@@ -845,7 +878,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             time: 1
           }
         },
-        {$sort: {time: 1}}
+        { $sort: { time: 1 } }
       ]).toArray();
       console.log(logs);
       await subSession.endSession();
