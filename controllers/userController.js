@@ -527,19 +527,22 @@ exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) =
 
 exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
     try {
+        const {referralCode} = req.body;
+        const {userId} = req.body;
         // Find the user by ID
-        const user = await User.findById(req.params.id);
-        const secondUser = await User.findById(req.params.userId);
+        const user = await User.findOne({'userReferrInfo.referralCode': referralCode});
+        const secondUser = await User.findById(userId);
 
         // If the main user is not found, return an error
         if (!user) {
-            return next(new ErrorHandler('User not found', 404));
+            return next(new ErrorHandler('Code is not valid', 404));
         }
 
         // If the second user is not found, return an error
         if (!secondUser) {
             return next(new ErrorHandler('Second user not found', 404));
         }
+
 
         // Initialize userReferrInfo if it doesn't exist
         if (!user.userReferrInfo) {
@@ -552,11 +555,13 @@ exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
         }
 
         // Push the new referred ID into the referredTo array
-        user.userReferrInfo.referredTo.push(secondUser._id);
+        user.userReferrInfo.referredTo.push({
+            userId: secondUser._id,
+        });
 
         // Update user walled info
-        user.userWalledInfo += process.env.DEFAULT_REWARD_AMOUNT || 20;
-        secondUser.userWalledInfo += process.env.DEFAULT_REWARD_AMOUNT || 20;
+        user.userReferrInfo.referralAmount += parseInt(process.env.DEFAULT_REWARD_AMOUNT) || 20;
+        secondUser.userReferrInfo.referralAmount += parseInt(process.env.DEFAULT_REWARD_AMOUNT) || 20;
 
         // Save the updated user documents
         await user.save();

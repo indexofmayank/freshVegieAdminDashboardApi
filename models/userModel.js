@@ -85,13 +85,16 @@ const userModel = new mongoose.Schema({
         },
         referredTo: [
             {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'User',
-                required: false
-            },
-            {
-                type: Date,
-                default: new Date()
+                userId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User',
+                    required: false
+                },
+                referredAt: {
+                    type: Date,
+                    require: false,
+                    default: Date.now()
+                }
             }
         ],
     },
