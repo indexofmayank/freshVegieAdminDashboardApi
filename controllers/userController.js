@@ -527,11 +527,10 @@ exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) =
 
 exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
     try {
-        console.log('we came here')
-        const {referralCode} = req.body;
-        const {userId} = req.body;
-        // Find the user by ID
-        const user = await User.findOne({'userReferrInfo.referralCode': referralCode});
+        const { referralCode, userId } = req.body;
+
+        // Find the user by referral code
+        const user = await User.findOne({ 'userReferrInfo.referralCode': referralCode });
         const secondUser = await User.findById(userId);
         console.log(user);
         console.log(secondUser);
@@ -546,34 +545,38 @@ exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler('Second user not found', 404));
         }
 
-
         // Initialize userReferrInfo if it doesn't exist
         if (!user.userReferrInfo) {
             user.userReferrInfo = { referredTo: [] }; // Initialize if undefined
         }
 
-        // Check if the userId is already in the referredTo array
-        if (user.userReferrInfo.referredTo.includes(secondUser._id.toString())) {
+        // Check if the second user's ID is already in the referredTo array
+        const isAlreadyReferred = user.userReferrInfo.referredTo.some(
+            referred => referred.userId.toString() === secondUser._id.toString()
+        );
+
+        if (isAlreadyReferred) {
             return next(new ErrorHandler('User ID already referred', 400));
         }
 
         // Push the new referred ID into the referredTo array
         user.userReferrInfo.referredTo.push({
             userId: secondUser._id,
+            referredAt: Date.now() // Optionally include the time they were referred
         });
 
-        // Update user walled info
+        // Update user referral amounts
         user.userReferrInfo.referralAmount += parseInt(process.env.DEFAULT_REWARD_AMOUNT) || 20;
         secondUser.userReferrInfo.referralAmount += parseInt(process.env.DEFAULT_REWARD_AMOUNT) || 20;
 
         // Save the updated user documents
         await user.save();
         await secondUser.save();
-        console.log(secondUser);    
+
         // Return success response
         return res.status(200).json({
             success: true,
-            data: user // Return the updated user or relevant information
+            data: secondUser // Return the updated user or relevant information
         });
     } catch (error) {
         console.error(error.message);
