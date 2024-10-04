@@ -24,7 +24,7 @@ exports.getOrdersForTable = catchAsyncError(async (req, res, next) => {
             $dateToString: {
               format: "%d %B %Y, %H:%M:%S",
               date: "$createdAt",
-              timezone: "UTC"
+              timezone: 'Asia/Kolkata' // Change this to IST
             }
           },
           orderItemsCount: { $size: "$orderItems" }
@@ -72,6 +72,7 @@ exports.getOrdersForTable = catchAsyncError(async (req, res, next) => {
       page,
       limit,
       totalPages,
+      totalOrders: orders.length,
       data: orders
     });
   } catch (error) {

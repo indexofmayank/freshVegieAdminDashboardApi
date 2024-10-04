@@ -527,11 +527,14 @@ exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) =
 
 exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
     try {
+        console.log('we came here')
         const {referralCode} = req.body;
         const {userId} = req.body;
         // Find the user by ID
         const user = await User.findOne({'userReferrInfo.referralCode': referralCode});
         const secondUser = await User.findById(userId);
+        console.log(user);
+        console.log(secondUser);
 
         // If the main user is not found, return an error
         if (!user) {
@@ -566,7 +569,7 @@ exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
         // Save the updated user documents
         await user.save();
         await secondUser.save();
-
+        console.log(secondUser);    
         // Return success response
         return res.status(200).json({
             success: true,

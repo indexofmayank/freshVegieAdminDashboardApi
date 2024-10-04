@@ -215,7 +215,7 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
           $dateToString: {
             format: "%d %B %Y, %H:%M:%S",
             date: "$createdAt",
-            timezone: 'UTC'
+            timezone: 'Asia/Kolkata'
           }
         }
       }
@@ -932,6 +932,85 @@ exports.updateDeliveryDetailsToOrder = (catchAsyncError(async (req, res, next) =
     throw new ErrorHandler('Something went wrong while updating delivery partner details');
   }
 }));
+
+
+exports.getOrderForDashboardCards = catchAsyncError(async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const status = req.query.status;
+    let totalOrders = null;
+    let matchCondition = {};
+
+    if (status === 'pending') {
+      matchCondition.orderStatus = { $eq: 'received' };
+      totalOrders = await Order.countDocuments({'orderStatus': 'received'});
+    }
+    
+    if (status === 'delivered') {
+      matchCondition.orderStatus = { $eq: 'delivered' };
+      totalOrders = await Order.countDocuments({'orderStatus': 'delivered'});
+    }
+    
+    if (status === 'total_order') {
+      matchCondition = {}; 
+      totalOrders = await Order.countDocuments({});
+    }
+
+
+    const orders = await Order.aggregate([
+      {
+        $match: matchCondition
+      },
+      {
+        $addFields: {
+          timestampFormatted: {
+            $dateToString: {
+              format: "%d %B %Y, %H:%M:%S",
+              date: "$createdAt",
+              timezone: 'Asia/Kolkata' // Change this to IST
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          order_no: { $ifNull: ["$orderId", 'N/A'] },
+          timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+          customerName: { $ifNull: ["$user.name", "N/A"] },
+          orderItemsCount: { $ifNull: [{ $size: "$orderItems" }, "N/A"] },
+          totalQuantity: { $ifNull: ["$total_quantity", "N/A"] },
+          location: { $ifNull: ["$shippingInfo.deliveryAddress.state", "N/A"] },
+          paymentType: { $ifNull: ["$paymentInfo.status", "N/A"] },
+          status: { $ifNull: ["$orderStatus", "N/A"] },
+          amount: { $ifNull: ["$grandTotal", "N/A"] },
+          createdAt: 1
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    ]);
+
+    if (!orders) {
+      return next(new ErrorHandler('No order found', 400));
+    }
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPages: Math.ceil(totalOrders / limit),
+      totalOrders,
+      data: orders
+    });
+
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while updating delivery partner details');
+  }
+});
 
 
 

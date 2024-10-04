@@ -11,7 +11,8 @@ exports.getTotalSales = catchAsyncError(async (req, res, next) => {
                     _id: null,
                     count: {$sum: 1}
                 }
-            },{
+            },
+            {
                 $addFields: {
                     totalSales: {
                         $toString: {
