@@ -28,6 +28,7 @@ const orderTableRouter = require('./routes/orderTableRouter');
 const dealOfTheDayRouter = require('./routes/dealofthedayRouter');
 const dashboardRouter = require('./routes/dashboardRouter');
 const referralRouter = require('./routes/referralRouter');
+const deliveryInstructions = require('./routes/deliveryInstructionsRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -85,6 +86,7 @@ app.use('/api/ordertable', orderTableRouter);
 app.use('/api/dealoftheday', dealOfTheDayRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/referral', referralRouter);
+app.use('/api/deliveryInstructions', deliveryInstructions);
 
 // using other middlewares
 app.use(errorMiddleware);
