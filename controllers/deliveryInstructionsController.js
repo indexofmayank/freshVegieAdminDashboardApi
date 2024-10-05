@@ -5,8 +5,8 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 
 exports.createDeliveryInstructions = catchAsyncError (async (req, res, next) => {
     try {
-        const {name, status, total_distance, surge_fee} = req.body;
-        const deliveryInstructions = await DeliveryInstructions.create({name, status, total_distance, surge_fee});
+        const {minimumcart_amount,delivery_charges,initial_rewardpoint} = req.body;
+        const deliveryInstructions = await DeliveryInstructions.create({minimumcart_amount, delivery_charges, initial_rewardpoint});
         if(!deliveryInstructions) {
             return next(new ErrorHandler('Server error', 500));
         }
@@ -29,10 +29,9 @@ exports.getDeliveryInstructionsForTable = catchAsyncError(async (req, res, next)
         const result = await DeliveryInstructions.aggregate([
             {
                 $project: {
-                    name: {$ifNull: ["$name", "N/a"]},
-                    status: {$ifNull: ["$status" , "N/a"]},
-                    total_distance: {$ifNull: ["$total_distance", "N/a"]},
-                    surge_fee: {$ifNull: ["$surge_fee", "N/a"]}
+                    minimumcart_amount: {$ifNull: ["$minimumcart_amount", "N/a"]},
+                    delivery_charges: {$ifNull: ["$delivery_charges" , "N/a"]},
+                    initial_rewardpoint: {$ifNull: ["$initial_rewardpoint", "N/a"]},
                 }
             },
             {$sort: {createdAt: -1}},
