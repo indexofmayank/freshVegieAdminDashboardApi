@@ -8,6 +8,7 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const { format } = require('winston');
 const nodemailer = require('nodemailer');
+const {useWalletfunds} = require('../controllers/walletController');
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
 
@@ -69,11 +70,21 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     shippingPrice,
     totalPrice,
     orderStatus,
-    deliverAt
+    deliverAt,
+    isWalletUsed
   } = req.body;
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
+  //=-=-=-=-=-=-=-=-=-=-=-= wallet flag option -=-=-=-=-=-=-=-=-=-=-=-=-
+    if(isWalletUsed) {
+      const walletdDeduction = await useWalletfunds(req, res, session);
+      console.log(walletdDeduction); 
+      if(!walletdDeduction.success) {
+        throw new Error('Wallet deduction failed');
+      }
+    }
+  //=-=-=-=-=-=-=-=-=-=-=-= wallet flag option -=-=-=-=-=-=-=-=-=-=-=-=-
     for (let item of orderItems) {
       const product = await Product.findById(item.id).session(session);
       const subSession = await mongoose.startSession();
@@ -111,32 +122,30 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
 
     //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.protonmail.com",
-      port: 465, // Use 465 for SSL or 587 for TLS
-      secure: true, // True for SSL
-      auth: {
-        user: "mayankdevtiwari@proton.me", // Your ProtonMail email address
-        pass: "Superfan@1234", // The app-specific password generated earlier
-      },
-    });
+    // const transporter = nodemailer.createTransport({
+    //   host: "smtp.protonmail.com",
+    //   port: 465, // Use 465 for SSL or 587 for TLS
+    //   secure: true, // True for SSL
+    //   auth: {
+    //     user: "mayankdevtiwari@proton.me", // Your ProtonMail email address
+    //     pass: "Superfan@1234", // The app-specific password generated earlier
+    //   },
+    // });
 
-    const mailOptions = {
-      from: '"Sender Name" <mayankdevtiwari@proton.me>', // Sender address
-      to: 'maimayanmanu@gmail.com',
-      subject: 'Hello with Environment Variables!',
-      text: 'This email was sent using environment variables.'
-    };
+    // const mailOptions = {
+    //   from: '"Sender Name" <mayankdevtiwari@proton.me>', // Sender address
+    //   to: 'maimayanmanu@gmail.com',
+    //   subject: 'Hello with Environment Variables!',
+    //   text: 'This email was sent using environment variables.'
+    // };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log('Error occurred: ' + error.message);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
-
-
+    // transporter.sendMail(mailOptions, (error, info) => {
+    //   if (error) {
+    //     console.log('Error occurred: ' + error.message);
+    //   } else {
+    //     console.log('Email sent: ' + info.response);
+    //   }
+    // });
 
     //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
 
