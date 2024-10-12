@@ -158,7 +158,7 @@ exports.addFundsToWallet = async (req, res, next) => {
 exports.useWalletfunds = CatchAsyncErrors(async (req, res, session) => {
     try {
         let success = false;
-        const description = req.body.description || 'Purchase payment';
+        const description = 'Purchase payment';
         const amount = parseInt(req.body.amount);
         const userId = req.body.user.userId;
         if (!userId) {

@@ -5,7 +5,7 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 
 exports.createDeliveryInstructions = catchAsyncError (async (req, res, next) => {
     try {
-        const {minimumcart_amount,delivery_charges,initial_rewardpoint} = req.body;
+        const {minimumcart_amount, delivery_charges, initial_rewardpoint} = req.body;
         const deliveryInstructions = await DeliveryInstructions.create({minimumcart_amount, delivery_charges, initial_rewardpoint});
         if(!deliveryInstructions) {
             return next(new ErrorHandler('Server error', 500));
@@ -15,6 +15,7 @@ exports.createDeliveryInstructions = catchAsyncError (async (req, res, next) => 
             message: 'created succeessfully',
             data: deliveryInstructions
         });
+
     } catch (error) {
         throw new ErrorHandler('Unable to create delivery instructions', 500);
     }
@@ -66,4 +67,25 @@ exports.getDeliveryInstructions = catchAsyncError (async (req, res, next) => {
         throw new ErrorHandler('Unable to get delivery instructions', 500);
     }
 });
+
+exports.getDeliveryInstructionsById = catchAsyncError (async (req, res, next) => {
+    try {
+        if(!req.params.id) {
+            throw new ErrorHandler('Unable to get delivery instructions', 500);
+        }
+        const result = await DeliveryInstructions.findById(req.params.id);
+        if(!result) {
+            throw new ErrorHandler('Unable to get delivery instructions', 500);
+        }
+        return res.status(200).json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+})
 

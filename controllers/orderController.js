@@ -8,7 +8,10 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const { format } = require('winston');
 const nodemailer = require('nodemailer');
-const {useWalletfunds} = require('../controllers/walletController');
+const { useWalletfunds } = require('../controllers/walletController');
+const Wallet = require('../models/walletModel');
+const User = require('../models/userModel');
+
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ';
 
@@ -58,7 +61,7 @@ const getLatLng = async (toCheckAddress) => {
 };
 
 exports.createNewOrder = catchAsyncError(async (req, res, next) => {
-  console.log('we can hre')
+  console.log(req.body);
   const {
     shippingInfo,
     orderItems,
@@ -71,20 +74,75 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     totalPrice,
     orderStatus,
     deliverAt,
-    isWalletUsed
   } = req.body;
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-  //=-=-=-=-=-=-=-=-=-=-=-= wallet flag option -=-=-=-=-=-=-=-=-=-=-=-=-
-    if(isWalletUsed) {
-      const walletdDeduction = await useWalletfunds(req, res, session);
-      console.log(walletdDeduction); 
-      if(!walletdDeduction.success) {
-        throw new Error('Wallet deduction failed');
+    //=-=-=-=-=-=-=-=-=-=-=-= payment area option -=-=-=-=-=-=-=-=-=-=-=-=-
+    if (req.body.paymentInfo && req.body.user.userId) {
+      switch (req.body.paymentInfo.payment_type) {
+        case 'cod':
+          console.log('it was cod and done');
+          break;
+
+        case 'online':
+          if (req.body.paymentInfo.useReferral) {
+
+            const userForReferal = await User.findById(req.body.user.userId).session(session);
+
+            if (!userForReferal) {
+              return res.status(400).json({
+                success: false,
+                message: 'Referal not found'
+              });
+            }
+
+            if (userForReferal.userReferrInfo.referralAmount < req.body.paymentInfo.referralAmount) {
+              return res.status(400).json({
+                success: false,
+                message: 'Referal amount is not sufficient'
+              });
+            }
+            userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
+            await userForReferal.save({ session });
+          }
+          if (req.body.paymentInfo.useWallet) {
+            const wallet = await Wallet.findOne({ 'userId': req.body.user.userId }).session(session);
+            if (!wallet) {
+              return res.status(400).json({
+                success: false,
+                message: 'Wallet not found'
+              });
+            }
+
+            if (wallet.balance < req.body.paymentInfo.referralAmount) {
+              return res.status(400).json({
+                success: false,
+                message: 'Wallet amount is not sufficient'
+              });
+            }
+            wallet.balance -= req.body.paymentInfo.referralAmount;
+            const amount = req.body.paymentInfo.referralAmount;
+            const description = 'Product purchased'
+            wallet.transactions.push({ type: 'debit', amount, description });
+            await wallet.save({ session });
+          }
+          //after all this for online gateway payment
+          
+          //after all this for online gateway payment
+          req.body.paymentInfo.status = 'completed';
+          break;
+
+        default:
+          return res.status(400).json({
+            success: false,
+            message: 'Not able to process payment'
+          })
       }
     }
-  //=-=-=-=-=-=-=-=-=-=-=-= wallet flag option -=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+    //=-=-=-=-=-=-=-=-=-=-=-= payment area option -=-=-=-=-=-=-=-=-=-=-=-=-
     for (let item of orderItems) {
       const product = await Product.findById(item.id).session(session);
       const subSession = await mongoose.startSession();
@@ -954,16 +1012,16 @@ exports.getOrderForDashboardCards = catchAsyncError(async (req, res, next) => {
 
     if (status === 'pending') {
       matchCondition.orderStatus = { $eq: 'received' };
-      totalOrders = await Order.countDocuments({'orderStatus': 'received'});
+      totalOrders = await Order.countDocuments({ 'orderStatus': 'received' });
     }
-    
+
     if (status === 'delivered') {
       matchCondition.orderStatus = { $eq: 'delivered' };
-      totalOrders = await Order.countDocuments({'orderStatus': 'delivered'});
+      totalOrders = await Order.countDocuments({ 'orderStatus': 'delivered' });
     }
-    
+
     if (status === 'total_order') {
-      matchCondition = {}; 
+      matchCondition = {};
       totalOrders = await Order.countDocuments({});
     }
 

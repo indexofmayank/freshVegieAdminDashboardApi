@@ -3,25 +3,21 @@ const mongoose = require('mongoose');
 
 const deliveryInstructionSchema = mongoose.Schema({
 
-    name: {
-        type: String,
-        required: [true, 'Please enter name']
-    },
-
-    status: {
-        type: String,
-        required: [true, 'Please enter status']
-    },
-
-    total_distance: {
+    minimum_cart_amount: {
         type: Number,
-        required: [true, 'Pleae provide total distance']
+        required: [true, 'Please provide minimum cart amount']
     },
 
-    surge_fee: {
+    delivery_charges: {
         type: Number,
-        required: [true, 'Pleae provide surge fee']
+        required: [true, 'Please provide delivery charges']
     },
+
+    intial_rewardpoint: {
+        type: Number,
+        required: [true, 'Please provide initial reward point']
+    }
+
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
