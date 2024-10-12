@@ -82,7 +82,52 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     if (req.body.paymentInfo && req.body.user.userId) {
       switch (req.body.paymentInfo.payment_type) {
         case 'cod':
-          console.log('it was cod and done');
+          if (req.body.paymentInfo.useReferral) {
+
+            const userForReferal = await User.findById(req.body.user.userId).session(session);
+
+            if (!userForReferal) {
+              return res.status(400).json({
+                success: false,
+                message: 'Referal not found'
+              });
+            }
+
+            if (userForReferal.userReferrInfo.referralAmount < req.body.paymentInfo.referralAmount) {
+              return res.status(400).json({
+                success: false,
+                message: 'Referal amount is not sufficient'
+              });
+            }
+            userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
+            await userForReferal.save({ session });
+          }
+          if (req.body.paymentInfo.useWallet) {
+            const wallet = await Wallet.findOne({ 'userId': req.body.user.userId }).session(session);
+            if (!wallet) {
+              return res.status(400).json({
+                success: false,
+                message: 'Wallet not found'
+              });
+            }
+
+            if (wallet.balance < req.body.paymentInfo.walletAmount) {
+              return res.status(400).json({
+                success: false,
+                message: 'Wallet amount is not sufficient'
+              });
+            }
+            wallet.balance -= req.body.paymentInfo.walletAmount;
+            const amount = req.body.paymentInfo.walletAmount;
+            const description = 'Product purchased'
+            wallet.transactions.push({ type: 'debit', amount, description });
+            await wallet.save({ session });
+          }
+          //after all this do for cod gateway payment
+
+          //after all this for cod gateway payment
+          req.body.paymentInfo.status = 'completed';
+
           break;
 
         case 'online':
@@ -128,7 +173,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
             await wallet.save({ session });
           }
           //after all this for online gateway payment
-          
+
           //after all this for online gateway payment
           req.body.paymentInfo.status = 'completed';
           break;
