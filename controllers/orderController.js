@@ -115,14 +115,14 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
               });
             }
 
-            if (wallet.balance < req.body.paymentInfo.referralAmount) {
+            if (wallet.balance < req.body.paymentInfo.walletAmount) {
               return res.status(400).json({
                 success: false,
                 message: 'Wallet amount is not sufficient'
               });
             }
-            wallet.balance -= req.body.paymentInfo.referralAmount;
-            const amount = req.body.paymentInfo.referralAmount;
+            wallet.balance -= req.body.paymentInfo.walletAmount;
+            const amount = req.body.paymentInfo.walletAmount;
             const description = 'Product purchased'
             wallet.transactions.push({ type: 'debit', amount, description });
             await wallet.save({ session });

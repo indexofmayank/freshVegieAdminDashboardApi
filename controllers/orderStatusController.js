@@ -324,6 +324,8 @@ exports.getTotalSales = catchAsyncError(async (req, res, next) => {
         return res.status(200).json({
             success: true,
             data: result.length > 0 ? result[0].totalSales : 0
+
+            
         });
     } catch (error) {
         console.log(error);

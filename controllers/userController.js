@@ -73,6 +73,7 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         }
         return referralCode;
     };
+
     // Generate and save a unique referral code to the Referral collection
     const referralCode = await generateUniqueReferralCode();
     const user = await User.create({

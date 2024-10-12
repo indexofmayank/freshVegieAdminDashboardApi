@@ -33,7 +33,7 @@ const walletSchema = new mongoose.Schema({
 
     balance: {
         type: Number,
-        default: Date.now
+        default: 0,
     },
 
     transactions: [

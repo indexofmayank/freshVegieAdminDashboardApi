@@ -58,7 +58,7 @@ exports.getOrdersForTable = catchAsyncError(async (req, res, next) => {
         }
       },
       {
-        $sort: { createdAt: -1 }
+        $sort: { createdAt: 1 }
       },
       { $skip: skip },
       { $limit: limit }
