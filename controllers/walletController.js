@@ -83,7 +83,7 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
                 },
                 {
                     $sort: {
-                        'transactions.date': -1 
+                        'transactions.date': -1
                     }
                 },
                 {
@@ -103,7 +103,7 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
                     }
                 },
             ]);
-    
+
         } else {
             wallet = await Wallet.aggregate([
                 {
@@ -208,6 +208,10 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
 });
 
 exports.addFundsToWallet = async (req, res, next) => {
+
+    const {skip = 0, limit = 10} = req.query;
+    const skipInt = parseInt(skip);
+    const limitInt = parseInt(limit);
     try {
         const { amount, description = 'Funds Added' } = req.body;
         const wallet = await Wallet.findOne({ 'userId': req.params.id });
@@ -217,19 +221,85 @@ exports.addFundsToWallet = async (req, res, next) => {
         wallet.balance += amount;
         wallet.transactions.push({ type: 'credit', amount, description });
         await wallet.save();
-        const result = await Wallet.findOne({ 'userId': req.params.id });
-        if (!result) {
-            return res.status(200).json({
-                success: false,
-                message: 'Amount added but wallet not found'
-            });
-        }
+        const result = await Wallet.aggregate([
+            {
+                $match: { 'userId': mongoose.Types.ObjectId(req.params.id) }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'userDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$userDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    timestampFormatted: {
+                        $dateToString: {
+                            format: "%d %B %Y, %H:%M:%S",
+                            date: "$createdAt",
+                            timezone: 'Asia/Kolkata'
+                        }
+                    },
+                    userName: { $ifNull: ['$userDetails.name', 'Unknown User'] }
+                }
+            },
+            {
+                $unwind: {
+                    path: '$transactions',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    'transactions.timestampFormatted': {
+                        $dateToString: {
+                            format: "%d %B %Y, %H:%M:%S",
+                            date: "$transactions.date",
+                            timezone: 'Asia/Kolkata'
+                        }
+                    },
+                    'transactions.description': { $ifNull: ['$transactions.description', 'No Description'] }
+                }
+            },
+            {
+                $sort: {
+                    'transactions.date': -1
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    userName: { $first: '$userName' },
+                    balance: { $first: '$balance' },
+                    transactions: { $push: '$transactions' }
+                }
+            },
+            {
+                $project: {
+                    userName: 1,
+                    balance: 1,
+                    timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+                    transactions: {
+                        $slice: ['$transactions', skipInt, limitInt]
+                    }
+                }
+            },
+        ]);
+
         return res.status(200).json({
             success: true,
-            message: 'Amount added successfully',
             data: result
         });
-    } catch (error) {
+
+} catch (error) {
         return res.status(200).json({
             success: false,
             message: "Server error",
