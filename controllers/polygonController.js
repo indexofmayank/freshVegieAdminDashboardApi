@@ -24,6 +24,25 @@ exports.createPolygon = catchAsyncError(async (req, res, next) => {
     }
 });
 
+exports.getSimplePolygon = catchAsyncError(async (req, res, next) => {
+    try {
+        const results = await Polygon.find()
+        if(!results) {
+            throw new Error('Something went wrong while getting polygon', 400);
+        }
+        return res.status(200).json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            MessageEvent: 'Server error',
+            error: error.message
+        });
+    }
+});
+
 exports.getAllPolygon = catchAsyncError(async(req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
