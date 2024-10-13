@@ -4,6 +4,8 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
 const Referral = require('../models/referModel');
+const Wallet = require('../models/walletModel');
+
 
 exports.getAllUser = catchAsyncError(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
@@ -58,7 +60,6 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         });
     }
 
-    // Create a new user
     // Function to generate a unique referral code using Referral collection
     const generateUniqueReferralCode = async () => {
         let referralCode;
@@ -87,10 +88,20 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
             referralCode: referralCode
         }
     });
-    console.log(user);
-    console.log('Unique Referral Code:', referralCode);
 
-    res.status(201).json({
+    if(!user) {
+        throw new Error('Something went wrong while creating user');
+    }
+
+    //create wallet for the user
+    const userId = user._id;
+    const balance = 0;
+    const wallet = await Wallet.create({userId, balance});
+    if (!wallet) {
+        return next(new ErrorHandler('Server error', 500));
+    }
+
+    return res.status(201).json({
         success: true,
         data: {
             id: user._id,
