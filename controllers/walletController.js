@@ -26,85 +26,162 @@ exports.createWallet = CatchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
-    const { skip = 0, limit = 10 } = req.query; // Get skip and limit from query params
+    const { skip = 0, limit = 10 } = req.query;
     const skipInt = parseInt(skip);
     const limitInt = parseInt(limit);
+    let wallet = ''
 
     try {
-        const wallet = await Wallet.aggregate([
-            {
-                $match: { 'userId': mongoose.Types.ObjectId(req.params.id) }
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'userId',
-                    foreignField: '_id',
-                    as: 'userDetails'
-                }
-            },
-            {
-                $unwind: {
-                    path: '$userDetails',
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $addFields: {
-                    timestampFormatted: {
-                        $dateToString: {
-                            format: "%d %B %Y, %H:%M:%S",
-                            date: "$createdAt",
-                            timezone: 'Asia/Kolkata'
-                        }
-                    },
-                    userName: { $ifNull: ['$userDetails.name', 'Unknown User'] }
-                }
-            },
-            {
-                $unwind: {
-                    path: '$transactions',
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $addFields: {
-                    'transactions.timestampFormatted': {
-                        $dateToString: {
-                            format: "%d %B %Y, %H:%M:%S",
-                            date: "$transactions.date",
-                            timezone: 'Asia/Kolkata'
-                        }
-                    },
-                    'transactions.description': { $ifNull: ['$transactions.description', 'No Description'] }
-                }
-            },
-            {
-                $sort: {
-                    'transactions.date': -1 // Sort by transaction date ascending
-                    // Use -1 for descending order if needed
-                }
-            },
-            {
-                $group: {
-                    _id: '$_id',
-                    userName: { $first: '$userName' },
-                    balance: { $first: '$balance' },
-                    transactions: { $push: '$transactions' }
-                }
-            },
-            {
-                $project: {
-                    userName: 1,
-                    balance: 1,
-                    timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
-                    transactions: {
-                        $slice: ['$transactions', skipInt, limitInt]
+        if (limit === 'all') {
+            wallet = await Wallet.aggregate([
+                {
+                    $match: { 'userId': mongoose.Types.ObjectId(req.params.id) }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'userDetails'
                     }
-                }
-            },
-        ]);
-        
+                },
+                {
+                    $unwind: {
+                        path: '$userDetails',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        timestampFormatted: {
+                            $dateToString: {
+                                format: "%d %B %Y, %H:%M:%S",
+                                date: "$createdAt",
+                                timezone: 'Asia/Kolkata'
+                            }
+                        },
+                        userName: { $ifNull: ['$userDetails.name', 'Unknown User'] }
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$transactions',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        'transactions.timestampFormatted': {
+                            $dateToString: {
+                                format: "%d %B %Y, %H:%M:%S",
+                                date: "$transactions.date",
+                                timezone: 'Asia/Kolkata'
+                            }
+                        },
+                        'transactions.description': { $ifNull: ['$transactions.description', 'No Description'] }
+                    }
+                },
+                {
+                    $sort: {
+                        'transactions.date': -1 
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        userName: { $first: '$userName' },
+                        balance: { $first: '$balance' },
+                        transactions: { $push: '$transactions' }
+                    }
+                },
+                {
+                    $project: {
+                        userName: 1,
+                        balance: 1,
+                        timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+                        transactions: 1
+                    }
+                },
+            ]);
+    
+        } else {
+            wallet = await Wallet.aggregate([
+                {
+                    $match: { 'userId': mongoose.Types.ObjectId(req.params.id) }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'userDetails'
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$userDetails',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        timestampFormatted: {
+                            $dateToString: {
+                                format: "%d %B %Y, %H:%M:%S",
+                                date: "$createdAt",
+                                timezone: 'Asia/Kolkata'
+                            }
+                        },
+                        userName: { $ifNull: ['$userDetails.name', 'Unknown User'] }
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$transactions',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        'transactions.timestampFormatted': {
+                            $dateToString: {
+                                format: "%d %B %Y, %H:%M:%S",
+                                date: "$transactions.date",
+                                timezone: 'Asia/Kolkata'
+                            }
+                        },
+                        'transactions.description': { $ifNull: ['$transactions.description', 'No Description'] }
+                    }
+                },
+                {
+                    $sort: {
+                        'transactions.date': -1
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        userName: { $first: '$userName' },
+                        balance: { $first: '$balance' },
+                        transactions: { $push: '$transactions' }
+                    }
+                },
+                {
+                    $project: {
+                        userName: 1,
+                        balance: 1,
+                        timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
+                        transactions: {
+                            $slice: ['$transactions', skipInt, limitInt]
+                        }
+                    }
+                },
+            ]);
+
+        }
+
+        console.log(wallet);
+
         // Handle case when wallet is empty
         if (wallet.length === 0) {
             return res.status(404).json({
@@ -140,8 +217,8 @@ exports.addFundsToWallet = async (req, res, next) => {
         wallet.balance += amount;
         wallet.transactions.push({ type: 'credit', amount, description });
         await wallet.save();
-        const result = await Wallet.findOne({'userId': req.params.id});
-        if(!result) {
+        const result = await Wallet.findOne({ 'userId': req.params.id });
+        if (!result) {
             return res.status(200).json({
                 success: false,
                 message: 'Amount added but wallet not found'
