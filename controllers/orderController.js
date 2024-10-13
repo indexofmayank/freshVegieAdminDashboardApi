@@ -134,7 +134,8 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
         case 'online':
           if (req.body.paymentInfo.useReferral) {
-
+            const description = 'Product purchased';
+            const amount = req.body.paymentInfo.referralAmount;
             const userForReferal = await User.findById(req.body.user.userId).session(session);
 
             if (!userForReferal) {
@@ -151,6 +152,8 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
               });
             }
             userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
+            userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
+
             await userForReferal.save({ session });
           }
           if (req.body.paymentInfo.useWallet) {
