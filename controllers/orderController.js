@@ -85,7 +85,8 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
           if (req.body.paymentInfo.useReferral) {
 
             const userForReferal = await User.findById(req.body.user.userId).session(session);
-
+            const description = 'Product purchased';
+            const amount = req.body.paymentInfo.referralAmount;
             if (!userForReferal) {
               return res.status(400).json({
                 success: false,
@@ -100,6 +101,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
               });
             }
             userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
+            userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
             await userForReferal.save({ session });
           }
           if (req.body.paymentInfo.useWallet) {
@@ -227,18 +229,20 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
 
-    if(req.body.user.email && req.body.user) {
-      const shippindAddress = [
+    if (req.body.user.email && req.body.user) {
+      const shippingAddress = [
         req.body.shippingInfo.deliveryAddress.address,
         req.body.shippingInfo.deliveryAddress.locality,
         req.body.shippingInfo.deliveryAddress.landmark,
         req.body.shippingInfo.deliveryAddress.city,
         req.body.shippingInfo.deliveryAddress.pin_code,
         req.body.shippingInfo.deliveryAddress.state
-      ].join(', ')
+      ]
+        .filter(value => value)
+        .join(', ');
       const items = req.body.orderItems || [];
       const to = req.body.user.email;
-      const subject = 'Order placed at fresh Vegie for '+ result.orderId
+      const subject = 'Order placed at fresh Vegie for ' + result.orderId
       const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
@@ -337,7 +341,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
                   <p class="bold">Total Amount: ${result.grandTotal}</p>
               </div>
               <div class="order-details">
-                  <p class="bold">Shipping Address: ${shippindAddress}</p>
+                  <p class="bold">Shipping Address: ${shippingAddress}</p>
                   <p class="bold">Estimated Delivery Date ${result.createdAt + 1}</p>
               </div>
               <div class="order-items">
@@ -348,7 +352,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
               </div>
                   <p>If you have any questions, feel free to contact our support team:</p>
                   <p>Email: fortune.solutionpoint@gmail.com</p>
-                  <p>Phone: 9935377995</p>
+                  <p>Phone: 9167992130</p>
               </div>
               <div class="footer">
                   <p>If you did not place this order, please contact us immediately at fortune.solutionpoint@gmail.com.</p>
@@ -357,23 +361,23 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       </body>
       </html>
   `;
-  
+
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
         secure: false,
         auth: {
           user: 'fortune.solutionpoint@gmail.com',
-          pass: 'rsyh xzdk cfgo vdak'  
+          pass: 'rsyh xzdk cfgo vdak'
         }
       });
-  
+
       try {
         const info = await transporter.sendMail({
           from: 'fortune.solutionpoint@gmail.com',
           to,
           subject,
-          html: htmlContent 
+          html: htmlContent
         });
       } catch (error) {
         console.error(error);
@@ -384,7 +388,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
         });
       }
 
-    } 
+    }
     //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
