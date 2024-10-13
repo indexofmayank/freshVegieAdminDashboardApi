@@ -367,7 +367,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
         secure: false,
         auth: {
           user: 'fortune.solutionpoint@gmail.com',
-          pass: 'rsyh xzdk cfgo vdak' // Consider using environment variables for this 
+          pass: 'rsyh xzdk cfgo vdak'  
         }
       });
   
@@ -376,7 +376,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
           from: 'fortune.solutionpoint@gmail.com',
           to,
           subject,
-          html: htmlContent // Use HTML content here
+          html: htmlContent 
         });
       } catch (error) {
         console.error(error);

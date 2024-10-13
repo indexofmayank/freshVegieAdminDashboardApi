@@ -217,8 +217,38 @@ const orderSchema = mongoose.Schema({
       type: Number,
       require: false,
       default: 0
+    },
+    usedelivery: {
+      type: Boolean,
+      require: false,
+      default: false
+    },
+    deliverycharges: {
+      type: Number,
+      require: false,
+      default: 0
+    },
+    useReferral: {
+      type: Boolean,
+      require: false,
+      default: false
+    },
+    referralAmount: {
+      type: Number,
+      require: false,
+      default: 0
+    },
+    useWallet: {
+      type: Boolean,
+      require: false,
+      default: true
+    },
+    walletAmount: {
+      type: Number,
+      require: false,
+      default: 0
     }
-  },
+  },  
   deliveryInfo: {
     deliveryType: {
       type: String,
