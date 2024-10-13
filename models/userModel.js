@@ -81,7 +81,7 @@ const userModel = new mongoose.Schema({
         referralAmount: {
             type: Number,
             required: false,
-            default: 20
+            default: 0,
         },
         referredTo: [
             {
