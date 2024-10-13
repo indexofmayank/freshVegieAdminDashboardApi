@@ -94,7 +94,7 @@ exports.createPolygon = catchAsyncError(async (req, res, next) => {
 
 exports.getSimplePolygon = catchAsyncError(async (req, res, next) => {
     try {
-        const results = await Polygon.find({'status' : 'true'})
+        const results = await Polygon.find({'status' : true});
         if(!results) {
             throw new Error('Something went wrong while getting polygon', 400);
         }
