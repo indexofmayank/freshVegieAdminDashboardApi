@@ -142,10 +142,18 @@ exports.addFundsToWallet = async (req, res, next) => {
         wallet.balance += amount;
         wallet.transactions.push({ type: 'credit', amount, description });
         await wallet.save();
-        res.status(200).json({
+        const result = await Wallet.findOne({'userId': req.params.id});
+        if(!result) {
+            return res.status(200).json({
+                success: false,
+                message: 'Amount added but wallet not found'
+            });
+        }
+        return res.status(200).json({
             success: true,
-            message: 'Amount added successfully'
-        })
+            message: 'Amount added successfully',
+            data: result
+        });
     } catch (error) {
         return res.status(200).json({
             success: false,
