@@ -48,7 +48,8 @@ exports.getAllUser = catchAsyncError(async (req, res, next) => {
 
 exports.createUser = catchAsyncError(async (req, res, next) => {
     console.log(req.body);
-    const { name, email, phone, address, device, userInfo } = req.body;
+    const { name, email, phone, address, device, userInfo, fcm_token
+     } = req.body;
 
 
     // Check if the phone number already exists
@@ -86,7 +87,8 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
         userInfo,
         userReferrInfo: {
             referralCode: referralCode
-        }
+        },
+        fcm_token
     });
 
     if(!user) {
