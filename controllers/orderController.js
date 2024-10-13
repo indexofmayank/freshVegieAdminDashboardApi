@@ -346,7 +346,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
                       ${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}
                   </ul>
               </div>
-              <p>You will receive a confirmation email with tracking details once your order is shipped. You can also check the status of your order using the link below:</p>
                   <p>If you have any questions, feel free to contact our support team:</p>
                   <p>Email: fortune.solutionpoint@gmail.com</p>
                   <p>Phone: 9935377995</p>

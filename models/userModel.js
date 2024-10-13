@@ -97,6 +97,30 @@ const userModel = new mongoose.Schema({
                 }
             }
         ],
+        referredLogs: [
+            {
+                type: {
+                    type: String,
+                    enum: ['credit', 'debit'],
+                    required: true
+                },
+    
+                amount: {
+                    type: Number,
+                    required: true
+                },
+    
+                date: {
+                    type: Date,
+                    default: Date.now
+                },
+    
+                description: {
+                    type: String,
+                    required: true
+                }
+            }
+        ]
     },
     userWalledInfo: {
         type: Number,
