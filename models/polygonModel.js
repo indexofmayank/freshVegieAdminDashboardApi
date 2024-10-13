@@ -9,7 +9,7 @@ const polygonSchema = new mongoose.Schema({
     },
 
     status: {
-        type: String,
+        type: Boolean,
         required: [true, 'Please enter status'],
     },
 
@@ -23,6 +23,13 @@ const polygonSchema = new mongoose.Schema({
                 type: String,
                 required: [true, 'Please enter lng']
             }
+        }
+    ],
+
+    pincodes: [
+        {
+            type: Number,
+            require: [true]
         }
     ],
 

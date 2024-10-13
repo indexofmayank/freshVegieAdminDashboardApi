@@ -2,16 +2,84 @@ const Polygon = require('../models/polygonModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
+const pointInPolygon = require('point-in-polygon');
+const axios = require('axios');
+
 
 exports.createPolygon = catchAsyncError(async (req, res, next) => {
     console.log(req.body);
     try {
         let {name, status, polygon, image} = req.body;
+        console.log(polygon);
+        const polygonData = polygon.map(point => [parseFloat(point.lng), parseFloat(point.lat)]);
+        console.log(polygonData);
+
+        const generatePointsWithinPolygon = (polygon) => {
+            console.log('we came here inside point with polygon')
+            const latitudes = polygon.map(point => parseFloat(point[1]));
+            const longitudes = polygon.map(point => parseFloat(point[0]));
+            console.log(latitudes);
+            console.log(longitudes);
+            
+            const minLat = Math.min(...latitudes);
+            const maxLat = Math.max(...latitudes);
+            const minLng = Math.min(...longitudes);
+            const maxLng = Math.max(...longitudes);
+            console.log(minLat);
+            console.log(maxLat);
+            console.log(minLng);
+            console.log(maxLng);
+            
+            const points = [];
+        
+            // Iterate through the bounding box of the polygon
+            for (let lat = minLat; lat <= maxLat; lat += 0.01) { // Adjust step size for granularity
+                for (let lng = minLng; lng <= maxLng; lng += 0.01) {
+                    const coords = [lng, lat];
+                    console.log(coords)
+                    if (pointInPolygon(coords, polygon)) {
+                        console.log('got point')
+                        points.push({ lat: lat.toFixed(6), lng: lng.toFixed(6) });
+                    }
+                }
+            }
+            console.log(points);
+            return points;
+        };
+        const getPincodesForPoints = async (points) => {
+            console.log('we came here inside pincode for polygon');
+            const pincodes = [];
+        
+            for (const point of points) {
+                const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
+                    params: {
+                        latlng: `${point.lat},${point.lng}`,
+                        key: 'AIzaSyCrS9nf-veNDWJi3uw7Opt9d08yqlx3spU' // Replace with your actual API key
+                    }
+                });
+        
+        
+                const results = response.data.results;
+                if (results.length > 0) {
+                    const addressComponents = results[0].address_components;
+                    const pincodeComponent = addressComponents.find(component => component.types.includes('postal_code'));
+                    if (pincodeComponent) {
+                        pincodes.push(pincodeComponent.long_name);
+                    }
+                }
+            }
+            console.log(pincodes);
+            return [...new Set(pincodes)]; // Remove duplicates
+        };
+        const pointsWithinPolygon = generatePointsWithinPolygon(polygonData);
+        const pincodes = await getPincodesForPoints(pointsWithinPolygon);
+
+        
         const {secure_url} = await cloudinary.uploader.upload(image, {
             folder: 'tomper-wear',
         });
         image = secure_url;
-        const newPolygon = await Polygon.create({name, status, polygon, image});
+        const newPolygon = await Polygon.create({name, status, polygon, image, pincodes});
         if(!newPolygon) {
             return next(new ErrorHandler('Server error', 500));
         }
@@ -26,7 +94,7 @@ exports.createPolygon = catchAsyncError(async (req, res, next) => {
 
 exports.getSimplePolygon = catchAsyncError(async (req, res, next) => {
     try {
-        const results = await Polygon.find()
+        const results = await Polygon.find({'status' : 'true'})
         if(!results) {
             throw new Error('Something went wrong while getting polygon', 400);
         }
@@ -54,6 +122,7 @@ exports.getAllPolygon = catchAsyncError(async(req, res, next) => {
                     name: 1,
                     image: 1,
                     status: 1,
+
                 }
             },
             {$sort: {name: 1}},
