@@ -332,15 +332,13 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
               <p>Dear <strong>${result.user.name}</strong>,</p>
               <p>Thank you for shopping with <strong>Fresh Vegie</strong>. We're happy to inform you that your order has been placed successfully. Below are the details:</p>
               <div class="order-details">
-                  <p class="bold">Order Number:</p> <p>${result.orderId}</p>
-                  <p class="bold">Order Date:</p> <p>${result.createdAt}</p>
-                  <p class="bold">Total Amount:</p> <p>${result.grandTotal}</p>
+                  <p class="bold">Order Number: ${result.orderId}</p> 
+                  <p class="bold">Order Date: ${result.createdAt}</p> 
+                  <p class="bold">Total Amount: ${result.grandTotal}</p>
               </div>
               <div class="order-details">
-                  <p class="bold">Shipping Address:</p>
-                  <p>${shippindAddress}</p>
-                  <p class="bold">Estimated Delivery Date:</p>
-                  <p>${result.createdAt + 1}</p>
+                  <p class="bold">Shipping Address: ${shippindAddress}</p>
+                  <p class="bold">Estimated Delivery Date ${result.createdAt + 1}</p>
               </div>
               <div class="order-items">
                   <h3>Items Ordered</h3>
@@ -388,7 +386,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       }
 
     } 
-
     //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
