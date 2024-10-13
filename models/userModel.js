@@ -108,7 +108,11 @@ const userModel = new mongoose.Schema({
             type: mongoose.Schema.Types.Mixed,
             required: false
         }
-    ]
+    ],
+    fcm_token: {
+        type: String,
+        required: false
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
