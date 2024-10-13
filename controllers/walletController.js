@@ -58,17 +58,9 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
                             timezone: 'Asia/Kolkata'
                         }
                     },
-                    userName: { $ifNull: ['$userDetails.name', 'Unknown User'] } // Default value if null
+                    userName: { $ifNull: ['$userDetails.name', 'Unknown User'] }
                 }
             },
-            // {
-            //     $project: {
-            //         timestampFormatted: { $ifNull: ["$timestampFormatted", "N/A"] },
-            //         userName: 1,
-            //         balance: { $ifNull: ['$balance', 0] }, // Default to 0 if balance is null
-            //         transactions: 1
-            //     }
-            // },
             {
                 $unwind: {
                     path: '$transactions',
@@ -84,7 +76,13 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
                             timezone: 'Asia/Kolkata'
                         }
                     },
-                    'transactions.description': { $ifNull: ['$transactions.description', 'No Description'] } // Default if null
+                    'transactions.description': { $ifNull: ['$transactions.description', 'No Description'] }
+                }
+            },
+            {
+                $sort: {
+                    'transactions.date': -1 // Sort by transaction date ascending
+                    // Use -1 for descending order if needed
                 }
             },
             {
@@ -104,9 +102,9 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
                         $slice: ['$transactions', skipInt, limitInt]
                     }
                 }
-            }
+            },
         ]);
-
+        
         // Handle case when wallet is empty
         if (wallet.length === 0) {
             return res.status(404).json({
