@@ -523,7 +523,7 @@ exports.getUserMetaDataForCreateOrder = catchAsyncError(async (req, res, next) =
                 $project: {
                     name: { $ifNull: ['$name', 'N/a'] },
                     phone: { $ifNull: ['$phone', 'N/a'] },
-                    email: { $ifNull: ["email", 'N/a'] }
+                    email: { $ifNull: ["$email", 'N/a'] }
                 }
             }
         ]);

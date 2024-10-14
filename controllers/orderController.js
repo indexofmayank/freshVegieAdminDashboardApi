@@ -192,7 +192,9 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     }
 
 
-    //=-=-=-=-=-=-=-=-=-=-=-= payment area option -=-=-=-=-=-=-=-=-=-=-=-=-
+    //=-=-=-=-=-=-=-=-=-=-=-= payment area option Ends -=-=-=-=-=-=-=-=-=-=-=-=-
+    
+    //=-=-=-=-=-=-=-=-=-=-=-= Quantity deduction Begins -=-=-=-=-=-=-=-=-=-=-=-=-
     for (let item of orderItems) {
       const product = await Product.findById(item.id).session(session);
       const subSession = await mongoose.startSession();
@@ -208,6 +210,11 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
         console.error(error.message);
       }
     }
+    //=-=-=-=-=-=-=-=-=-=-=-= Quantity deduction Ends -=-=-=-=-=-=-=-=-=-=-=-=-
+
+  //=-=-=-=-=-=-=-=-=-=-=-= Creating order Starts -=-=-=-=-=-=-=-=-=-=-=-=-
+
+
     const orderId = await generateOrderId();
     const newOrder = new Order({
       orderId,
@@ -229,6 +236,9 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     await session.commitTransaction();
     session.endSession();
     orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
+
+    //=-=-=-=-=-=-=-=-=-=-=-= Creating order Ends -=-=-=-=-=-=-=-=-=-=-=-=-
+
 
     //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
 
