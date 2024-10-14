@@ -3,8 +3,8 @@ const deliveryInstructionsController = require('../controllers/deliveryInstructi
 
 router.route('/').post(deliveryInstructionsController.createDeliveryInstructions);
 router.route('/table/').get(deliveryInstructionsController.getDeliveryInstructionsForTable);
-router.route('/').get(deliveryInstructionsController.getDeliveryInstructions);
-router.route('/:id').get(deliveryInstructionsController.getDeliveryInstructionsById);
+// router.route('/').get(deliveryInstructionsController.getDeliveryInstructions);
+router.route('/').get(deliveryInstructionsController.getDeliveryInstructionsById);
 
 
 module.exports = router;

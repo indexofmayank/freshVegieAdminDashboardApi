@@ -69,11 +69,10 @@ exports.getDeliveryInstructions = catchAsyncError (async (req, res, next) => {
 });
 
 exports.getDeliveryInstructionsById = catchAsyncError (async (req, res, next) => {
+    const staticId = '670ac17222aa50ab5514bd25';
+
     try {
-        if(!req.params.id) {
-            throw new ErrorHandler('Unable to get delivery instructions', 500);
-        }
-        const result = await DeliveryInstructions.findById(req.params.id);
+        const result = await DeliveryInstructions.findById(staticId);
         if(!result) {
             throw new ErrorHandler('Unable to get delivery instructions', 500);
         }

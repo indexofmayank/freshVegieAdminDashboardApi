@@ -74,122 +74,122 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     totalPrice,
     orderStatus,
     deliverAt,
+    orderedFrom,
+    deliveryInfo
   } = req.body;
+
+
+  console.log(paymentInfo);
+
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    //=-=-=-=-=-=-=-=-=-=-=-= payment area option -=-=-=-=-=-=-=-=-=-=-=-=-
-    if (req.body.paymentInfo && req.body.user.userId) {
-      switch (req.body.paymentInfo.payment_type) {
-        case 'cod':
-          if (req.body.paymentInfo.useReferral) {
+    //=-=-=-=-=-=-=-=-=-=-=-= payment area option starts -=-=-=-=-=-=-=-=-=-=-=-=-
+    // if (req.body.paymentInfo && req.body.user.userId) {
+    //   switch (req.body.paymentInfo.payment_type) {
+    //     case 'cod':
+    //       if (req.body.paymentInfo.useReferral) {
 
-            const userForReferal = await User.findById(req.body.user.userId).session(session);
-            const description = 'Product purchased';
-            const amount = req.body.paymentInfo.referralAmount;
-            if (!userForReferal) {
-              return res.status(400).json({
-                success: false,
-                message: 'Referal not found'
-              });
-            }
+    //         const userForReferal = await User.findById(req.body.user.userId).session(session);
+    //         const description = 'Product purchased';
+    //         const amount = req.body.paymentInfo.referralAmount;
+    //         if (!userForReferal) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Referal not found'
+    //           });
+    //         }
 
-            if (userForReferal.userReferrInfo.referralAmount < req.body.paymentInfo.referralAmount) {
-              return res.status(400).json({
-                success: false,
-                message: 'Referal amount is not sufficient'
-              });
-            }
-            userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
-            userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
-            await userForReferal.save({ session });
-          }
-          if (req.body.paymentInfo.useWallet) {
-            const wallet = await Wallet.findOne({ 'userId': req.body.user.userId }).session(session);
-            if (!wallet) {
-              return res.status(400).json({
-                success: false,
-                message: 'Wallet not found'
-              });
-            }
+    //         if (userForReferal.userReferrInfo.referralAmount < req.body.paymentInfo.referralAmount) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Referal amount is not sufficient'
+    //           });
+    //         }
+    //         userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
+    //         userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
+    //         await userForReferal.save({ session });
+    //       }
+    //       if (req.body.paymentInfo.useWallet) {
+    //         const wallet = await Wallet.findOne({ 'userId': req.body.user.userId }).session(session);
+    //         if (!wallet) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Wallet not found'
+    //           });
+    //         }
 
-            if (wallet.balance < req.body.paymentInfo.walletAmount) {
-              return res.status(400).json({
-                success: false,
-                message: 'Wallet amount is not sufficient'
-              });
-            }
-            wallet.balance -= req.body.paymentInfo.walletAmount;
-            const amount = req.body.paymentInfo.walletAmount;
-            const description = 'Product purchased'
-            wallet.transactions.push({ type: 'debit', amount, description });
-            await wallet.save({ session });
-          }
-          //after all this do for cod gateway payment
+    //         if (wallet.balance < req.body.paymentInfo.walletAmount) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Wallet amount is not sufficient'
+    //           });
+    //         }
+    //         wallet.balance -= req.body.paymentInfo.walletAmount;
+    //         const amount = req.body.paymentInfo.walletAmount;
+    //         const description = 'Product purchased'
+    //         wallet.transactions.push({ type: 'debit', amount, description });
+    //         await wallet.save({ session });
+    //       }
+    //       req.body.paymentInfo.status = 'completed';
 
-          //after all this for cod gateway payment
-          req.body.paymentInfo.status = 'completed';
+    //       break;
 
-          break;
+    //     case 'online':
+    //       if (req.body.paymentInfo.useReferral) {
+    //         const description = 'Product purchased';
+    //         const amount = req.body.paymentInfo.referralAmount;
+    //         const userForReferal = await User.findById(req.body.user.userId).session(session);
 
-        case 'online':
-          if (req.body.paymentInfo.useReferral) {
-            const description = 'Product purchased';
-            const amount = req.body.paymentInfo.referralAmount;
-            const userForReferal = await User.findById(req.body.user.userId).session(session);
+    //         if (!userForReferal) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Referal not found'
+    //           });
+    //         }
 
-            if (!userForReferal) {
-              return res.status(400).json({
-                success: false,
-                message: 'Referal not found'
-              });
-            }
+    //         if (userForReferal.userReferrInfo.referralAmount < req.body.paymentInfo.referralAmount) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Referal amount is not sufficient'
+    //           });
+    //         }
+    //         userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
+    //         userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
 
-            if (userForReferal.userReferrInfo.referralAmount < req.body.paymentInfo.referralAmount) {
-              return res.status(400).json({
-                success: false,
-                message: 'Referal amount is not sufficient'
-              });
-            }
-            userForReferal.userReferrInfo.referralAmount -= req.body.paymentInfo.referralAmount;
-            userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
+    //         await userForReferal.save({ session });
+    //       }
+    //       if (req.body.paymentInfo.useWallet) {
+    //         const wallet = await Wallet.findOne({ 'userId': req.body.user.userId }).session(session);
+    //         if (!wallet) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Wallet not found'
+    //           });
+    //         }
 
-            await userForReferal.save({ session });
-          }
-          if (req.body.paymentInfo.useWallet) {
-            const wallet = await Wallet.findOne({ 'userId': req.body.user.userId }).session(session);
-            if (!wallet) {
-              return res.status(400).json({
-                success: false,
-                message: 'Wallet not found'
-              });
-            }
+    //         if (wallet.balance < req.body.paymentInfo.walletAmount) {
+    //           return res.status(400).json({
+    //             success: false,
+    //             message: 'Wallet amount is not sufficient'
+    //           });
+    //         }
+    //         wallet.balance -= req.body.paymentInfo.walletAmount;
+    //         const amount = req.body.paymentInfo.walletAmount;
+    //         const description = 'Product purchased'
+    //         wallet.transactions.push({ type: 'debit', amount, description });
+    //         await wallet.save({ session });
+    //       }
+    //       req.body.paymentInfo.status = 'completed';
+    //       break;
 
-            if (wallet.balance < req.body.paymentInfo.walletAmount) {
-              return res.status(400).json({
-                success: false,
-                message: 'Wallet amount is not sufficient'
-              });
-            }
-            wallet.balance -= req.body.paymentInfo.walletAmount;
-            const amount = req.body.paymentInfo.walletAmount;
-            const description = 'Product purchased'
-            wallet.transactions.push({ type: 'debit', amount, description });
-            await wallet.save({ session });
-          }
-          //after all this for online gateway payment
-
-          //after all this for online gateway payment
-          req.body.paymentInfo.status = 'completed';
-          break;
-
-        default:
-          return res.status(400).json({
-            success: false,
-            message: 'Not able to process payment'
-          })
-      }
-    }
+    //     default:
+    //       return res.status(400).json({
+    //         success: false,
+    //         message: 'Not able to process payment'
+    //       })
+    //   }
+    // }
 
 
     //=-=-=-=-=-=-=-=-=-=-=-= payment area option Ends -=-=-=-=-=-=-=-=-=-=-=-=-
@@ -201,7 +201,10 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       subSession.startTransaction();
       try {
         if (parseInt(product.stock) < parseInt(item.quantity)) {
-          throw new ErrorHandler(`Not enough stock for product ${product.name}`);
+          return res.status(400).json({
+            success: false,
+            message: `Not enough stock for ${product.name}`
+          });
         }
         product.stock -= item.quantity;
         await product.save({ subSession });
@@ -228,11 +231,12 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       shippingPrice,
       totalPrice,
       orderStatus,
-      deliverAt
+      orderedFrom,
+      deliveryInfo,
+      deliverAt,
     });
 
     const result = await newOrder.save({ session });
-    console.log(result);
     await session.commitTransaction();
     session.endSession();
     orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
@@ -240,174 +244,174 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     //=-=-=-=-=-=-=-=-=-=-=-= Creating order Ends -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-    //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
+    //=-=-=-=-=-=-=-=-=-=-=-= mail option Starts -=-=-=-=-=-=-=-=-=-=-=-=-
 
-    if (req.body.user.email && req.body.user) {
-      const shippingAddress = [
-        req.body.shippingInfo.deliveryAddress.address,
-        req.body.shippingInfo.deliveryAddress.locality,
-        req.body.shippingInfo.deliveryAddress.landmark,
-        req.body.shippingInfo.deliveryAddress.city,
-        req.body.shippingInfo.deliveryAddress.pin_code,
-        req.body.shippingInfo.deliveryAddress.state
-      ]
-        .filter(value => value)
-        .join(', ');
-      const items = req.body.orderItems || [];
-      const to = req.body.user.email;
-      const subject = 'Order placed at fresh Vegie for ' + result.orderId
-      const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Order Confirmation</title>
-          <style>
-              body {
-                  font-family: Arial, sans-serif;
-                  background-color: #f4f4f4;
-                  margin: 0;
-                  padding: 0;
-              }
-              .container {
-                  width: 100%;
-                  max-width: 600px;
-                  margin: 0 auto;
-                  background-color: #ffffff;
-                  padding: 20px;
-                  border-radius: 8px;
-                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-              }
-              h1 {
-                  color: #333;
-              }
-              .header {
-                  text-align: center;
-                  padding: 20px 0;
-              }
-              .header h1 {
-                  color: #4caf50;
-                  font-size: 28px;
-                  margin: 0;
-              }
-              .order-details {
-                  margin: 20px 0;
-              }
-              .order-details p {
-                  margin: 10px 0;
-              }
-              .order-details .bold {
-                  font-weight: bold;
-              }
-              .order-items {
-                  border: 1px solid #ddd;
-                  padding: 10px;
-                  margin: 20px 0;
-              }
-              .order-items h3 {
-                  border-bottom: 1px solid #ddd;
-                  padding-bottom: 10px;
-                  margin-bottom: 10px;
-                  color: #333;
-              }
-              .order-items ul {
-                  list-style: none;
-                  padding: 0;
-                  margin: 0;
-              }
-              .order-items li {
-                  padding: 10px 0;
-                  border-bottom: 1px solid #ddd;
-              }
-              .order-items li:last-child {
-                  border-bottom: none;
-              }
-              .contact-info {
-                  margin: 20px 0;
-                  padding: 20px;
-                  background-color: #f4f4f4;
-                  border-radius: 8px;
-                  text-align: center;
-              }
-              .contact-info p {
-                  margin: 0;
-              }
-              .footer {
-                  text-align: center;
-                  font-size: 12px;
-                  color: #888;
-                  margin-top: 20px;
-              }
-          </style>
-      </head>
-      <body>
-          <div class="container">
-              <div class="header">
-                  <h1>Order Placed Successfully!</h1>
-              </div>
-              <p>Dear <strong>${result.user.name}</strong>,</p>
-              <p>Thank you for shopping with <strong>Fresh Vegie</strong>. We're happy to inform you that your order has been placed successfully. Below are the details:</p>
-              <div class="order-details">
-                  <p class="bold">Order Number: ${result.orderId}</p> 
-                  <p class="bold">Order Date: ${result.createdAt}</p> 
-                  <p class="bold">Total Amount: ${result.grandTotal}</p>
-              </div>
-              <div class="order-details">
-                  <p class="bold">Shipping Address: ${shippingAddress}</p>
-                  <p class="bold">Estimated Delivery Date ${result.createdAt + 1}</p>
-              </div>
-              <div class="order-items">
-                  <h3>Items Ordered</h3>
-                  <ul>
-                      ${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}
-                  </ul>
-              </div>
-                  <p>If you have any questions, feel free to contact our support team:</p>
-                  <p>Email: fortune.solutionpoint@gmail.com</p>
-                  <p>Phone: 9167992130</p>
-              </div>
-              <div class="footer">
-                  <p>If you did not place this order, please contact us immediately at fortune.solutionpoint@gmail.com.</p>
-              </div>
-          </div>
-      </body>
-      </html>
-  `;
+  //   if (req.body.user.email && req.body.user) {
+  //     const shippingAddress = [
+  //       req.body.shippingInfo.deliveryAddress.address,
+  //       req.body.shippingInfo.deliveryAddress.locality,
+  //       req.body.shippingInfo.deliveryAddress.landmark,
+  //       req.body.shippingInfo.deliveryAddress.city,
+  //       req.body.shippingInfo.deliveryAddress.pin_code,
+  //       req.body.shippingInfo.deliveryAddress.state
+  //     ]
+  //       .filter(value => value)
+  //       .join(', ');
+  //     const items = req.body.orderItems || [];
+  //     const to = req.body.user.email;
+  //     const subject = 'Order placed at fresh Vegie for ' + result.orderId
+  //     const htmlContent = `
+  //     <!DOCTYPE html>
+  //     <html lang="en">
+  //     <head>
+  //         <meta charset="UTF-8">
+  //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  //         <title>Order Confirmation</title>
+  //         <style>
+  //             body {
+  //                 font-family: Arial, sans-serif;
+  //                 background-color: #f4f4f4;
+  //                 margin: 0;
+  //                 padding: 0;
+  //             }
+  //             .container {
+  //                 width: 100%;
+  //                 max-width: 600px;
+  //                 margin: 0 auto;
+  //                 background-color: #ffffff;
+  //                 padding: 20px;
+  //                 border-radius: 8px;
+  //                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  //             }
+  //             h1 {
+  //                 color: #333;
+  //             }
+  //             .header {
+  //                 text-align: center;
+  //                 padding: 20px 0;
+  //             }
+  //             .header h1 {
+  //                 color: #4caf50;
+  //                 font-size: 28px;
+  //                 margin: 0;
+  //             }
+  //             .order-details {
+  //                 margin: 20px 0;
+  //             }
+  //             .order-details p {
+  //                 margin: 10px 0;
+  //             }
+  //             .order-details .bold {
+  //                 font-weight: bold;
+  //             }
+  //             .order-items {
+  //                 border: 1px solid #ddd;
+  //                 padding: 10px;
+  //                 margin: 20px 0;
+  //             }
+  //             .order-items h3 {
+  //                 border-bottom: 1px solid #ddd;
+  //                 padding-bottom: 10px;
+  //                 margin-bottom: 10px;
+  //                 color: #333;
+  //             }
+  //             .order-items ul {
+  //                 list-style: none;
+  //                 padding: 0;
+  //                 margin: 0;
+  //             }
+  //             .order-items li {
+  //                 padding: 10px 0;
+  //                 border-bottom: 1px solid #ddd;
+  //             }
+  //             .order-items li:last-child {
+  //                 border-bottom: none;
+  //             }
+  //             .contact-info {
+  //                 margin: 20px 0;
+  //                 padding: 20px;
+  //                 background-color: #f4f4f4;
+  //                 border-radius: 8px;
+  //                 text-align: center;
+  //             }
+  //             .contact-info p {
+  //                 margin: 0;
+  //             }
+  //             .footer {
+  //                 text-align: center;
+  //                 font-size: 12px;
+  //                 color: #888;
+  //                 margin-top: 20px;
+  //             }
+  //         </style>
+  //     </head>
+  //     <body>
+  //         <div class="container">
+  //             <div class="header">
+  //                 <h1>Order Placed Successfully!</h1>
+  //             </div>
+  //             <p>Dear <strong>${result.user.name}</strong>,</p>
+  //             <p>Thank you for shopping with <strong>Fresh Vegie</strong>. We're happy to inform you that your order has been placed successfully. Below are the details:</p>
+  //             <div class="order-details">
+  //                 <p class="bold">Order Number: ${result.orderId}</p> 
+  //                 <p class="bold">Order Date: ${result.createdAt}</p> 
+  //                 <p class="bold">Total Amount: ${result.grandTotal}</p>
+  //             </div>
+  //             <div class="order-details">
+  //                 <p class="bold">Shipping Address: ${shippingAddress}</p>
+  //                 <p class="bold">Estimated Delivery Date ${result.createdAt + 1}</p>
+  //             </div>
+  //             <div class="order-items">
+  //                 <h3>Items Ordered</h3>
+  //                 <ul>
+  //                     ${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}
+  //                 </ul>
+  //             </div>
+  //                 <p>If you have any questions, feel free to contact our support team:</p>
+  //                 <p>Email: fortune.solutionpoint@gmail.com</p>
+  //                 <p>Phone: 9167992130</p>
+  //             </div>
+  //             <div class="footer">
+  //                 <p>If you did not place this order, please contact us immediately at fortune.solutionpoint@gmail.com.</p>
+  //             </div>
+  //         </div>
+  //     </body>
+  //     </html>
+  // `;
 
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: 'fortune.solutionpoint@gmail.com',
-          pass: 'rsyh xzdk cfgo vdak'
-        }
-      });
+  //     const transporter = nodemailer.createTransport({
+  //       host: 'smtp.gmail.com',
+  //       port: 587,
+  //       secure: false,
+  //       auth: {
+  //         user: 'fortune.solutionpoint@gmail.com',
+  //         pass: 'rsyh xzdk cfgo vdak'
+  //       }
+  //     });
 
-      try {
-        const info = await transporter.sendMail({
-          from: 'fortune.solutionpoint@gmail.com',
-          to,
-          subject,
-          html: htmlContent
-        });
-      } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-          success: false,
-          message: 'Error placing order and sending email',
-          error: error.message
-        });
-      }
+  //     try {
+  //       const info = await transporter.sendMail({
+  //         from: 'fortune.solutionpoint@gmail.com',
+  //         to,
+  //         subject,
+  //         html: htmlContent
+  //       });
+  //     } catch (error) {
+  //       console.error(error);
+  //       return res.status(500).json({
+  //         success: false,
+  //         message: 'Error placing order and sending email',
+  //         error: error.message
+  //       });
+  //     }
 
-    }
-    //=-=-=-=-=-=-=-=-=-=-=-= mail option -=-=-=-=-=-=-=-=-=-=-=-=-
+  //   }
+    //=-=-=-=-=-=-=-=-=-=-=-= mail option Ends -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
     return res.status(201).json({
       success: true,
-      message: 'new order created successfully',
+      message: 'New order created successfully',
       data: newOrder
     });
   } catch (error) {

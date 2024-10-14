@@ -242,7 +242,7 @@ const orderSchema = mongoose.Schema({
     useWallet: {
       type: Boolean,
       require: false,
-      default: true
+      default: false
     },
     walletAmount: {
       type: Number,
@@ -257,7 +257,7 @@ const orderSchema = mongoose.Schema({
       default: null
     },
     deliveryCost: {
-      type: String,
+      type: Number,
       default: 0,
       required: false
     }, 
@@ -327,6 +327,11 @@ const orderSchema = mongoose.Schema({
     type: Date,
     require: false,
     default: null
+  },
+  orderedFrom: {
+    type: String,
+    require: false,
+    default: 'app'
   }
 }, {
   timestamps: true,
