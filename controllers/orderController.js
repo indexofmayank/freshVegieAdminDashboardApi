@@ -1266,6 +1266,56 @@ exports.getOrderForDashboardCards = catchAsyncError(async (req, res, next) => {
   }
 });
 
+exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const order = await Order.aggregate([
+      {
+        $match: {_id: mongoose.Types.ObjectId(req.params.orderId)}
+      },
+      {
+        $project: {
+          orderItems: {
+            $slice: [
+              {
+                $map: {
+                  input: "$orderItems",
+                  as: "item",
+                  in: {
+                    name: {$ifNull: ["$$item.name", "N/a"]},
+                    image: {$ifNull: ["$$item.image", "N/a"]},
+                    quantity: {$ifNull: ["$$item.quantity", "N/a"]},
+                    item_price: {$ifNull: ["$$item.item_price", "N/a"]},
+                    offer_price: {$ifNull: ["$$item.offer_price", "N/a"]},
+                    incrementvalue: {$ifNull: ["$$item.incrementvalue", "N/a"]},
+                    maxquantity: {$ifNull: ["$$item.maxquantity", "N/a"]},
+                    minquantity: {$ifNull: ["$$item.minquantity", "N/a"]},
+                    unit: {$ifNull: ["$$item.unit", "N/a"]},
+                  }
+                }
+              },
+              skip,
+              limit
+            ]
+          },
+          shippingInfo: 1,
+          orderId: 1
+        } 
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: order
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong getting order for edit order');
+  }
+})
+
 
 
 

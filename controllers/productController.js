@@ -492,7 +492,11 @@ exports.getProductDropdownForCreateOrder = catchAsyncError(async (req, res, next
           name: { $ifNull: ["$name", "N/A"] }, 
           image: { $ifNull: ["$images.secure_url", "N/A"] },
           offer_price: {$ifNull: ["$offer_price", "N/A"]},
-          price: {$ifNull: ["$price", "N/A"]}
+          price: {$ifNull: ["$price", "N/A"]},
+          product_detail_min: {$ifNull: ["$product_detail_min", "N/a"]},
+          product_detail_max: {$ifNull: ["$product_detail_max", "N/a"]},
+          increment_value: {$ifNull: ["$increment_value", "N/a"]},
+          information: {$ifNull: ["$information", "N/a"]}
         },
       }
     ]);

@@ -23,6 +23,7 @@ router.route('/orderstatus/:orderId').get(orderController.getSingleOrderStatusBy
 router.route('/markdelivered/:orderId').put(orderController.markOrderStatusAsDeliveredByOrderId);
 router.route('/deliverypartnerdetails/:orderId').put(orderController.updateDeliveryDetailsToOrder);
 router.route('/dashboardcard/orders/').get(orderController.getOrderForDashboardCards);
+router.route('/orderforedit/:orderId').get(orderController.getOrderForEditOrder);
 
 module.exports = router;    
     

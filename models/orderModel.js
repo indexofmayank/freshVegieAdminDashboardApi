@@ -207,6 +207,7 @@ const orderSchema = mongoose.Schema({
     payment_type: {
       type: String,
       required: false,
+      default: 'cod'
     },
     status: {
       type: String,
