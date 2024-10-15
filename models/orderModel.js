@@ -347,15 +347,13 @@ orderSchema.pre('save', function (next) {
   order.orderItems.forEach( item => {
     if(item.offer_price && item.offer_price > 0) {
       item.item_total = item.offer_price *  item.quantity;
-    } else {
-      item.item_total = item.item_price * item.quantity;
-    }
+    } 
   });
 
   //for total item total discount
   order.orderItems.forEach( item => {
     if(item.offer_price && item.offer_price > 0) {
-    item.item_total_discount = item.item_price * item.quantity - item.offer_price * item.quantity;
+    item.item_total_discount = item.offer_price * item.quantity;
     }
   });
 
