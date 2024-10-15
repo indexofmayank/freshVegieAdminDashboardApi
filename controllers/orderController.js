@@ -765,7 +765,13 @@ exports.getUserPaymentDetailByOrderId = catchAsyncError(async (req, res, next) =
           _id: 0,
           paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
           status: { $ifNull: ["$paymentInfo.status", "N/A"] },
-          amount: { $ifNull: ["$paymentInfo.amount", "N/A"] }
+          amount: { $ifNull: ["$paymentInfo.amount", "N/A"] },
+          usedelivery: { $ifNull: ["$paymentInfo.usedelivery", "false"] },
+          deliverycharges: { $ifNull: ["$paymentInfo.deliverycharges", "0"] },
+          useReferral: { $ifNull: ["$paymentInfo.useReferral", "false"] },
+          referralAmount: { $ifNull: ["$paymentInfo.referralAmount", "0"] },
+          useWallet: { $ifNull: ["$paymentInfo.useWallet", "false"] },
+          walletAmount: { $ifNull: ["$paymentInfo.walletAmount", "0"] },
         }
       }
     ]);
@@ -1248,7 +1254,7 @@ exports.getOrderForDashboardCards = catchAsyncError(async (req, res, next) => {
           orderItemsCount: { $ifNull: [{ $size: "$orderItems" }, "N/A"] },
           totalQuantity: { $ifNull: ["$total_quantity", "N/A"] },
           location: { $ifNull: ["$shippingInfo.deliveryAddress.state", "N/A"] },
-          paymentType: { $ifNull: ["$paymentInfo.status", "N/A"] },
+          paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
           status: { $ifNull: ["$orderStatus", "N/A"] },
           amount: { $ifNull: ["$grandTotal", "N/A"] },
           createdAt: 1

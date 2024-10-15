@@ -4,6 +4,7 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
 
 exports.getOrdersForTable = catchAsyncError(async (req, res, next) => {
+  // console.log("avinashhh");
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -54,11 +55,12 @@ exports.getOrdersForTable = catchAsyncError(async (req, res, next) => {
           location: { $ifNull: ["$shippingInfo.deliveryAddress.city", "N/A"] },
           paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
           status: { $ifNull: ["$orderStatus", "N/A"] },
-          amount: { $ifNull: ["$grandTotal", "N/A"] }
+          amount: { $ifNull: ["$grandTotal", "N/A"] },
+          createdAt: 1
         }
       },
       {
-        $sort: { createdAt: 1 }
+        $sort: { createdAt: -1 }
       },
       { $skip: skip },
       { $limit: limit }
@@ -98,7 +100,7 @@ exports.getRecentOrderForTable = catchAsyncError (async (req, res, next) => {
             $dateToString: {
               format: "%d %B %Y, %H:%M:%S",
               date: "$createdAt",
-              timezone: "UTC"
+              timezone: 'Asia/Kolkata' // Change this to IST
             }
           },
           orderItemsCount: { $size: "$orderItems" }
@@ -128,11 +130,12 @@ exports.getRecentOrderForTable = catchAsyncError (async (req, res, next) => {
           location: { $ifNull: ["$shippingInfo.deliveryAddress.city", "N/A"] },
           paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
           status: { $ifNull: ["$orderStatus", "N/A"] },
-          amount: { $ifNull: ["$grandTotal", "N/A"] }
+          amount: { $ifNull: ["$grandTotal", "N/A"] },
+          createdAt: 1
         }
       },
       {
-        $sort: { order_no: -1 }
+        $sort: { createdAt: -1 }
       },
       { $skip: skip },
       { $limit: limit }
