@@ -1347,6 +1347,32 @@ exports.getOrderForCustomize = catchAsyncError (async (req, res, next) => {
     throw new ErrorHandler('Something went wrong getting the order');
 
   }
+});
+
+exports.updateOrderByAdmin = catchAsyncError(async (req, res, next) => {
+  try {
+    console.log(req.body);
+    const {
+      orderItems,
+      paymentInfo,
+      deliveryInfo
+    } = req.body;
+    const result = await Order.findByIdAndUpdate(req.params.orderId, {orderItems, paymentInfo, deliveryInfo}, {new: true});
+    if(!result) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server error'
+      });
+    } 
+    return res.status(200).json({
+      success: true,
+      message: 'its working bro'
+    });
+
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong getting the order');
+  }
 })
 
 

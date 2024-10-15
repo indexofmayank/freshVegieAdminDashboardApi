@@ -133,6 +133,16 @@ router
     orderController.deleteOrder
   );
 
+
+  //update single order
+  router
+  .route('/editorder/:orderId')
+  .put(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('moderate', 'super'),
+    orderController.updateOrderByAdmin
+  );
+
   router
     .route('/order/markcancelled/:orderId')
     .put(
