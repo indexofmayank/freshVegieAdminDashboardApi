@@ -337,3 +337,27 @@ exports.useWalletfunds = CatchAsyncErrors(async (req, res, session) => {
         })
     }
 });
+
+exports.getWalletBalanceByUserId = CatchAsyncErrors(async (req, res, next) => {
+    try {
+        const balance = await Wallet.aggregate([
+            {
+                $match: {'userId': mongoose.Types.ObjectId(req.params.id)}
+            },
+            {
+                $project: {
+                    balance: 1
+                }
+            }
+        ]);
+        return res.status(200).json({
+            success: true,
+            data: balance
+        });
+    } catch (error) {
+        return res.status(200).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+});

@@ -5,5 +5,6 @@ router.route('/').post(walletController.createWallet);
 router.route('/:id').get(walletController.getWalletByUserId);
 router.route('/add/:id').post(walletController.addFundsToWallet);
 router.route('/use/:id').post(walletController.useWalletfunds);
+router.route('/balance/:id').get(walletController.getWalletBalanceByUserId);
 
 module.exports = router;

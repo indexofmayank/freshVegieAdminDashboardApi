@@ -1317,7 +1317,8 @@ exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
           isDeliveryUsed: {$ifNull: ["$paymentInfo.usedelivery", "N/a"]},
           deliverycharges: {$ifNull: ["$paymentInfo.deliverycharges", "N/a"]},
           discountPrice: {$ifNull: ["$discountPrice", "N/a"]},
-          amount: {$ifNull: ["$paymentInfo.amount", "N/a"]}
+          amount: {$ifNull: ["$paymentInfo.amount", "N/a"]},
+          userId: {$ifNull: ["$user.userId", "N/a"]}
         } 
       }
     ]);
