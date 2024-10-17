@@ -415,7 +415,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    orderLogger.error(`Error creating order: {$error.message}, User ID - ${req.body.user.uerId}`);
+    orderLogger.error(`Error creating order:{error}, User ID - ${req.body.user.userId}`);
     console.log(error);
   }
 });
