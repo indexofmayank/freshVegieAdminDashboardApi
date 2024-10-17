@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const deliveryInstructionSchema = mongoose.Schema({
 
-    minimum_cart_amount: {
+    minimumcart_amount: {
         type: Number,
         required: [true, 'Please provide minimum cart amount']
     },
@@ -13,11 +13,10 @@ const deliveryInstructionSchema = mongoose.Schema({
         required: [true, 'Please provide delivery charges']
     },
 
-    intial_rewardpoint: {
+    initial_rewardpoint: {
         type: Number,
         required: [true, 'Please provide initial reward point']
-    }
-
+    },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

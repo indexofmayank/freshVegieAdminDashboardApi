@@ -18,5 +18,6 @@ router.route('/dropdown/getProductForDropdown').get(productController.getProduct
 router.route('/dropdown/getProductForCreateOrder').get(productController.getProductDropdownForCreateOrder);
 router.route('/dropdown-name/name/').get(productController.getActiveProductNameForDropdown);
 // router.route('/getAllProductForOrder/').get(productController.getAllProductForOrder);
+router.route('/dropdown/forsearch/').get(productController.getAllProductNameForSearchQuery);
 
 module.exports = router;

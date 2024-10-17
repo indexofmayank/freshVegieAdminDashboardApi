@@ -94,7 +94,7 @@ app.use('/api/wallet', walletRouter);
 app.use(errorMiddleware);
 
 // starting server
-const server = app.listen(process.env.PORT || 5001, () => {
+const server = app.listen(process.env.PORT || 5000, () => {
   console.log('Server running');
 });
 

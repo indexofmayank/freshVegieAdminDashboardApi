@@ -147,10 +147,16 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
 
 // send all product details
 exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
+  const {name} = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const skip = (page - 1) * limit;
+  const matchCondition = name ? {"name" : {$regex : name, $options: "i"}} : {};
+  console.log(matchCondition);
   const products = await Product.aggregate([
+    {
+      $match: matchCondition
+    },
     {
       $lookup: {
         from: 'categories', // Collection name for Category
@@ -584,3 +590,28 @@ exports.getActiveProductNameForDropdown = catchAsyncError(async (req, res, next)
     throw new ErrorHandler('Something went wrong while getting the dropdown');
   }
 });
+
+exports.getAllProductNameForSearchQuery = catchAsyncError(async (req, res, next) => {
+  const { name } = req.query;
+  const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};
+
+  try {
+    const products = await Product.aggregate([
+      {
+        $match: matchCondition
+      },
+      {
+        $project: {
+          name: {$ifNull: ["$name", "N/a"]}
+        }
+      }
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: products
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while getting the dropdown');
+  }
+})

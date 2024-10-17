@@ -27,6 +27,7 @@ exports.registerAdmin = catchAsyncError(async (req, res, next) => {
 });
 
 exports.loginAdmin = catchAsyncError(async (req, res, next) => {
+  console.log(req.body);
   const { email, password } = req.body;
   if (!email || !password) {
     return next(new ErrorHandler('Missing fields', 400));
