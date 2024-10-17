@@ -243,7 +243,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
 
     //=-=-=-=-=-=-=-=-=-=-=-= mail option Starts -=-=-=-=-=-=-=-=-=-=-=-=-
-
+   if(orderedFrom =='app'){
     if (req.body.user.email && req.body.user) {
       const shippingAddress = [
         req.body.shippingInfo.deliveryAddress.address,
@@ -404,6 +404,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       }
 
     }
+  }
     //=-=-=-=-=-=-=-=-=-=-=-= mail option Ends -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
