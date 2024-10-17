@@ -70,13 +70,9 @@ exports.getDeliveryInstructions = catchAsyncError (async (req, res, next) => {
 });
 
 exports.getDeliveryInstructionsById = catchAsyncError (async (req, res, next) => {
-    let staticId = '';
-    if(process.env.ENV_MODE === 'development') {
-        staticId = '67111410d6f98ff3578a8c92'
-    }
 
     try {
-        const result = await DeliveryInstructions.findById(staticId);
+        const result = await DeliveryInstructions.findOne();
         if(!result) {
             throw new ErrorHandler('Unable to get delivery instructions', 500);
         }
@@ -168,15 +164,11 @@ exports.getDeliveryInstructionsById = catchAsyncError (async (req, res, next) =>
 // });
 
 exports.updateDeliveryInstructions = catchAsyncError (async (req, res, next) => {
-    console.log('we come here');
     try {
         const updatedData = req.body;
-        if(process.env.ENV_MODE === 'development') {
-            staticId = '67111410d6f98ff3578a8c92'
-        }
 
-        const updateDeliveryInstructions = await DeliveryInstructions.findByIdAndUpdate(
-            staticId,
+        const updateDeliveryInstructions = await DeliveryInstructions.findOneAndUpdate(
+            {},
             {$set: updatedData},
             {new: false, runValidators: false}
         );
