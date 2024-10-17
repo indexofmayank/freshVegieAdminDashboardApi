@@ -18,10 +18,52 @@ exports.getAllUser = catchAsyncError(async (req, res, next) => {
                     name: 1,
                     phone: 1,
                     email: 1,
-                    status: 1
+                    status: 1,
+                    createdAt: 1
                 }
             },
-            { $sort: { createdAt: 1 } },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit }
+        ]);
+
+        if (!users) {
+            throw new ErrorHandler('Server error', 500);
+        }
+
+        const totalUsers = await User.countDocuments();
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalPages: Math.ceil(totalUsers / limit),
+            totalUsers,
+            data: users
+        });
+
+    } catch (error) {
+        console.log('Serveer error', error);
+        throw new ErrorHandler('Serever error', 500);
+    }
+});
+
+exports.userListingforAddorder = catchAsyncError(async (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    try {
+        const users = await User.aggregate([
+            {
+                $project: {
+                    name: 1,
+                    phone: 1,
+                    email: 1,
+                    status: 1,
+                    address:1,
+                    createdAt: 1,
+                }
+            },
+            { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: limit }
         ]);

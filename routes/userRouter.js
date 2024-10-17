@@ -18,5 +18,8 @@ router.route('/dropdown/createOrder').get(userController.getUserNameDropdownForC
 router.route('/address-for-create-order/:userId').get(userController.getUserAllAddressByUserIdForCreateOrder);
 router.route('/meta-data-for-create-order/:userId').get(userController.getUserMetaDataForCreateOrder);
 router.route('/referr/').post(userController.updateUserReferrInfo);
+// router.route('/user11').get(userController.getAllUser);
+// router.route('/userListing-for-Add-order/').get(userController.userListingforAddorder);
+// router.route('/userlist').get(userController.userListingforAddorder);
 
 module.exports = router;

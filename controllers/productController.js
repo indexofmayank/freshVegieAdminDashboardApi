@@ -196,6 +196,57 @@ exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.getAllProductForOrder = catchAsyncError(async (req, res, next) => {
+  // const page = parseInt(req.query.page) || 1;
+  // const limit = parseInt(req.query.limit) || 5;
+  // const skip = (page - 1) * limit;
+  const products = await Product.aggregate([
+    {
+      $lookup: {
+        from: 'categories', // Collection name for Category
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryDetails',
+      },
+    },
+    {
+      $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+    },
+    {
+      $project: {
+        name: 1,
+        category: '$categoryDetails.name', // Project the category name instead of the ObjectId
+        add_ons: 1,
+        search_tags: 1,
+        selling_method: 1,
+        description: 1,
+        price: 1,
+        offer_price: 1,
+        stock: 1,
+        information:1,
+        increment_value:1,
+        product_detail_min:1,
+        product_detail_max:1,
+        image: { $arrayElemAt: ['$images.secure_url', 0] },
+        product_status: 1
+      },
+    },
+    {
+      $sort: { name: 1 },
+    },
+    // {$skip: skip},
+    // {$limit: limit},
+  ]);
+
+  const totalProducts = await Product.countDocuments();
+  
+  res.status(200).json({
+    success: true,
+    totalProducts,
+    data: products,
+  });
+});
+
 // send only a single product detaisl
 exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
