@@ -213,48 +213,48 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     //=-=-=-=-=-=-=-=-=-=-=-= Order creation ends =-=-=-=-=-=-=-=-=-=-=-=-
 
     //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts =-=-=-=-=-=-=-=-=-=-=-=-
-    // if (orderedFrom === 'app' && user.email) {
-    //   const shippingAddress = [
-    //     shippingInfo.deliveryAddress.address,
-    //     shippingInfo.deliveryAddress.locality,
-    //     shippingInfo.deliveryAddress.landmark,
-    //     shippingInfo.deliveryAddress.city,
-    //     shippingInfo.deliveryAddress.pin_code,
-    //     shippingInfo.deliveryAddress.state
-    //   ].filter(value => value).join(', ');
+    if (orderedFrom === 'app' && user.email) {
+      const shippingAddress = [
+        shippingInfo.deliveryAddress.address,
+        shippingInfo.deliveryAddress.locality,
+        shippingInfo.deliveryAddress.landmark,
+        shippingInfo.deliveryAddress.city,
+        shippingInfo.deliveryAddress.pin_code,
+        shippingInfo.deliveryAddress.state
+      ].filter(value => value).join(', ');
 
-    //   const items = orderItems || [];
-    //   const to = user.email;
-    //   const subject = 'Order placed at Fresh Vegie for ' + result.orderId;
-    //   const htmlContent = `
-    //     <html>
-    //     <body>
-    //       <h1>Order Placed Successfully!</h1>
-    //       <p>Order Number: ${result.orderId}</p>
-    //       <p>Order Date: ${result.createdAt}</p>
-    //       <p>Total Amount: ${totalPrice}</p>
-    //       <p>Shipping Address: ${shippingAddress}</p>
-    //       <p>Estimated Delivery Date: ${result.deliverAt}</p>
-    //       <h3>Items Ordered:</h3>
-    //       <ul>${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}</ul>
-    //     </body>
-    //     </html>
-    //   `;
+      const items = orderItems || [];
+      const to = user.email;
+      const subject = 'Order placed at Fresh Vegie for ' + result.orderId;
+      const htmlContent = `
+        <html>
+        <body>
+          <h1>Order Placed Successfully!</h1>
+          <p>Order Number: ${result.orderId}</p>
+          <p>Order Date: ${result.createdAt}</p>
+          <p>Total Amount: ${totalPrice}</p>
+          <p>Shipping Address: ${shippingAddress}</p>
+          <p>Estimated Delivery Date: ${result.deliverAt}</p>
+          <h3>Items Ordered:</h3>
+          <ul>${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}</ul>
+        </body>
+        </html>
+      `;
 
-    //   const transporter = nodemailer.createTransport({
-    //     host: 'smtp.gmail.com',
-    //     port: 587,
-    //     secure: false,
-    //     auth: { user: 'fortune.solutionpoint@gmail.com', pass: 'rsyh xzdk cfgo vdak' }
-    //   });
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: { user: 'fortune.solutionpoint@gmail.com', pass: 'rsyh xzdk cfgo vdak' }
+      });
 
-    //   try {
-    //     await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
-    //   } catch (error) {
-    //     console.error(error);
-    //     return res.status(500).json({ success: false, message: 'Error sending email', error: error.message });
-    //   }
-    // }
+      try {
+        await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Error sending email', error: error.message });
+      }
+    }
     //=-=-=-=-=-=-=-=-=-=-=-= Sending email ends =-=-=-=-=-=-=-=-=-=-=-=-
 
     return res.status(201).json({ success: true, message: 'New order created successfully', data: newOrder });
