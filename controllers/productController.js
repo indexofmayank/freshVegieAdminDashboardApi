@@ -597,18 +597,52 @@ exports.getAllProductNameForSearchQuery = catchAsyncError(async (req, res, next)
 
   try {
     const products = await Product.aggregate([
+      // {
+      //   $match: matchCondition
+      // },
+      // {
+      //   $project: {
+      //     name: {$ifNull: ["$name", "N/a"]}
+      //   }
+      // }
       {
         $match: matchCondition
       },
       {
+        $lookup: {
+          from: 'categories', // Collection name for Category
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categoryDetails',
+        },
+      },
+      {
+        $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+      },
+      {
         $project: {
-          name: {$ifNull: ["$name", "N/a"]}
-        }
+          name: 1,
+          category: '$categoryDetails.name', // Project the category name instead of the ObjectId
+          add_ons: 1,
+          search_tags: 1,
+          selling_method: 1,
+          description: 1,
+          price: 1,
+          offer_price: 1,
+          stock: 1,
+          image: { $arrayElemAt: ['$images.secure_url', 0] },
+          product_status: 1
+        },
+      },
+      {
+        $sort: { name: 1 },
       }
     ]);
+    const totalProducts = await Product.countDocuments();
     return res.status(200).json({
       success: true,
-      data: products
+      totalProducts,
+      data: products,
     });
   } catch (error) {
     console.error(error);
