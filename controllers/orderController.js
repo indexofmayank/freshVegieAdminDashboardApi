@@ -1217,7 +1217,9 @@ exports.updateOrderByAdmin = catchAsyncError(async (req, res, next) => {
     } = req.body;
     const updatedData = {
       orderItems,
-      paymentInfo
+      paymentInfo,
+      discountPrice,
+      grandTotal
     }
     console.log(updatedData);
     const result = await Order.findByIdAndUpdate(req.params.orderId, 
