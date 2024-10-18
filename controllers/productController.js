@@ -3,6 +3,7 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 const mongoose = require('mongoose');
+const DemoProduct = require('../models/demoProductModel');
 
 // create a new product
 exports.createProduct = catchAsyncError(async (req, res, next) => {
@@ -191,6 +192,8 @@ exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
   ]);
 
   const totalProducts = await Product.countDocuments();
+
+  console.log(products);
   
   res.status(200).json({
     success: true,

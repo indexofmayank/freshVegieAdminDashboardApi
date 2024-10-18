@@ -30,6 +30,7 @@ const dashboardRouter = require('./routes/dashboardRouter');
 const referralRouter = require('./routes/referralRouter');
 const deliveryInstructions = require('./routes/deliveryInstructionsRouter');
 const walletRouter = require('./routes/walletRouter');
+const demoProductRouter = require('./routes/demoProductRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -89,6 +90,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/referral', referralRouter);
 app.use('/api/deliveryInstructions', deliveryInstructions);
 app.use('/api/wallet', walletRouter);
+app.use('/api/demo/', demoProductRouter);
 
 // using other middlewares
 app.use(errorMiddleware);
