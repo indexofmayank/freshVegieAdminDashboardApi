@@ -1287,6 +1287,7 @@ exports.getOrderForDashboardCards = catchAsyncError(async (req, res, next) => {
 
 exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
   try {
+    console.log('we in order for e0')
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -1325,8 +1326,9 @@ exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
           deliverycharges: {$ifNull: ["$paymentInfo.deliverycharges", "N/a"]},
           discountPrice: {$ifNull: ["$discountPrice", "N/a"]},
           amount: {$ifNull: ["$paymentInfo.amount", "N/a"]},
-          userId: {$ifNull: ["$user.userId", "N/a"]}
-        } 
+          userId: {$ifNull: ["$user.userId", "N/a"]},
+          paymentInfo: 1,
+        },
       }
     ]);
     return res.status(200).json({
@@ -1359,13 +1361,21 @@ exports.getOrderForCustomize = catchAsyncError (async (req, res, next) => {
 
 exports.updateOrderByAdmin = catchAsyncError(async (req, res, next) => {
   try {
-    console.log(req.body);
     const {
       orderItems,
       paymentInfo,
-      deliveryInfo
+      discountPrice,
+      grandTotal
     } = req.body;
-    const result = await Order.findByIdAndUpdate(req.params.orderId, {orderItems, paymentInfo, deliveryInfo}, {new: true});
+    const updatedData = {
+      orderItems,
+      paymentInfo
+    }
+    console.log(updatedData);
+    const result = await Order.findByIdAndUpdate(req.params.orderId, 
+      {$set: updatedData}, 
+      {new: false}
+    );
     if(!result) {
       return res.status(500).json({
         success: false,
@@ -1374,7 +1384,7 @@ exports.updateOrderByAdmin = catchAsyncError(async (req, res, next) => {
     } 
     return res.status(200).json({
       success: true,
-      message: 'its working bro'
+      message: 'Order updated successfully'
     });
 
   } catch (error) {

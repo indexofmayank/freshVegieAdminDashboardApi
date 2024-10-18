@@ -248,6 +248,16 @@ const orderSchema = mongoose.Schema({
       type: Number,
       require: false,
       default: 0
+    },
+    refundAmount: {
+      type: Number,
+      require: false,
+      default: 0
+    },
+    refundStatus: {
+      type: String,
+      require: false,
+      default: null
     }
   },  
   deliveryInfo: {
@@ -332,7 +342,7 @@ const orderSchema = mongoose.Schema({
     type: String,
     require: false,
     default: 'app'
-  }
+  },
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

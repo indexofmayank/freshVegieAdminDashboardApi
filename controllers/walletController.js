@@ -346,13 +346,14 @@ exports.getWalletBalanceByUserId = CatchAsyncErrors(async (req, res, next) => {
             },
             {
                 $project: {
-                    balance: 1
+                    balance:{ $ifNull: ["$balance", "N/a"]}
                 }
             }
         ]);
+        console.log(balance);
         return res.status(200).json({
             success: true,
-            data: balance
+           balance
         });
     } catch (error) {
         return res.status(200).json({
