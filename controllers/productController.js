@@ -149,7 +149,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
 exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
   const {name} = req.query;
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 5;
+  const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const matchCondition = name ? {"name" : {$regex : name, $options: "i"}} : {};
   console.log(matchCondition);
