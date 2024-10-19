@@ -218,7 +218,7 @@ exports.addFundsToWallet = async (req, res, next) => {
         if (!wallet) {
             throw new Error('Wallet not found');
         }
-        wallet.balance += amount;
+        wallet.balance += parent(amount);
         wallet.transactions.push({ type: 'credit', amount, description });
         await wallet.save();
         const result = await Wallet.aggregate([
@@ -438,3 +438,26 @@ exports.getWalletBalanceByUserIdForLogs = CatchAsyncErrors(async (req, res, next
         });
     }
 });
+
+exports.addAmountByAdminToWallet = CatchAsyncErrors(async (req, res, next) => {
+    try {
+        const {amount, description = 'Funds Added By Admin'} = req.body;
+        const wallet = await Wallet.findOne({'userId': req.params.id});
+        if(!wallet) {
+            throw new Error('Wallet not found');
+        }
+        wallet.balance += parseInt(amount);
+        wallet.transactions.push({type: 'credit', amount, description});
+        await wallet.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Amount added successfully'
+        });
+    } catch (error) {
+        return res.status(200).json({
+            success: false,
+            error: error.message
+        })
+    }
+})
