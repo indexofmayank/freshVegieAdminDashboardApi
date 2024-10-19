@@ -31,6 +31,7 @@ const referralRouter = require('./routes/referralRouter');
 const deliveryInstructions = require('./routes/deliveryInstructionsRouter');
 const walletRouter = require('./routes/walletRouter');
 const demoProductRouter = require('./routes/demoProductRouter');
+const assetRouter = require('./routes/assetRouter');
 
 // requiring middlewares
 const errorMiddleware = require('./middleware/Error');
@@ -58,7 +59,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({ limit: '100mb' }));
 app.use(cookieParser());
 
 // basic api route
@@ -91,6 +92,7 @@ app.use('/api/referral', referralRouter);
 app.use('/api/deliveryInstructions', deliveryInstructions);
 app.use('/api/wallet', walletRouter);
 app.use('/api/demo/', demoProductRouter);
+app.use('/api/asset/', assetRouter);
 
 // using other middlewares
 app.use(errorMiddleware);

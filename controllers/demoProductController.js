@@ -15,14 +15,11 @@ function generateRandomPublicId() {
 
 
 async function getCategoryMapping() {
-    // Fetch the category mapping from MongoDB collection
-    // const categories = Category;
     const categories = await Category.find();
     
-    // Create a mapping object: { categoryId: categoryName }
     const mapping = {};
     categories.forEach(cat => {
-        mapping[cat.name.toLowerCase()] = cat._id; // Assuming categoryName and _id fields
+        mapping[cat.name.toLowerCase()] = cat._id; 
       });
     return mapping;
   }
@@ -62,7 +59,7 @@ exports.updateLoadProductCSV = [
         }
         const categoryMapping = await getCategoryMapping();
         const products = [];
-        const processingPromises = []; // Store promises for all row transformations
+        const processingPromises = []; 
         await new Promise((resolve, reject) => {
             fs.createReadStream(req.file.path)
               .pipe(csv())
