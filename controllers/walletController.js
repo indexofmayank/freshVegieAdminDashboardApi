@@ -362,3 +362,79 @@ exports.getWalletBalanceByUserId = CatchAsyncErrors(async (req, res, next) => {
         })
     }
 });
+
+const moment = require('moment-timezone');
+
+exports.getWalletBalanceByUserIdForLogs = CatchAsyncErrors(async (req, res, next) => {
+    try {
+        const userId = mongoose.Types.ObjectId(req.params.id);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const totalTransactions = await Wallet.aggregate([
+            { $match: { userId: userId } },
+            { $project: { totalTransactions: { $size: "$transactions" } } }
+        ]);
+
+        const total = totalTransactions.length > 0 ? totalTransactions[0].totalTransactions : 0;
+
+        const logs = await Wallet.aggregate([
+            {
+                $match: { 'userId': userId }
+            },
+            {
+                $project: {
+                    transactions: {
+                        $slice: [
+                            {
+                                $map: {
+                                    input: "$transactions",
+                                    as: "log",
+                                    in: {
+                                        type: { $ifNull: ["$$log.type", "N/a"] },
+                                        amount: { $ifNull: ["$$log.amount", "N/a"] },
+                                        description: { $ifNull: ["$$log.description", "N/a"] },
+                                        // Format the date in 'Asia/Kolkata' timezone
+                                        date: {
+                                            $cond: {
+                                                if: { $eq: ["$$log.date", null] },
+                                                then: "N/a",
+                                                else: {
+                                                    $dateToString: {
+                                                        format: "%Y-%m-%d %H:%M:%S",
+                                                        date: "$$log.date",
+                                                        timezone: "Asia/Kolkata"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            skip, 
+                            limit 
+                        ]
+                    }
+                }
+            }
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalPages,
+            totalTransactions: total,
+            logs
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching logs',
+            error: error.message
+        });
+    }
+});
