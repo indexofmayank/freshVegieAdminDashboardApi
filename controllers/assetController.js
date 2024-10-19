@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const cloudinary = require('../config/cloudinary');
+
 async function uploadToCloudinary(filePath) {
     try {
         const result = await cloudinary.uploader.upload(filePath, {
@@ -24,18 +25,29 @@ async function uploadToCloudinary(filePath) {
 exports.uploadAssetZip = [
     upload.single('file'),
     catchAsyncError(async(req, res, next) => {
+        try {
         const zipFilePath = req.file.path;
-        console.log(__dirname);
+        const zipFile = req.file;
+        console.log(zipFilePath);
+
         const extractedFolder = path.join('upload', 'extracted_images');
-        if(!req.file) {
+
+        if (!zipFilePath) {
             return res.status(400).json({
                 success: false,
-                message: 'No file uploaded'
+                message: 'No ZIP file uploaded',
+            });
+        }
+
+        if (!/\.(zip)$/i.test(zipFile.originalname)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid ZIP file format',
             });
         }
 
         console.log(req.file);
-        try {
+        // try {
             // Create a folder for extracted images
             if (!fs.existsSync(extractedFolder)) {
                 fs.mkdirSync(extractedFolder, { recursive: true });
@@ -76,6 +88,13 @@ exports.uploadAssetZip = [
             const { filePath, fileName } = imageInfo;
           const url = await uploadToCloudinary(filePath);
 
+        //   if (!url) {
+        //     return res.status(500).json({ 
+        //         success: false, 
+        //         message: `Failed to upload image ${fileName} to Cloudinary` 
+        //     });
+        // }
+
           if (url) {
             // Save the URL to MongoDB
             // const imageDoc = new Image({ url });
@@ -90,119 +109,69 @@ exports.uploadAssetZip = [
           }
         }
 
+        fs.unlinkSync(zipFile.path);
+
         // Send response with Cloudinary URLs
-        return res.json({ 
-            success: true,
-            message: 'Uploaded successfully'
-         });
-      });
-           
-          } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({ error: 'Failed to upload images.' });
-          } finally {
-            // Clean up temporary files
-          //  fs.unlinkSync(zipFilePath);
-          }
-
-
         return res.status(200).json({
             success: true,
-            message: 'it working'
+            message: 'Images uploaded successfully from ZIP',
+            images: uploadedImages,
         });
-    })
+    });
+    } catch (error) {
+        console.error('Error processing ZIP file:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Server error during ZIP file processing',
+            error: error.message
+        });
+    }
+}),
 ];
 
 exports.imageSingleZip = [
     upload.single('file'),
     catchAsyncError(async(req, res, next) => {
-        const zipFilePath = req.file.path;
-        console.log(__dirname);
-        const extractedFolder = path.join('upload', 'extracted_images');
-        if(!req.file) {
+        const imageFile = req.file;
+        // console.log(__dirname);
+
+        if(!imageFile) {
             return res.status(400).json({
                 success: false,
-                message: 'No file uploaded'
+                message: 'No image uploaded'
             });
         }
-
-        console.log(req.file);
+        // console.log(req.file);
         try {
-            // Create a folder for extracted images
-            if (!fs.existsSync(extractedFolder)) {
-                fs.mkdirSync(extractedFolder, { recursive: true });
-              }
+            
+            const validExtensions = /\.(jpg|jpeg|png|gif)$/i;
+            const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+            if (!validExtensions.test(imageFile.originalname) || !validMimeTypes.includes(imageFile.mimetype)) {
+                return res.status(400).json({ success: false, message: 'Invalid image format' });
+            }
           
-              await new Promise((resolve, reject) => {
-                fs.createReadStream(zipFilePath)
-                    .pipe(unzipper.Extract({ path: extractedFolder }))
-                    .on('close', resolve)
-                    .on('error', reject);
-            });
+            const imageUrl = await uploadToCloudinary(imageFile.path);
 
-            console.log('Files extracted successfully.');
-        
-    const imagePaths = [];
+            if (!imageUrl) {
+                return res.status(500).json({ success: false, message: 'Failed to upload image' });
+            }  
 
-    // Unzip the file and extract the images
-    fs.createReadStream(zipFilePath)
-      .pipe(unzipper.Parse())
-      .on('entry', async (entry) => {
-        const fileName = entry.path;
-        const type = entry.type;
-
-        // Only process image files
-        if (type === 'File' && /\.(jpg|jpeg|png|gif)$/i.test(fileName)) {
-          const filePath = path.join(extractedFolder, fileName);
-          entry.pipe(fs.createWriteStream(filePath));
-          imagePaths.push({ filePath, fileName });
-        } else {
-          entry.autodrain();
-        }
-      })
-      .on('close', async () => {
-        const uploadedImages = [];
-
-        // Upload each extracted image to Cloudinary and store the URLs in MongoDB
-        for (const imageInfo of imagePaths) {
-            const { filePath, fileName } = imageInfo;
-          const url = await uploadToCloudinary(filePath);
-
-          if (url) {
-            // Save the URL to MongoDB
-            // const imageDoc = new Image({ url });
-            const localImageName = path.basename(fileName);
-            const imageDoc = new Asset({ image:url, name: localImageName });
+            const imageDoc = new Asset({ image: imageUrl, name: imageFile.originalname });
             await imageDoc.save();
 
-            uploadedImages.push(url);
+            // Clean up local file
+            fs.unlinkSync(imageFile.path);
 
-            // Clean up local file after upload
-            fs.unlinkSync(filePath);
-          }
+            return res.status(200).json({
+                success: true,
+                message: 'Image uploaded successfully',
+                imageUrl,
+            });
+        } catch (error) {
+            return res.status(500).json({ success: false, message: 'Server error during image upload',error: error.message });
         }
-
-        // Send response with Cloudinary URLs
-        return res.json({ 
-            success: true,
-            message: 'Uploaded successfully'
-         });
-      });
-           
-          } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({ error: 'Failed to upload images.' });
-          } finally {
-            // Clean up temporary files
-          //  fs.unlinkSync(zipFilePath);
-          }
-
-
-        return res.status(200).json({
-            success: true,
-            message: 'it working'
-        });
-    })
+    }),
 ];
 
 
