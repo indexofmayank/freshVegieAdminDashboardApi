@@ -6,7 +6,7 @@ const fs = require('fs');
 const multer = require('multer');
 const Category = require('../models/categoryModel');
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: '/tmp/uploads' });
 
 function generateRandomPublicId() {
   return Math.floor(100000000000000 + Math.random() * 900000000000000).toString();
@@ -108,7 +108,7 @@ exports.getDemoProductModal = catchAsyncError(async(req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'server error'
-      
+
     })
   }
 })
