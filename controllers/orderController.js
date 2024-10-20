@@ -61,8 +61,216 @@ const getLatLng = async (toCheckAddress) => {
   }
 };
 
+// exports.createNewOrder = catchAsyncError(async (req, res, next) => {
+//   console.log(req.body);
+//   const {
+//     shippingInfo,
+//     orderItems,
+//     user,
+//     paymentInfo,
+//     paidAt,
+//     itemsPrice,
+//     discountPrice,
+//     shippingPrice,
+//     totalPrice,
+//     orderStatus,
+//     deliverAt,
+//     orderedFrom,
+//     deliveryInfo,
+//   } = req.body;
+
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+//   try {
+//     //=-=-=-=-=-=-=-=-=-=-=-= Payment handling starts =-=-=-=-=-=-=-=-=-=-=-=-
+//     if (paymentInfo && user.userId) {
+//       switch (paymentInfo.payment_type) {
+//         case 'cod':
+//           if (paymentInfo.useReferral) {
+//             const userForReferal = await User.findById(user.userId).session(session);
+//             const description = 'Product purchased';
+//             const amount = paymentInfo.referralAmount;
+
+//             if (!userForReferal) {
+//               return res.status(400).json({ success: false, message: 'Referal not found' });
+//             }
+
+//             if (userForReferal.userReferrInfo.referralAmount < paymentInfo.referralAmount) {
+//               return res.status(400).json({ success: false, message: 'Referral amount is not sufficient' });
+//             }
+
+//             userForReferal.userReferrInfo.referralAmount -= paymentInfo.referralAmount;
+//             userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
+//             await userForReferal.save({ session });
+//           }
+
+//           if (paymentInfo.useWallet) {
+//             const wallet = await Wallet.findOne({ 'userId': user.userId }).session(session);
+//             if (!wallet) {
+//               return res.status(400).json({ success: false, message: 'Wallet not found' });
+//             }
+
+//             if (wallet.balance < paymentInfo.walletAmount) {
+//               return res.status(400).json({ success: false, message: 'Wallet amount is not sufficient' });
+//             }
+
+//             wallet.balance -= paymentInfo.walletAmount;
+//             const amount = paymentInfo.walletAmount;
+//             const description = 'Product purchased';
+//             wallet.transactions.push({ type: 'debit', amount, description });
+//             await wallet.save({ session });
+//           }
+//           paymentInfo.status = 'completed';
+//           break;
+
+//         case 'online':
+//           if (paymentInfo.useReferral) {
+//             const description = 'Product purchased';
+//             const amount = paymentInfo.referralAmount;
+//             const userForReferal = await User.findById(user.userId).session(session);
+
+//             if (!userForReferal) {
+//               return res.status(400).json({ success: false, message: 'Referal not found' });
+//             }
+
+//             if (userForReferal.userReferrInfo.referralAmount < paymentInfo.referralAmount) {
+//               return res.status(400).json({ success: false, message: 'Referral amount is not sufficient' });
+//             }
+
+//             userForReferal.userReferrInfo.referralAmount -= paymentInfo.referralAmount;
+//             userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
+//             await userForReferal.save({ session });
+//           }
+
+//           if (paymentInfo.useWallet) {
+//             const wallet = await Wallet.findOne({ 'userId': user.userId }).session(session);
+//             if (!wallet) {
+//               return res.status(400).json({ success: false, message: 'Wallet not found' });
+//             }
+
+//             if (wallet.balance < paymentInfo.walletAmount) {
+//               return res.status(400).json({ success: false, message: 'Wallet amount is not sufficient' });
+//             }
+
+//             wallet.balance -= paymentInfo.walletAmount;
+//             const amount = paymentInfo.walletAmount;
+//             const description = 'Product purchased';
+//             wallet.transactions.push({ type: 'debit', amount, description });
+//             await wallet.save({ session });
+//           }
+//           break;
+
+//         default:
+//           return res.status(400).json({ success: false, message: 'Not able to process payment' });
+//       }
+//     }
+//     //=-=-=-=-=-=-=-=-=-=-=-= Payment handling ends =-=-=-=-=-=-=-=-=-=-=-=-
+
+//     //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction starts =-=-=-=-=-=-=-=-=-=-=-=-
+//     for (let item of orderItems) {
+//       const product = await Product.findById(item.id).session(session);
+//       const subSession = await mongoose.startSession();
+//       subSession.startTransaction();
+//       try {
+//         if (parseInt(product.stock) < parseInt(item.quantity)) {
+//           await subSession.abortTransaction();
+//           return res.status(400).json({ success: false, message: `Not enough stock for ${product.name}` });
+//         }
+
+//         product.stock -= item.quantity;
+//         await product.save({ session: subSession });
+//         await subSession.commitTransaction();
+//       } catch (error) {
+//         await subSession.abortTransaction();
+//         throw error;
+//       } finally {
+//         subSession.endSession();
+//       }
+//     }
+//     //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction ends =-=-=-=-=-=-=-=-=-=-=-=-
+
+//     //=-=-=-=-=-=-=-=-=-=-=-= Order creation starts =-=-=-=-=-=-=-=-=-=-=-=-
+//     const orderId = await generateOrderId();
+//     const newOrder = new Order({
+//       orderId,
+//       shippingInfo,
+//       orderItems,
+//       user,
+//       paymentInfo,
+//       paidAt,
+//       itemsPrice,
+//       discountPrice,
+//       shippingPrice,
+//       totalPrice,
+//       orderStatus,
+//       orderedFrom,
+//       deliveryInfo,
+//       deliverAt,
+//     });
+
+//     const result = await newOrder.save({ session });
+//     await session.commitTransaction();
+//     orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
+//     //=-=-=-=-=-=-=-=-=-=-=-= Order creation ends =-=-=-=-=-=-=-=-=-=-=-=-
+
+//     //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts =-=-=-=-=-=-=-=-=-=-=-=-
+//     if (orderedFrom === 'app' && user.email) {
+//       const shippingAddress = [
+//         shippingInfo.deliveryAddress.address,
+//         shippingInfo.deliveryAddress.locality,
+//         shippingInfo.deliveryAddress.landmark,
+//         shippingInfo.deliveryAddress.city,
+//         shippingInfo.deliveryAddress.pin_code,
+//         shippingInfo.deliveryAddress.state
+//       ].filter(value => value).join(', ');
+
+//       const items = orderItems || [];
+//       const to = user.email;
+//       const subject = 'Order placed at Fresh Vegie for ' + result.orderId;
+//       const htmlContent = `
+//         <html>
+//         <body>
+//           <h1>Order Placed Successfully!</h1>
+//           <p>Order Number: ${result.orderId}</p>
+//           <p>Order Date: ${result.createdAt}</p>
+//           <p>Total Amount: ${totalPrice}</p>
+//           <p>Shipping Address: ${shippingAddress}</p>
+//           <p>Estimated Delivery Date: ${result.deliverAt}</p>
+//           <h3>Items Ordered:</h3>
+//           <ul>${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}</ul>
+//         </body>
+//         </html>
+//       `;
+
+//       const transporter = nodemailer.createTransport({
+//         host: 'smtp.gmail.com',
+//         port: 587,
+//         secure: false,
+//         auth: { user: 'fortune.solutionpoint@gmail.com', pass: 'rsyh xzdk cfgo vdak' }
+//       });
+
+//       try {
+//         await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
+//       } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ success: false, message: 'Error sending email', error: error.message });
+//       }
+//     }
+//     //=-=-=-=-=-=-=-=-=-=-=-= Sending email ends =-=-=-=-=-=-=-=-=-=-=-=-
+
+//     return res.status(201).json({ success: true, message: 'New order created successfully', data: newOrder });
+//   } catch (error) {
+//     await session.abortTransaction();
+//     orderLogger.error(`Error creating order: ${error}, User ID - ${req.body.user.userId}`);
+//     return res.status(500).json({ success: false, message: 'Failed to create new order', error: error.message });
+//   } finally {
+//     session.endSession();
+//   }
+// });
+
 exports.createNewOrder = catchAsyncError(async (req, res, next) => {
-  console.log(req.body);
+  console.time('createNewOrder Execution Time');  // Start timer
+
   const {
     shippingInfo,
     orderItems,
@@ -82,114 +290,16 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    //=-=-=-=-=-=-=-=-=-=-=-= Payment handling starts =-=-=-=-=-=-=-=-=-=-=-=-
-    if (paymentInfo && user.userId) {
-      switch (paymentInfo.payment_type) {
-        case 'cod':
-          if (paymentInfo.useReferral) {
-            const userForReferal = await User.findById(user.userId).session(session);
-            const description = 'Product purchased';
-            const amount = paymentInfo.referralAmount;
+    // Handle payment processing concurrently
+    const paymentPromise = handlePayment(paymentInfo, user.userId, session);
 
-            if (!userForReferal) {
-              return res.status(400).json({ success: false, message: 'Referal not found' });
-            }
+    // Handle stock updates concurrently
+    const stockPromise = handleStockUpdate(orderItems, session);
 
-            if (userForReferal.userReferrInfo.referralAmount < paymentInfo.referralAmount) {
-              return res.status(400).json({ success: false, message: 'Referral amount is not sufficient' });
-            }
+    // Wait for both payment and stock updates to complete
+    await Promise.all([paymentPromise, stockPromise]);
 
-            userForReferal.userReferrInfo.referralAmount -= paymentInfo.referralAmount;
-            userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
-            await userForReferal.save({ session });
-          }
-
-          if (paymentInfo.useWallet) {
-            const wallet = await Wallet.findOne({ 'userId': user.userId }).session(session);
-            if (!wallet) {
-              return res.status(400).json({ success: false, message: 'Wallet not found' });
-            }
-
-            if (wallet.balance < paymentInfo.walletAmount) {
-              return res.status(400).json({ success: false, message: 'Wallet amount is not sufficient' });
-            }
-
-            wallet.balance -= paymentInfo.walletAmount;
-            const amount = paymentInfo.walletAmount;
-            const description = 'Product purchased';
-            wallet.transactions.push({ type: 'debit', amount, description });
-            await wallet.save({ session });
-          }
-          paymentInfo.status = 'completed';
-          break;
-
-        case 'online':
-          if (paymentInfo.useReferral) {
-            const description = 'Product purchased';
-            const amount = paymentInfo.referralAmount;
-            const userForReferal = await User.findById(user.userId).session(session);
-
-            if (!userForReferal) {
-              return res.status(400).json({ success: false, message: 'Referal not found' });
-            }
-
-            if (userForReferal.userReferrInfo.referralAmount < paymentInfo.referralAmount) {
-              return res.status(400).json({ success: false, message: 'Referral amount is not sufficient' });
-            }
-
-            userForReferal.userReferrInfo.referralAmount -= paymentInfo.referralAmount;
-            userForReferal.userReferrInfo.referredLogs.push({ type: 'debit', amount, description });
-            await userForReferal.save({ session });
-          }
-
-          if (paymentInfo.useWallet) {
-            const wallet = await Wallet.findOne({ 'userId': user.userId }).session(session);
-            if (!wallet) {
-              return res.status(400).json({ success: false, message: 'Wallet not found' });
-            }
-
-            if (wallet.balance < paymentInfo.walletAmount) {
-              return res.status(400).json({ success: false, message: 'Wallet amount is not sufficient' });
-            }
-
-            wallet.balance -= paymentInfo.walletAmount;
-            const amount = paymentInfo.walletAmount;
-            const description = 'Product purchased';
-            wallet.transactions.push({ type: 'debit', amount, description });
-            await wallet.save({ session });
-          }
-          break;
-
-        default:
-          return res.status(400).json({ success: false, message: 'Not able to process payment' });
-      }
-    }
-    //=-=-=-=-=-=-=-=-=-=-=-= Payment handling ends =-=-=-=-=-=-=-=-=-=-=-=-
-
-    //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction starts =-=-=-=-=-=-=-=-=-=-=-=-
-    for (let item of orderItems) {
-      const product = await Product.findById(item.id).session(session);
-      const subSession = await mongoose.startSession();
-      subSession.startTransaction();
-      try {
-        if (parseInt(product.stock) < parseInt(item.quantity)) {
-          await subSession.abortTransaction();
-          return res.status(400).json({ success: false, message: `Not enough stock for ${product.name}` });
-        }
-
-        product.stock -= item.quantity;
-        await product.save({ session: subSession });
-        await subSession.commitTransaction();
-      } catch (error) {
-        await subSession.abortTransaction();
-        throw error;
-      } finally {
-        subSession.endSession();
-      }
-    }
-    //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction ends =-=-=-=-=-=-=-=-=-=-=-=-
-
-    //=-=-=-=-=-=-=-=-=-=-=-= Order creation starts =-=-=-=-=-=-=-=-=-=-=-=-
+    // Create the order
     const orderId = await generateOrderId();
     const newOrder = new Order({
       orderId,
@@ -210,63 +320,28 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     const result = await newOrder.save({ session });
     await session.commitTransaction();
+
+    // Log the successful order creation
     orderLogger.info(`Order received: Order ID - ${result.orderId}, User ID - ${result.user.userId}`);
-    //=-=-=-=-=-=-=-=-=-=-=-= Order creation ends =-=-=-=-=-=-=-=-=-=-=-=-
 
-    //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts =-=-=-=-=-=-=-=-=-=-=-=-
+    // Send email asynchronously (offloaded)
     if (orderedFrom === 'app' && user.email) {
-      const shippingAddress = [
-        shippingInfo.deliveryAddress.address,
-        shippingInfo.deliveryAddress.locality,
-        shippingInfo.deliveryAddress.landmark,
-        shippingInfo.deliveryAddress.city,
-        shippingInfo.deliveryAddress.pin_code,
-        shippingInfo.deliveryAddress.state
-      ].filter(value => value).join(', ');
-
-      const items = orderItems || [];
-      const to = user.email;
-      const subject = 'Order placed at Fresh Vegie for ' + result.orderId;
-      const htmlContent = `
-        <html>
-        <body>
-          <h1>Order Placed Successfully!</h1>
-          <p>Order Number: ${result.orderId}</p>
-          <p>Order Date: ${result.createdAt}</p>
-          <p>Total Amount: ${totalPrice}</p>
-          <p>Shipping Address: ${shippingAddress}</p>
-          <p>Estimated Delivery Date: ${result.deliverAt}</p>
-          <h3>Items Ordered:</h3>
-          <ul>${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}</ul>
-        </body>
-        </html>
-      `;
-
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: { user: 'fortune.solutionpoint@gmail.com', pass: 'rsyh xzdk cfgo vdak' }
-      });
-
-      try {
-        await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
-      } catch (error) {
-        console.error(error);
-        return res.status(500).json({ success: false, message: 'Error sending email', error: error.message });
-      }
+      sendOrderEmail(user.email, result, shippingInfo, orderItems, totalPrice, result.deliverAt);
     }
-    //=-=-=-=-=-=-=-=-=-=-=-= Sending email ends =-=-=-=-=-=-=-=-=-=-=-=-
+
+    console.timeEnd('createNewOrder Execution Time');  // End timer and log time
 
     return res.status(201).json({ success: true, message: 'New order created successfully', data: newOrder });
   } catch (error) {
     await session.abortTransaction();
+    console.timeEnd('createNewOrder Execution Time');  // Log time even in case of an error
     orderLogger.error(`Error creating order: ${error}, User ID - ${req.body.user.userId}`);
     return res.status(500).json({ success: false, message: 'Failed to create new order', error: error.message });
   } finally {
     session.endSession();
   }
 });
+
 
 
 
