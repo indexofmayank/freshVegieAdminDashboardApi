@@ -226,15 +226,19 @@ exports.getAllCategoryForNotification = (catchAsyncError (async (req, res, next)
 }));
 
 exports.getAllUserForNotification = (catchAsyncError (async (req, res, next) => {
+    const matchCondition = {'fcm_token': {$ne: null}}
     try {
         const users = await User.aggregate([
             {
+                $match: matchCondition
+            },
+            {
                 $project: {
-                    name: {$ifNull: ["$name", "N/A"]}
+                    fcm_token: 1
                 }
             }
         ]);
-        if(!users) {
+                if(!users) {
             return new ErrorHandler('Not found', 404);
         }
         return res.status(200).json({

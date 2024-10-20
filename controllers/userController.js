@@ -640,3 +640,31 @@ exports.updateUserReferrInfo = catchAsyncError(async (req, res, next) => {
     }
 });
 
+exports.getFcmtokenedUser = catchAsyncError(async (req, res, next) => {
+    const userId = req.params.id;
+    const matchCondition = userId ? {'_id' : userId} : {}
+    try {
+        const userList = await User.aggregate([
+            {
+                $match: matchCondition
+            },
+            {
+                $project: {
+                    name: 1
+                }
+            }
+        ]);
+
+        console.log(userList);
+        return res.status(200).json({
+            success : false,
+            message: "its me"
+        });
+    } catch (error) {
+        return res.status(200).json({
+            success: false,
+            message: error.message
+        })
+    }
+});
+
