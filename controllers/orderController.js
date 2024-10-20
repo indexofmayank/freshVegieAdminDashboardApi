@@ -1028,16 +1028,20 @@ exports.updateDeliveryDetailsToOrder = (catchAsyncError(async (req, res, next) =
       type,
       name,
       phone,
-      email
+      email,
+      _id
     } = req.body;
+    console.log(req.body);
     const deliveryPartnerDetails = await Order.findOneAndUpdate(
       { _id: orderId },
       {
         'deliveryInfo.deliveryType': type === '1' ? 'Third party delivery partner' : 'In house delivery partner' || null,
         'deliveryInfo.deliveryPartner.name': name || null,
         'deliveryInfo.deliveryPartner.phone': isNaN(phone) ? null : phone,
-        'deliveryInfo.deliveryPartner.email': email || null
-      }
+        'deliveryInfo.deliveryPartner.email': email || null,
+        'deliveryInfo.deliveryPartner.deliveryPartnerId' : _id || null
+      },
+      {new: true}
     );
     if (!deliveryPartnerDetails) {
       return res.status(404).json({
@@ -1243,7 +1247,5 @@ exports.updateOrderByAdmin = catchAsyncError(async (req, res, next) => {
     throw new ErrorHandler('Something went wrong getting the order');
   }
 })
-
-
 
 

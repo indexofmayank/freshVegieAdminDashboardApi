@@ -286,7 +286,11 @@ const orderSchema = mongoose.Schema({
         type: String,
         required: false,
         default: null
-      }
+      },
+      deliveryPartnerId: {
+        type: mongoose.Schema.ObjectId,
+        require: true
+      },
     }
   },  
   paidAt: {
