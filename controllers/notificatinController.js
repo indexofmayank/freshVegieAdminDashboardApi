@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel');
 const User = require('../models/userModel');
+const Order = require('../models/orderModel');
 
 
 exports.createNoficiation = catchAsyncError (async (req, res, next) => {
@@ -249,4 +250,179 @@ exports.getAllUserForNotification = (catchAsyncError (async (req, res, next) => 
         console.error(error);
         throw new ErrorHandler('Something went wrong while getting user for notification');
     }
-}))
+}));
+
+exports.getUserFcmTokenByUserId = catchAsyncError(async (req, res, next) => {
+    try {
+        const { userIds } = req.body;
+
+        if (!userIds || !Array.isArray(userIds)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid userIds array'
+            });
+        }
+
+        const fcmTokenList = await User.aggregate([
+            {
+                $match: {
+                    _id: { $in: userIds.map(id => mongoose.Types.ObjectId(id)) }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    fcm_token: 1
+                }
+            }
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: fcmTokenList
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+});
+
+// exports.getUserNamesForNotification = catchAsyncError(async (req, res, next) => {
+
+//     try {
+//         const usersWithZeroOrders = await User.aggregate([
+//           {
+//             $lookup: {
+//               from: 'orders', 
+//               localField: '_id', 
+//               foreignField: 'user.userId', 
+//               as: 'orders' 
+//             }
+//           },
+//           {
+//             $match: {
+//               'orders': { $size: 0 } 
+//             }
+//           },
+//           {
+//             $project: {
+//               _id: 1,
+//               name: 1,
+//             }
+//           }
+//         ]);
+    
+//         // Send the result
+//         res.status(200).json({
+//           success: true,
+//           users: usersWithZeroOrders
+//         });
+//       } catch (error) {
+//         res.status(500).json({
+//           success: false,
+//           message: error.message
+//         });
+//     }
+// })
+
+exports.getUserNamesForNotification = catchAsyncError(async (req, res, next) => {
+    console.log('we came here');
+    try {
+        let matchCondition = {};
+
+        switch (req.query.filter) {
+            case 'zeroOrders':
+                console.log('inside zero');
+                matchCondition = {
+                    'orders': { $size: 0 } 
+                };
+                break;
+
+            case 'moreThanOneOrder':
+                console.log('inside multiple');
+                const usersWithMultipleOrders = await Order.aggregate([
+                    {
+                        $group: {
+                            _id: '$user.userId',
+                            orderCount: { $sum: 1 }
+                        }
+                    },
+                    {
+                        $match: {
+                            orderCount: { $gt: 1 } 
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: '_id',
+                            foreignField: '_id',
+                            as: 'userDetails'
+                        }
+                    },
+                    {
+                        $unwind: '$userDetails'
+                    },
+                    {
+                        $project: {
+                            'userDetails._id': 1,
+                            'userDetails.name': 1
+                        }
+                    }
+                ]);
+
+                return res.status(200).json({
+                    success: true,
+                    users: usersWithMultipleOrders.map(user => user.userDetails)
+                });
+
+            case 'all':
+                console.log('inside all');
+                matchCondition = {}; // No filter, match all users
+                break;
+
+            default:
+                console.log('inside default');
+                return res.status(200).json({
+                    success: true,
+                    message: 'Invalid filter provided',
+                    users: []
+                });
+        }
+
+        // Fetch users based on the matchCondition (for both 'zeroOrders' and 'all')
+        const users = await User.aggregate([
+            {
+                $lookup: {
+                    from: 'orders',
+                    localField: '_id',
+                    foreignField: 'user.userId',
+                    as: 'orders'
+                }
+            },
+            {
+                $match: matchCondition
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1
+                }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            users
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});

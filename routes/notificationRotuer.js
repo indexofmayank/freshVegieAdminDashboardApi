@@ -9,5 +9,7 @@ router.route('/:notificationId').delete(notificationController.deleteNotificatio
 router.route('/products/name').get(notificationController.getAllProductForNotification);
 router.route('/category/name').get(notificationController.getAllCategoryForNotification);
 router.route('/user/fcmtoken').get(notificationController.getAllUserForNotification);
+router.route('/fcmtokens/').post(notificationController.getUserFcmTokenByUserId);
+router.route('/user/name').get(notificationController.getUserNamesForNotification);
 
 module.exports = router;
