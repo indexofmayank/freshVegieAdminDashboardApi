@@ -3,8 +3,8 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 const mongoose = require('mongoose');
+// const Demoproduct = require('../models/demoProductModel');
 const DemoProduct = require('../models/demoProductModel');
-
 // create a new product
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   req.body.admin = req.user.id;
@@ -153,7 +153,7 @@ exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const matchCondition = name ? {"name" : {$regex : name, $options: "i"}} : {};
-  console.log(matchCondition);
+  // console.log(matchCondition);
   const products = await Product.aggregate([
     {
       $match: matchCondition
@@ -193,7 +193,7 @@ exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
 
   const totalProducts = await Product.countDocuments();
 
-  console.log(products);
+  // console.log(products);
   
   res.status(200).json({
     success: true,
