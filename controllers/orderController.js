@@ -380,7 +380,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts (after transaction) =-=-=-=-=-=-=-=-=-=-=-=-
     if (orderedFrom === 'app' && user.email) {
-      const sendOrderEmail = async (to, order, shippingInfo, orderItems, totalPrice, deliveryDate) => {
+      const sendOrderEmail = async (to, order, shippingInfo, orderItems, totalPrice, deliveryDate,finalamount) => {
         const shippingAddress = [
           shippingInfo.deliveryAddress.address,
           shippingInfo.deliveryAddress.locality,
@@ -398,7 +398,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
             <h1>Order Placed Successfully!</h1>
             <p>Order Number: ${order.orderId}</p>
             <p>Order Date: ${order.createdAt}</p>
-            <p>Total Amount: ${totalPrice}</p>
+            <p>Total Amount: ${finalamount}</p>
             <p>Shipping Address: ${shippingAddress}</p>
             <p>Estimated Delivery Date: ${deliveryDate}</p>
             <h3>Items Ordered:</h3>
@@ -417,7 +417,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
         await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
       };
 
-      sendOrderEmail(user.email, newOrder, shippingInfo, orderItems, totalPrice, newOrder.deliverAt)
+      sendOrderEmail(user.email, newOrder, shippingInfo, orderItems, totalPrice, newOrder.deliverAt,paymentInfo.amount)
         .catch(err => console.error('Failed to send email:', err));
     }
 
@@ -426,7 +426,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     return res.status(201).json({ success: true, message: 'New order created successfully', data: newOrder });
   } catch (error) {
     console.error('Error in createNewOrder:', error);  // Log the error
-
     await session.abortTransaction(); // Abort the transaction on error
     return res.status(500).json({ success: false, message: 'Failed to create new order', error: error.message });
   } finally {
