@@ -392,20 +392,24 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
         const items = orderItems || [];
         const subject = 'Order placed at Fresh Vegie for ' + order.orderId;
-        // const htmlContent = `
-        //   <html>
-        //   <body>
-        //     <h1>Order Placed Successfully!</h1>
-        //     <p>Order Number: ${order.orderId}</p>
-        //     <p>Order Date: ${order.createdAt}</p>
-        //     <p>Total Amount: ${totalPrice}</p>
-        //     <p>Shipping Address: ${shippingAddress}</p>
-        //     <p>Estimated Delivery Date: ${deliveryDate}</p>
-        //     <h3>Items Ordered:</h3>
-        //     <ul>${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}</ul>
-        //   </body>
-        //   </html>
-        // `;
+        const createdAtUTC = new Date(newOrder.createdAt);
+
+          // Convert to IST (UTC + 5:30)
+          const createdAtIST = new Date(createdAtUTC.getTime() + (5.5 * 60 * 60 * 1000));
+
+          // Format the IST date as a string (customize as needed)
+          const orderDateIST = createdAtIST.toLocaleDateString('en-IN', { 
+            weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' 
+          });
+
+          // Add 1 day for estimated delivery date
+          const estimatedDeliveryDate = new Date(createdAtIST);
+          estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 1);
+          const formattedDeliveryDate = estimatedDeliveryDate.toLocaleDateString('en-IN', { 
+            weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
+          });
+
         const htmlContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -500,17 +504,17 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
                 <p>Thank you for shopping with <strong>Fresh Vegie</strong>. We're happy to inform you that your order has been placed successfully. Below are the details:</p>
                 <div class="order-details">
                     <p class="bold">Order Number: ${newOrder.orderId}</p> 
-                    <p class="bold">Order Date: ${newOrder.createdAt}</p> 
+                    <p class="bold">Order Date: ${orderDateIST}</p> 
                     <p class="bold">Total Amount: ${newOrder.grandTotal}</p>
                 </div>
                 <div class="order-details">
                     <p class="bold">Shipping Address: ${shippingAddress}</p>
-                    <p class="bold">Estimated Delivery Date ${newOrder.createdAt + 1}</p>
+                    <p class="bold">Estimated Delivery Date ${formattedDeliveryDate}</p>
                 </div>
                 <div class="order-items">
                     <h3>Items Ordered</h3>
                     <ul>
-                        ${orderItems.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}
+                        ${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}
                     </ul>
                 </div>
                     <p>If you have any questions, feel free to contact our support team:</p>
