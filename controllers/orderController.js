@@ -289,7 +289,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
   } = req.body;
 
   const session = await mongoose.startSession();
-  session.startTransaction(); // Start a transaction with the session
+  session.startTransaction();
 
   try {
     //=-=-=-=-=-=-=-=-=-=-=-= Payment handling starts =-=-=-=-=-=-=-=-=-=-=-=-
@@ -336,17 +336,15 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     };
     //=-=-=-=-=-=-=-=-=-=-=-= Payment handling ends =-=-=-=-=-=-=-=-=-=-=-=-
 
-    //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction starts =-=-=-=-=-=-=-=-=-=-=-=-
+    //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction starts (BULK WRITE) =-=-=-=-=-=-=-=-=-=-=-=-
     const handleStockUpdate = async (orderItems, session) => {
-      for (let item of orderItems) {
-        const product = await Product.findById(item.id).session(session);
-        if (!product) throw new Error(`Product not found: ${item.id}`);
-        if (product.stock < item.quantity) {
-          throw new Error(`Not enough stock for ${product.name}`);
+      const bulkOps = orderItems.map(item => ({
+        updateOne: {
+          filter: { _id: item.id },
+          update: { $inc: { stock: -item.quantity } },
         }
-        product.stock -= item.quantity;
-        await product.save({ session });
-      }
+      }));
+      await Product.bulkWrite(bulkOps, { session });
     };
     //=-=-=-=-=-=-=-=-=-=-=-= Stock deduction ends =-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -374,14 +372,13 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       deliverAt,
     });
 
-    await newOrder.save({ session });  // Save the order within the session
+    await newOrder.save({ session });
 
     await session.commitTransaction(); // Commit the transaction
 
     orderLogger.info(`Order received: Order ID - ${newOrder.orderId}, User ID - ${newOrder.user.userId}`);
-    //=-=-=-=-=-=-=-=-=-=-=-= Order creation ends =-=-=-=-=-=-=-=-=-=-=-=-
 
-    //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts =-=-=-=-=-=-=-=-=-=-=-=-
+    //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts (after transaction) =-=-=-=-=-=-=-=-=-=-=-=-
     if (orderedFrom === 'app' && user.email) {
       const sendOrderEmail = async (to, order, shippingInfo, orderItems, totalPrice, deliveryDate) => {
         const shippingAddress = [
@@ -423,7 +420,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       sendOrderEmail(user.email, newOrder, shippingInfo, orderItems, totalPrice, newOrder.deliverAt)
         .catch(err => console.error('Failed to send email:', err));
     }
-    //=-=-=-=-=-=-=-=-=-=-=-= Sending email ends =-=-=-=-=-=-=-=-=-=-=-=-
 
     console.timeEnd('createNewOrder Execution Time');  // End timer and log execution time
 
@@ -437,10 +433,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     session.endSession();  // End the session in any case
   }
 });
-
-
-
-
 
 
 // send user orders
