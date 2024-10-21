@@ -357,51 +357,51 @@ orderSchema.pre('save', function (next) {
   const order = this;
 
 
-  //for total item price
-  order.orderItems.forEach( item => {
-    if(item.offer_price && item.offer_price > 0) {
-      item.item_total = item.offer_price *  item.quantity;
-    } 
-  });
+  // //for total item price
+  // order.orderItems.forEach( item => {
+  //   if(item.offer_price && item.offer_price > 0) {
+  //     item.item_total = item.offer_price *  item.quantity;
+  //   } 
+  // });
 
-  //for total item total discount
-  order.orderItems.forEach( item => {
-    if(item.offer_price && item.offer_price > 0) {
-    item.item_total_discount = item.offer_price * item.quantity;
-    }
-  });
+  // //for total item total discount
+  // order.orderItems.forEach( item => {
+  //   if(item.offer_price && item.offer_price > 0) {
+  //   item.item_total_discount = item.offer_price * item.quantity;
+  //   }
+  // });
 
-  //for total item tax
-  order.orderItems.forEach( item => {
-    item.item_total_tax = item.tax * item.quantity;
-  });
+  // //for total item tax
+  // order.orderItems.forEach( item => {
+  //   item.item_total_tax = item.tax * item.quantity;
+  // });
 
-  //for total quantity
-  const totalQuantityCount = order.orderItems.reduce((acc, item) => {
-    return acc + item.quantity;
-  }, 0);
-  order.total_quantity = totalQuantityCount;
+  // //for total quantity
+  // const totalQuantityCount = order.orderItems.reduce((acc, item) => {
+  //   return acc + item.quantity;
+  // }, 0);
+  // order.total_quantity = totalQuantityCount;
 
-  //for total item count
-  const totalItemCount = order.orderItems.length;
-  order.total_item_count = totalItemCount;
+  // //for total item count
+  // const totalItemCount = order.orderItems.length;
+  // order.total_item_count = totalItemCount;
 
-  const itemTotal = order.orderItems.reduce((acc, item) => {
-    return acc + item.item_total;
-  }, 0);
-  order.items_grand_total = itemTotal;
+  // const itemTotal = order.orderItems.reduce((acc, item) => {
+  //   return acc + item.item_total;
+  // }, 0);
+  // order.items_grand_total = itemTotal;
 
-  const totalTax = order.orderItems.reduce((acc, item) => {
-    return acc + item.item_total_tax
-  }, 0);
-  order.total_tax = totalTax;
+  // const totalTax = order.orderItems.reduce((acc, item) => {
+  //   return acc + item.item_total_tax
+  // }, 0);
+  // order.total_tax = totalTax;
 
-  const itemDiscountTotal = order.orderItems.reduce((acc, item) => {
-    return acc + item.item_total_discount;
-  }, 0);
-  order.total_discount = itemDiscountTotal;
+  // const itemDiscountTotal = order.orderItems.reduce((acc, item) => {
+  //   return acc + item.item_total_discount;
+  // }, 0);
+  // order.total_discount = itemDiscountTotal;
 
-  order.grandTotal = itemTotal + totalTax + order.shippingPrice;
+  // order.grandTotal = itemTotal + totalTax + order.shippingPrice;
 
   next();
 });
