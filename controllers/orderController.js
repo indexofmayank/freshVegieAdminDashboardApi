@@ -380,7 +380,8 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts (after transaction) =-=-=-=-=-=-=-=-=-=-=-=-
     if (orderedFrom === 'app' && user.email) {
-      const sendOrderEmail = async (to, order, shippingInfo, orderItems, totalPrice, deliveryDate,finalamount) => {
+      const sendOrderEmail = async (to, order, shippingInfo, orderItems, totalPrice, deliveryDate,finalamountinfo) => {
+          console.log(finalamountinfo)
         const shippingAddress = [
           shippingInfo.deliveryAddress.address,
           shippingInfo.deliveryAddress.locality,
@@ -398,7 +399,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
             <h1>Order Placed Successfully!</h1>
             <p>Order Number: ${order.orderId}</p>
             <p>Order Date: ${order.createdAt}</p>
-            <p>Total Amount: ${finalamount}</p>
+            <p>Total Amount: ${finalamountinfo}</p>
             <p>Shipping Address: ${shippingAddress}</p>
             <p>Estimated Delivery Date: ${deliveryDate}</p>
             <h3>Items Ordered:</h3>
