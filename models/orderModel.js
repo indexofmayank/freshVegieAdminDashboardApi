@@ -177,6 +177,11 @@ const orderSchema = mongoose.Schema({
         required: false,
         default: 0
       },
+      gstAmount: {
+        type: Number,
+        required: false,
+        default: 0
+      },
       id: {
         type: mongoose.Schema.ObjectId,
         ref: 'products',
@@ -245,6 +250,11 @@ const orderSchema = mongoose.Schema({
       default: false
     },
     walletAmount: {
+      type: Number,
+      require: false,
+      default: 0
+    },
+    totalGST: {
       type: Number,
       require: false,
       default: 0
