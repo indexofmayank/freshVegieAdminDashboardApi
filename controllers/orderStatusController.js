@@ -59,7 +59,6 @@ exports.getOrderStatus = catchAsyncError(async (req, res, next) => {
         console.log(matchCondition);
 
         const statuses = [
-            'verifying payment',
             'received',
             'accepted',
             'processing',
@@ -68,6 +67,7 @@ exports.getOrderStatus = catchAsyncError(async (req, res, next) => {
             'out for delivery',
             'transit',
             'delivered',
+            'verifying payment',
             'canceled',
             'failed'
         ];

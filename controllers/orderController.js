@@ -1263,7 +1263,6 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             status: {
               $switch: {
                 branches: [
-                  { case: { $regexMatch: { input: "$message", regex: /verifying payment/ } }, then: 'verifying payment' },
                   { case: { $regexMatch: { input: "$message", regex: /received/ } }, then: 'received' },
                   { case: { $regexMatch: { input: "$message", regex: /accepted/ } }, then: 'accepted' },
                   { case: { $regexMatch: { input: "$message", regex: /processing/ } }, then: 'processing' },
@@ -1272,6 +1271,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
                   { case: { $regexMatch: { input: "$message", regex: /out for delivery/ } }, then: 'out for delivery' },
                   { case: { $regexMatch: { input: "$message", regex: /transit/ } }, then: 'transit' },
                   { case: { $regexMatch: { input: "$message", regex: /delivered/ } }, then: 'delivered' },
+                  { case: { $regexMatch: { input: "$message", regex: /verifying payment/ } }, then: 'verifying payment' },
                   { case: { $regexMatch: { input: "$message", regex: /canceled/ } }, then: 'canceled' },
                   { case: { $regexMatch: { input: "$message", regex: /failed/ } }, then: 'failed' }
                 ],
