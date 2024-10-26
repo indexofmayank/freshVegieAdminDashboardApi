@@ -136,4 +136,4 @@ const demoProductSchema = mongoose.Schema({
 
 });
 
-module.exports = mongoose.model('DemoProduct', demoProductSchema);
+module.exports = mongoose.model('Demoproduct', demoProductSchema);

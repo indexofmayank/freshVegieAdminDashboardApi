@@ -116,7 +116,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       }
     ]);
 
-    console.log(Orders);
+    // console.log(Orders);
     const csvFilePath = path.join(__dirname, '../output.csv');
     // console.log(csvFilePath);
     const csvStringifier = createObjectCsvStringifier({

@@ -1,4 +1,5 @@
 const DemoProduct = require('../models/demoProductModel');
+const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const csv = require('csv-parser');
@@ -69,7 +70,7 @@ exports.updateLoadProductCSV = [
               })
               .on('end', async () => {
                 try {
-                  const result = await DemoProduct.insertMany(products);
+                  const result = await Product.insertMany(products);
                   console.log('${result.insertedCount} products inserted successfully.');
                   resolve();
                 } catch (err) {
@@ -88,7 +89,7 @@ exports.updateLoadProductCSV = [
 
 exports.getDemoProductModal = catchAsyncError(async(req, res, next) => {
   try {
-    const result = await DemoProduct.find();
+    const result = await Product.find();
     if(!result) {
       return res.status(500).json({
         success: false,
