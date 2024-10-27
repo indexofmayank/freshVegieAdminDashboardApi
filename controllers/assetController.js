@@ -46,7 +46,7 @@ exports.uploadAssetZip = [
             });
         }
 
-        console.log(req.file);
+        // console.log(req.file);
         // try {
             // Create a folder for extracted images
             if (!fs.existsSync(extractedFolder)) {
@@ -182,7 +182,7 @@ exports.getAssetForTable = catchAsyncError (async(req, res, next) => {
     try {
         const {name} = req.query;
         const matchCondition = name ? {"name" : {$regex: name, $options: "i"}} : {};
-        console.log(matchCondition);
+        // console.log(matchCondition);
         const result = await Asset.aggregate([
             {
                 $match: matchCondition
@@ -190,9 +190,13 @@ exports.getAssetForTable = catchAsyncError (async(req, res, next) => {
             {
                 $project: {
                     name: {$ifNull: ["$name", "N/a"]},
-                    image: {$ifNull: ["$image", "N/a"]}
+                    image: {$ifNull: ["$image", "N/a"]},
+                    createdAt: 1
                 }
-            }
+            },
+            {
+                $sort: { createdAt: -1 }
+            },
         ]);
 
 
