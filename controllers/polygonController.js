@@ -121,8 +121,8 @@ exports.getAllPolygon = catchAsyncError(async(req, res, next) => {
                 $project : {
                     name: 1,
                     image: 1,
+                    pincodes:1,
                     status: 1,
-
                 }
             },
             {$sort: {name: 1}},
