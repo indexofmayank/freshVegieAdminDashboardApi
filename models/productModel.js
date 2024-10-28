@@ -52,11 +52,11 @@ const productSchema = mongoose.Schema({
     {
       public_id: {
         type: String,
-        required: true,
+        required: false,
       },
       secure_url: {
         type: String,
-        required: true,
+        required: false,
       },
     },
   ],
