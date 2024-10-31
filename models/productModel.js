@@ -103,7 +103,7 @@ const productSchema = mongoose.Schema({
     default: 0
   },
   increment_value: {
-    type: String,
+    type: Number,
     required: false,
     default: 0
   },
