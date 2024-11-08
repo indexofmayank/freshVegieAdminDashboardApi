@@ -128,7 +128,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
       // {$skip: skip},
       // {$limit: limit}
     ]);
-    const totalProducts = await Product.countDocuments();
+    // const totalProducts = await Product.countDocuments();
     res.status(200).json({
       success: true,
       // page,
