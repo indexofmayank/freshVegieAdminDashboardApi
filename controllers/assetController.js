@@ -219,3 +219,22 @@ exports.getAssetForTable = catchAsyncError (async(req, res, next) => {
         });
     }
 });
+
+exports.deleteAssetById = catchAsyncError(async (req, res, next) => {
+    try {
+        if(!req.params.assetId) {
+            return next(new ErrorHandler('Asset not found', 400));
+        }
+        const asset = await Asset.findById(req.params.assetId);
+        await asset.remove();
+        return res.status(200).json({
+            success: true,
+            message: 'Asset deleted'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+})
