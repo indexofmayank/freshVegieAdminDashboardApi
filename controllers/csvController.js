@@ -12,9 +12,10 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
     const period = req.query.period;
     const startDate = req.query.startDate;
     const endDate= req.query.endDate;
+    const tableLabel = req.query.tableLabel.toLowerCase();
     let matchCondition = {};
     const currentDate = new Date();
-    console.log(filter);
+    matchCondition.orderStatus = tableLabel;
 
     if (period === 'custom' && startDate && endDate) {
       matchCondition.createdAt = {
