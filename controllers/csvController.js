@@ -40,8 +40,8 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
           };
           break;
         case 'Month':
-          const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-          const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+          const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, currentDate.getDate());
+          const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());    
           matchCondition.createdAt = {
             $gte: new Date(startOfMonth.setHours(0, 0, 0, 0)),
             $lt: new Date(endOfMonth.setHours(23, 59, 59, 999))
@@ -60,6 +60,8 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
 
       }
     }
+
+    console.log(matchCondition);
 
     const Orders = await Order.aggregate([
       {
