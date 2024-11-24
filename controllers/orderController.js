@@ -297,7 +297,6 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
       if (paymentInfo) {
         switch (paymentInfo.payment_type) {
           case 'cod':
-          case 'online':
             if (paymentInfo.useReferral) {
               const userForReferral = await User.findById(userId).session(session);
               if (!userForReferral) throw new Error('Referral not found');

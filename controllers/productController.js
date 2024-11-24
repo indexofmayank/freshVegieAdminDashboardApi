@@ -77,25 +77,10 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllProducts = catchAsyncError(async (req, res, next) => {
-  // const page = parseInt(req.query.page) || 1;
-  // const limit = parseInt(req.query.limit) || 10;
-  // const skip = (page - 1) * limit;
+
+  const session = await mongoose.startSession();
   try {
     const products = await Product.aggregate([
-      // {
-      //   $lookup: {
-      //     from: 'categories',
-      //     localField: 'category',
-      //     foreignField: '_id',
-      //     as: 'categoryDetails'
-      //   }
-      // },
-      // {
-      //   $unwind: {
-      //     path: '$categoryDetails',
-      //     preserveNullAndEmptyArrays: true 
-      //   }
-      // },
       {
         $project : {
           name: 1,
@@ -125,25 +110,27 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
         }
       },
       {$sort: {name: 1}},
-      // {$skip: skip},
-      // {$limit: limit}
-    ]);
-    // const totalProducts = await Product.countDocuments();
-    res.status(200).json({
+    ], {session});
+    if(!products) {
+      return res.status(404).json({
+        success: 'false',
+        message: 'No product found'
+      });
+    }
+    return res.status(200).json({
       success: true,
-      // page,
-      // limit,
-      // totalPage: Math.ceil(totalProducts / limit),
-      // totalProducts,
       data: products
-    })
+    });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      message: error.message
     });
+  } finally {
+    session.endSession();
   }
+
 });
 
 // send all product details
