@@ -20,7 +20,7 @@ exports.createCategory = catchAsyncError(async(req, res, next) => {
 });
 
 exports.getAllCategroy = catchAsyncError(async(req, res, next) => {
-    const categories = await Category.find({status: true});
+    const categories = await Category.find({status: true}).sort({ order: 1 });
 
     // const categories = await Category.aggregate([
     //     {
