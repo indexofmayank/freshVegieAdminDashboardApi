@@ -25,7 +25,9 @@ router.route('/deliverypartnerdetails/:orderId').put(orderController.updateDeliv
 router.route('/dashboardcard/orders/').get(orderController.getOrderForDashboardCards);
 router.route('/orderforedit/:orderId').get(orderController.getOrderForEditOrder);
 router.route('/orderforcustomise/:id').get(orderController.getOrderForCustomize);
+router.route('/newforonline').post(orderController.createNewOrderForOnlinePayment);
 // router.route('/editorder/:orderId').get(orderController)
+router.route('/updateOrderStatusAfterPayment').post(orderController.updateOrderStatusAfterPayment);
 
 module.exports = router;    
     
