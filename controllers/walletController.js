@@ -208,22 +208,22 @@ exports.getWalletByUserId = CatchAsyncErrors(async (req, res, next) => {
 });
 
 exports.addFundsToWallet = async (req, res, next) => {
-
-    const {skip = 0, limit = 10} = req.query;
+    const { skip = 0, limit = 10 } = req.query;
     const skipInt = parseInt(skip);
     const limitInt = parseInt(limit);
     try {
         const { amount, description = 'Funds Added' } = req.body;
-        const wallet = await Wallet.findOne({ 'userId': req.params.id });
+        const wallet = await Wallet.findOne({ userId: req.params.id });
         if (!wallet) {
             throw new Error('Wallet not found');
         }
-        wallet.balance += parent(amount);
+        wallet.balance += amount; 
         wallet.transactions.push({ type: 'credit', amount, description });
         await wallet.save();
+        
         const result = await Wallet.aggregate([
             {
-                $match: { 'userId': mongoose.Types.ObjectId(req.params.id) }
+                $match: { userId: mongoose.Types.ObjectId(req.params.id) }
             },
             {
                 $lookup: {
@@ -299,14 +299,14 @@ exports.addFundsToWallet = async (req, res, next) => {
             data: result
         });
 
-} catch (error) {
-        return res.status(200).json({
+    } catch (error) {
+        return res.status(500).json({ // Changed status code to 500 for server errors
             success: false,
             message: "Server error",
             error: error.message
-        })
+        });
     }
-}
+};
 
 exports.useWalletfunds = CatchAsyncErrors(async (req, res, session) => {
     try {
