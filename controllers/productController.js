@@ -77,8 +77,9 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllProducts = catchAsyncError(async (req, res, next) => {
-
-  const session = await mongoose.startSession();
+  // const page = parseInt(req.query.page) || 1;
+  // const limit = parseInt(req.query.limit) || 10;
+  // const skip = (page - 1) * limit;
   try {
     const products = await Product.aggregate([
       {
