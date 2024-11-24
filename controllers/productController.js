@@ -77,10 +77,8 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllProducts = catchAsyncError(async (req, res, next) => {
-  // const page = parseInt(req.query.page) || 1;
-  // const limit = parseInt(req.query.limit) || 10;
-  // const skip = (page - 1) * limit;
   try {
+    const session = await mongoose.startSession();
     const products = await Product.aggregate([
       {
         $project : {
@@ -112,6 +110,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
       },
       {$sort: {name: 1}},
     ], {session});
+
     if(!products) {
       return res.status(404).json({
         success: 'false',
