@@ -1826,10 +1826,12 @@ exports.updateOrderByAdmin = catchAsyncError(async (req, res, next) => {
 
 exports.updateOrderStatusAfterPayment = catchAsyncError(async (req, res, next) => {
   try {
-    const { orderId } = req.body;
-    console.log(orderId);
-    const updatedOrderStatusAfterPayment = await Order.findOneAndUpdate(
-      { 'orderId' : orderId },
+
+    const {orderId} = req.body;
+    console.log(req.body);
+
+    const updatedOrderStatusAfterPayment = await Order.findByIdAndUpdate(
+      orderId,
       {
         'paymentInfo.status': "completed",
         'paidAt': new Date() 
