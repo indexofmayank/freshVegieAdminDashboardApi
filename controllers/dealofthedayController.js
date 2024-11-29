@@ -66,22 +66,22 @@ exports.getAllFeaturedProductForTable = catchAsyncError(async (req, res, next) =
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const featuredStatus = true; // Change to false for non-featured products
+        const featuredStatus = true; 
         const result = await Product.aggregate([
             {
                 $match: {
-                    featured: featuredStatus // Match on the featured status
+                    featured: featuredStatus 
                 }
             },
             {
                 $facet: {
                     featuredProducts: [
-                        {
-                            $skip: skip // Skip documents for pagination
-                        },
-                        {
-                            $limit: limit // Limit the number of documents
-                        },
+                        // {
+                        //     $skip: skip 
+                        // },
+                        // {
+                        //     $limit: limit 
+                        // },
                         {
                             $project: {
                                 name: { $ifNull: ["$name", "N/a"] },
@@ -91,7 +91,7 @@ exports.getAllFeaturedProductForTable = catchAsyncError(async (req, res, next) =
                     ],
                     totalCount: [
                         {
-                            $count: "count" // Count total matched documents
+                            $count: "count" 
                         }
                     ]
                 }
