@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Product = require('../models/productModel');
+
 
 const categorySchema = new mongoose.Schema({
     name: {
@@ -23,17 +25,24 @@ const categorySchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Create a virtual property 'id' that's computed from '_id'
 categorySchema.virtual('id').get(function () {
     return this._id.toHexString();
 });
 
-// Ensure virtual fields are serialized.
 categorySchema.set('toJSON', {
     virtuals: true
 });
 categorySchema.set('toObject', {
     virtuals: true
+});
+
+categorySchema.pre('remove', async function(next) {
+    try {
+        await Product.deleteMany({category: this._id});
+        next();
+    } catch (error) {
+        next(err);
+    }
 });
 
 module.exports = mongoose.model('Category', categorySchema);

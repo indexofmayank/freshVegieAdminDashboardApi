@@ -10,7 +10,7 @@ const productSchema = mongoose.Schema({
     required: [true, 'Please enter product status'],
   },
   category: {
-    type: mongoose.Schema.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: [true, 'Please enter the product category'],
   },
@@ -135,5 +135,8 @@ const productSchema = mongoose.Schema({
   },
 
 });
+
+
+
 
 module.exports = mongoose.model('Product', productSchema);
