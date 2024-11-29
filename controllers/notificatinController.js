@@ -70,7 +70,9 @@ exports.getAllNotificationForTable = catchAsyncError(async (req, res, next) => {
                     audience: {$ifNull: ["$audience", "N/A"]},
                     banner: {$ifNull: ["$image", "N/A"]},
                     status: {$ifNull: ["$status", "N/A"]},
-                    lastLive: {$ifNull: ["$timestampFormatted", "N/A"]}
+                    lastLive: {$ifNull: ["$timestampFormatted", "N/A"]},
+                    message: {$ifNull: ["$message", "N/a"]},
+                    heading: {$ifNull: ["$heading", "N/a"]}
                 }
             },
             {

@@ -111,6 +111,8 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
       {$sort: {name: 1}},
     ], {session});
 
+    console.log(products);
+
     if(!products) {
       return res.status(404).json({
         success: 'false',
