@@ -3,9 +3,8 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 const mongoose = require('mongoose');
-// const Demoproduct = require('../models/demoProductModel');
 const DemoProduct = require('../models/demoProductModel');
-// create a new product
+
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   req.body.admin = req.user.id;
   let images = req.body.images;
@@ -24,7 +23,6 @@ exports.createProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// update an existing product
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new ErrorHandler('Product Not Found', 400));
@@ -57,7 +55,6 @@ exports.updateProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// delete an existing product
 exports.deleteProduct = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new ErrorHandler('Product Not Found', 400));
@@ -116,8 +113,6 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
       {$sort: {name: 1}},
     ], {session});
 
-    console.log(products);
-
     if(!products) {
       return res.status(404).json({
         success: 'false',
@@ -140,33 +135,31 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
 
 });
 
-// send all product details
 exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
   const {name} = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const matchCondition = name ? {"name" : {$regex : name, $options: "i"}} : {};
-  // console.log(matchCondition);
   const products = await Product.aggregate([
     {
       $match: matchCondition
     },
     {
       $lookup: {
-        from: 'categories', // Collection name for Category
+        from: 'categories', 
         localField: 'category',
         foreignField: '_id',
         as: 'categoryDetails',
       },
     },
     {
-      $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+      $unwind: '$categoryDetails',
     },
     {
       $project: {
         name: 1,
-        category: '$categoryDetails.name', // Project the category name instead of the ObjectId
+        category: '$categoryDetails.name', 
         add_ons: 1,
         search_tags: 1,
         selling_method: 1,
@@ -187,7 +180,6 @@ exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
 
   const totalProducts = await Product.countDocuments();
 
-  // console.log(products);
   
   res.status(200).json({
     success: true,
@@ -206,20 +198,19 @@ exports.getAllProductForOrder = catchAsyncError(async (req, res, next) => {
   const products = await Product.aggregate([
     {
       $lookup: {
-        from: 'categories', // Collection name for Category
+        from: 'categories', 
         localField: 'category',
         foreignField: '_id',
         as: 'categoryDetails',
       },
     },
     {
-      $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+      $unwind: '$categoryDetails', 
     },
     {
       $project: {
         name: 1,
-        category: '$categoryDetails.name', // Project the category name instead of the ObjectId
-        add_ons: 1,
+        category: '$categoryDetails.name', 
         search_tags: 1,
         selling_method: 1,
         description: 1,
@@ -250,7 +241,7 @@ exports.getAllProductForOrder = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// send only a single product detaisl
+
 exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new ErrorHandler('Product Not Found', 400));
@@ -265,13 +256,11 @@ exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// review a product
 exports.createProductReview = catchAsyncError(async (req, res, next) => {
   const { rating, comment, productId, name, email } = req.body;
   if (!rating || !comment || !productId || !name || !email) {
     return next(new ErrorHandler('Request invalid', 400));
   }
-  // creating a review
   const review = {
     name,
     email,
@@ -279,10 +268,7 @@ exports.createProductReview = catchAsyncError(async (req, res, next) => {
     comment,
   };
   const product = await Product.findById(productId);
-  // check if the user already reviewed
   const isReviewed = product.reviews.some((rev) => rev.email === email);
-  // user already review: update the review
-  // user gives new review: add new review and update the number of reviews
   if (isReviewed) {
     product.reviews.forEach((rev) => {
       if (rev.email === email) {
@@ -295,23 +281,19 @@ exports.createProductReview = catchAsyncError(async (req, res, next) => {
     product.reviews.push(review);
     product.numberOfReviews = product.reviews.length;
   }
-  // update product rating
   let avg = 0;
   product.reviews.forEach((rev) => {
     avg += rev.rating;
   });
   avg = avg / product.reviews.length;
   product.rating = avg;
-  // save the product
   await product.save({ validateBeforeSave: false });
-  // send success response
   res.status(200).json({
     success: true,
     message: 'Product review created',
   });
 });
 
-// send all product reviews
 exports.getAllReviews = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new ErrorHandler('Product not found', 400));
@@ -327,7 +309,6 @@ exports.getAllReviews = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// delete product review
 exports.deleteReview = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new ErrorHandler('Product not found', 400));
@@ -408,14 +389,11 @@ exports.updateManyProducts = catchAsyncError(async (req, res, next) => {
       error: 'Bluk update failed'
     });
   }
-
 });
 
 exports.getProductByIdForAdmin = catchAsyncError (async (req, res, next) => {
-  console.log('we hit here');
   try {
     const productId = req.params.id;
-    console.log(productId);
     if(!productId) {
       throw new ErrorHandler('product id not defined')
     }
@@ -425,19 +403,19 @@ exports.getProductByIdForAdmin = catchAsyncError (async (req, res, next) => {
       },
       {
         $lookup: {
-          from: 'categories', // Collection name for Category
+          from: 'categories', 
           localField: 'category',
           foreignField: '_id',
           as: 'categoryDetails',
         },
       },
       {
-        $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+        $unwind: '$categoryDetails', 
       },
       {
         $project : {
           name: 1,
-          category: '$categoryDetails.name', // Project the category name instead of the ObjectId
+          category: '$categoryDetails.name', 
           add_ons: 1,
           search_tags: 1,
           selling_method: 1,
@@ -481,7 +459,6 @@ exports.getProductDetailByIdForUpdate = catchAsyncError (async (req, res, next) 
       throw new ErrorHandler('Product not found', 400);
     }
     const product = await Product.findById({_id: productId});
-    console.log(product);
     return res.status(200).json({
       success: true,
       data: product
@@ -498,7 +475,6 @@ exports.getProductDetailByIdForUpdate = catchAsyncError (async (req, res, next) 
 exports.getProductForDropdown = catchAsyncError (async (req, res, next) => {
   try {
     const {name, category} = req.query;
-    console.log(name, category);
     const matchCriteria = {};
     if(name) {
       matchCriteria.name = {$regex: name, $options: 'i'}
@@ -607,20 +583,19 @@ exports.getAllProductNameForSearchQuery = catchAsyncError(async (req, res, next)
       },
       {
         $lookup: {
-          from: 'categories', // Collection name for Category
+          from: 'categories', 
           localField: 'category',
           foreignField: '_id',
           as: 'categoryDetails',
         },
       },
       {
-        $unwind: '$categoryDetails', // Unwind to extract category details as a single object
+        $unwind: '$categoryDetails', 
       },
       {
         $project: {
           name: 1,
-          category: '$categoryDetails.name', // Project the category name instead of the ObjectId
-          add_ons: 1,
+          category: '$categoryDetails.name', 
           search_tags: 1,
           selling_method: 1,
           description: 1,
@@ -645,4 +620,29 @@ exports.getAllProductNameForSearchQuery = catchAsyncError(async (req, res, next)
     console.error(error);
     throw new ErrorHandler('Something went wrong while getting the dropdown');
   }
-})
+});
+
+exports.expermintedRouteToTest = catchAsyncError(async (req, res, next) => {
+  try {
+    const matchCondition = {category : null};
+
+    const product = await Product.aggregate([
+      // {$match: matchCondition},
+      {
+        $project: {
+          name: 1,
+          category: 1
+        }
+      }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      totalLenght: product.length,
+      product
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while getting the dropdown');
+  }
+});
