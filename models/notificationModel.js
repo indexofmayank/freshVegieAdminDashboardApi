@@ -18,7 +18,8 @@ const notificationSchema = new mongoose.Schema({
 
     redirect_to: {
         type: String,
-        required: [true, 'Please enter redirect']
+        required: [false, 'Please enter redirect'],
+        default: null,
     },
 
     specific_product: {
@@ -41,7 +42,8 @@ const notificationSchema = new mongoose.Schema({
 
     audience: {
         type: String,
-        required: [true, 'Please enter an audience']
+        required: [false, 'Please enter an audience'],
+        default: null,
     },
 
 
