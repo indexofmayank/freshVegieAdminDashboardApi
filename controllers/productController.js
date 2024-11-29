@@ -81,6 +81,11 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
     const session = await mongoose.startSession();
     const products = await Product.aggregate([
       {
+        $match: {
+          product_status: true,
+        },
+      },
+      {
         $project : {
           name: 1,
           category: 1,
