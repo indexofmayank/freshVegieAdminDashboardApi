@@ -133,10 +133,7 @@ const productSchema = mongoose.Schema({
     require: [true, 'Please enter a featured'],
     default: false
   },
-
-});
-
-
-
+}, {timestamps: true}
+);
 
 module.exports = mongoose.model('Product', productSchema);

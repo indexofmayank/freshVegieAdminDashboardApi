@@ -26,7 +26,9 @@ const adminSchema = new mongoose.Schema({
     minLength: [8, 'Password must be atleast 8 characters long'],
     select: false,
   },
-});
+},
+  {timestamps: true}
+);
 
 // checking for changed password
 adminSchema.pre('save', async function (next) {
