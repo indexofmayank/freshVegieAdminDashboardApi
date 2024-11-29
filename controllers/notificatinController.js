@@ -116,7 +116,7 @@ exports.getNotificationById = catchAsyncError (async (req, res, next) => {
                         audience: {$ifNull: ["$audience", "N/A"]},
                         banner: {$ifNull: ["$image", "N/A"]},
                         customFilters: {$ifNull: ["$customFilters", "N/A"]},
-                        //customers are left to take
+                        customers: 1,
                         status: {$ifNull: ["$status", "N/A"]},
                         // lastLive: {$ifNull: ["$timestampFormatted", "N/A"]}
                     }
@@ -137,9 +137,11 @@ exports.getNotificationById = catchAsyncError (async (req, res, next) => {
 
 exports.updateNotificationById = catchAsyncError(async (req, res, next) => {
     try {
+        console.log('update_notification_req_modal: ', req.body);
         const {notificationId} = req.params;
         let updateData = req.body;
-        const {secure_url} = await cloudinary.uploader.upload(updateData.image, {
+        let image = req.body.banner;
+        const {secure_url} = await cloudinary.uploader.upload(req.body.banner, {
             folder: 'tomper-wear'
         });
         updateData.image = secure_url;
@@ -150,6 +152,7 @@ exports.updateNotificationById = catchAsyncError(async (req, res, next) => {
                 message: 'Server error'
             });
         } 
+        console.log('update_notification_result_modal: ', result);
         return res.status(200).json({
             success: true,
             data: result
