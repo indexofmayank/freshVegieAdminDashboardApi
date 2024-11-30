@@ -622,27 +622,97 @@ exports.getAllProductNameForSearchQuery = catchAsyncError(async (req, res, next)
   }
 });
 
-exports.expermintedRouteToTest = catchAsyncError(async (req, res, next) => {
+exports.experimentedRouteToTest = catchAsyncError(async (req, res, next) => {
   try {
-    const matchCondition = {category : null};
-
     const product = await Product.aggregate([
-      // {$match: matchCondition},
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: '_id',
+          as: 'categoryDetails'
+        }
+      },
+      {
+        $match: {
+          categoryDetails: {$eq: []},
+        },
+      },
       {
         $project: {
           name: 1,
-          category: 1
+          price: 1,
+          category: 1,
+          categoryDetails: {name: 1}
         }
       }
     ]);
 
+    if(product.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No products found with empty categories',
+      });
+    }
+
+    const productIds = product.map(product => product._id);
+    await Product.deleteMany({_id: {$in: productIds}});
+
     return res.status(200).json({
       success: true,
-      totalLenght: product.length,
-      product
+      message: 'Products with empty categories delted successfully',
+      deletedCount: productIds.length
     });
   } catch (error) {
     console.error(error);
-    throw new ErrorHandler('Something went wrong while getting the dropdown');
+    throw new ErrorHandler("Something went wrong while fetching products.");
+  }
+});
+
+exports.experimentedRouteToTestTwo = catchAsyncError (async (req, res, next) => {
+  try {
+    const session = await mongoose.startSession();
+    const products = await Product.aggregate([
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categoryDetails'
+        }
+      },
+      {
+        $unwind: '$categoryDetails'
+      },
+      {
+          $match: {
+            'categoryDetails.status' : true
+          }
+      },
+      {
+        $project: {
+          name: 1
+        }
+      }
+    ], {session}); 
+
+    if(!products) {
+      return res.status(400).json({
+        success: 'false',
+        message: 'No product found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      totalProduct: products.length,
+      data: products
+    });
+
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler('Something went wrong while fetching products');
+  } finally {
+    session.endSession();
   }
 });
