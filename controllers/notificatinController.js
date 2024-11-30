@@ -431,3 +431,91 @@ exports.getUserNamesForNotification = catchAsyncError(async (req, res, next) => 
         });
     }
 });
+
+exports.pushNotification = catchAsyncError(async (req, res, next) => {
+    try {
+        const notificationId = mongoose.Types.ObjectId(req.params.id);
+
+        const notification = await Notification.findById(notificationId);
+
+        if (!notification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Notification not found'
+            });
+        }
+
+        const { customFilters } = notification;
+        let matchCondition = {};
+
+        switch (customFilters) {
+            case 'zeroOrders':
+                console.log('Filter: Zero Orders');
+                matchCondition = {
+                    'orders': { $size: 0 } 
+                };
+                break;
+
+            case 'new':
+                console.log('Filter: New Users');
+                matchCondition = {
+                    'orders': { $ne: [] } 
+                };
+                break;
+
+            case 'all':
+                console.log('Filter: All Users');
+                matchCondition = {}; 
+                break;
+
+            default:
+                console.log('Invalid custom filter');
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid custom filter provided in the notification'
+                });
+        }
+
+        const users = await User.aggregate([
+            {
+                $lookup: {
+                    from: 'orders',
+                    localField: '_id',
+                    foreignField: 'user.userId',
+                    as: 'orders'
+                }
+            },
+            {
+                $match: matchCondition
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    fcm_token: 1
+                }
+            }
+        ]);
+
+        if (!users || users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No users found matching the criteria'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            notification,
+            users
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing the push notification'
+        });
+    }
+});
