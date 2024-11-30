@@ -691,7 +691,30 @@ exports.experimentedRouteToTestTwo = catchAsyncError (async (req, res, next) => 
       },
       {
         $project: {
-          name: 1
+          name: 1,
+          category: 1,
+          add_ons: 1,
+          search_tags: 1,
+          selling_method: 1,
+          information: 1,
+          description: 1,
+          price: 1,
+          offer_price: 1,
+          purchase_price: 1,
+          images: 1,
+          sku: 1,
+          barcode: 1,
+          stock: 1,
+          stock_notify: 1,
+          tax: 1,
+          product_detail_min: 1,
+          product_detail_max: 1,
+          increment_value: 1,
+          variant_type: 1,
+          variant_value: 1,
+          product_weight_type: 1,
+          product_weight: 1,
+          featured:1,
         }
       }
     ], {session}); 
