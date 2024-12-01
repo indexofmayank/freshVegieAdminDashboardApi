@@ -22,7 +22,7 @@ exports.getAllProductsForInventory = catchAsyncError(async (req, res, next) => {
           stock: 1,
           price: 1,
           offer_price: 1,
-          stock_notify: 1,
+          stock_notify: 1,  
           purchase_price: 1,
         }
       },

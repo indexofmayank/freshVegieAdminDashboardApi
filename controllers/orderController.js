@@ -660,7 +660,7 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(async (req, res, next) 
 
     await newOrder.save({ session });
 
-    await session.commitTransaction(); // Commit the transaction
+    await session.commitTransaction(); 
 
     orderLogger.info(`Order received: Order ID - ${newOrder.orderId}, User ID - ${newOrder.user.userId}`);
 
@@ -1149,7 +1149,7 @@ exports.getUserBillingInfoByOrderId = catchAsyncError(async (req, res, next) => 
       },
       {
         $project: {
-          _id: 0, // Exclude the _id field
+          _id: 0, 
           name: { $ifNull: ['$shippingInfo.billingAddress.name', 'N/A'] },
           phone: { $ifNull: ['$shippingInfo.billingAddress.phone', 'N/A'] },
           email: { $ifNull: ['$shippingInfo.billingAddress.email', 'N/A'] },
@@ -1564,7 +1564,7 @@ exports.getOrderByOrderIdForUser = (catchAsyncError(async (req, res, next) => {
             time: {
               $dateToString: {
                 format: "%Y-%m-%d %H:%M:%S",
-                date: { $add: ["$timestamp", 19800000] } // Add 5 hours 30 minutes (in milliseconds)
+                date: { $add: ["$timestamp", 19800000] }
               }
             }
           }

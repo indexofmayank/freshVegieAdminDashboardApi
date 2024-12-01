@@ -142,14 +142,15 @@ exports.updateDealOfTheDay = catchAsyncError (async (req, res, next) => {
 
 exports.getDealOfTheDayById = catchAsyncError(async (req, res, next) => {
     try {
-        console.log('we came here');
         const deal = await Product.aggregate([
             {
                 $match: {_id: mongoose.Types.ObjectId(req.params.id)}
             },
             {
                 $project: {
-                    featured: {$ifNull: ["$featured", "N/a"]}
+                    name: 1,
+                    featured: 1,
+                    images: {$arrayElemAt: ['$images.secure_url', 0]},
                 }
             }
         ]);
@@ -163,4 +164,104 @@ exports.getDealOfTheDayById = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         throw new ErrorHandler('Something went wrong while getting the deal of the day');
     }
-})
+});
+
+exports.getFeaturedProductByName = catchAsyncError(async (req, res, next) => {
+    
+    console.log('we came here');
+    const session = await mongoose.startSession();
+    const {name} = req.body;
+    console.log(name);``
+    const matchCondition = name ? {"name" : {$regex: name, $options: "i" }}: {};
+
+    try {
+        const products = await Product.aggregate([
+            {
+                $match: matchCondition
+            },
+            {
+                $project: {
+                    name: {$ifNull: ["$name", "N/a"]}
+                }
+            },
+            {
+                $sort: {createdAt: -1}
+            }
+        ], {session});
+
+        if(!products) {
+            return res.status(200).json({
+                success: false,
+                message: 'Not able to get product by name'
+            });
+        }
+    
+        return res.status(200).json({
+            success: true,
+            data: products
+        });
+
+    } catch (error) {
+        console.error(error);
+        throw new ErrorHandler('Something went wrong while fetching featured product by name');
+    } finally {
+        session.endSession();
+    }
+
+});
+
+
+exports.getFeaturedProductDropdown = catchAsyncError(async (req, res, next) => {
+
+
+    try {
+        // const product = await Product.aggregate([
+
+        // ]);
+
+        return res.status(200).json({
+            success: true,
+            message: 'its working'
+        });
+
+    } catch (error) {
+        console.error(error);
+        throw new ErrorHandler('Something went wrong while fetching featured Product By Dropdown');
+    }
+});
+
+exports.updateDealOfTheDayWithBody = catchAsyncError(async (req, res, next) => {
+    console.log(req.body);
+    try {
+        if (!req.params.id) {
+            return next(new ErrorHandler('Product ID not provided', 400)); 
+        }
+
+        const { featured } = req.body; 
+
+        if (typeof featured !== 'boolean') {
+            return next(new ErrorHandler('Invalid featured value', 400)); 
+        }
+
+        const result = await Product.findOneAndUpdate(
+            { _id: req.params.id },
+            { $set: { featured } }, 
+            {
+                new: true, 
+                upsert: true, 
+            }
+        );
+
+        console.log(result);
+
+        res.status(200).json({
+            success: true,
+            message: result.isNew
+                ? 'New product created and marked as deal of the day'
+                : 'Deal of the day updated successfully',
+        });
+    } catch (error) {
+        console.error(error);
+        next(new ErrorHandler('Something went wrong while updating the deal of the day', 500));
+    }
+});

@@ -11,4 +11,6 @@ router.route('/singlefeaturedProduct/:id').get(dealofthedayController.getDealOfT
 router.route('/featuredProduct1/').get(userController.userListingforAddorder);
 // router.route('/featuredProduct1/').get(productController.userListingforAddorder);
 router.route('/getAllProductForOrder/').get(productController.getAllProductForOrder);
+router.route('/featuredProduct/').post(dealofthedayController.getFeaturedProductByName);
+router.route('/body/featuredProduct/:id').put(dealofthedayController.updateDealOfTheDayWithBody);
 module.exports = router;

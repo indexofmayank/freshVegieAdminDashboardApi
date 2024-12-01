@@ -182,7 +182,6 @@ exports.getAssetForTable = catchAsyncError (async(req, res, next) => {
     try {
         const {name} = req.query;
         const matchCondition = name ? {"name" : {$regex: name, $options: "i"}} : {};
-        // console.log(matchCondition);
         const result = await Asset.aggregate([
             {
                 $match: matchCondition
