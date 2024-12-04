@@ -30,7 +30,7 @@ exports.uploadAssetZip = [
         const zipFile = req.file;
         console.log(zipFilePath);
 
-        const extractedFolder = path.join(os.tmpdir(),'upload', 'extracted_images');
+        const extractedFolder = path.join(__dirname,'../uploads', 'extracted_images');
 
         if (!zipFilePath) {
             return res.status(400).json({
