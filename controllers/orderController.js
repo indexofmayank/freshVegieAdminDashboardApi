@@ -68,7 +68,6 @@ const getLatLng = async (toCheckAddress) => {
 };
 
 async function SendOrderConfirmMailAfterSomething(orderId, session) {
-
   if (!orderId) {
     throw new Error("Order Id is required");
   }
@@ -78,7 +77,6 @@ async function SendOrderConfirmMailAfterSomething(orderId, session) {
   }
 
   try {
-
     // await session.withTransaction(async () => {
     //   const requiredOrder = await requiredOrder.findById(
     //     mongoose.Types.ObjectId(orderId)
@@ -89,12 +87,12 @@ async function SendOrderConfirmMailAfterSomething(orderId, session) {
       mongoose.Types.ObjectId(orderId)
     ).session(session);
 
-    if(!requiredOrder) {
-      throw new Error('Order not found, whie sending mail')
+    if (!requiredOrder) {
+      throw new Error("Order not found, whie sending mail");
     }
 
-    if(!requiredOrder.user.email) {
-      throw new Error('User email, not found');
+    if (!requiredOrder.user.email) {
+      throw new Error("User email, not found");
     }
 
     const shippingAddress = [
@@ -236,12 +234,8 @@ async function SendOrderConfirmMailAfterSomething(orderId, session) {
                        }</p>
                    </div>
                    <div class="order-details">
-                       <p class="bold">Shipping Address: ${
-                        shippingAddress
-                       }</p>
-                       <p class="bold">Estimated Delivery Date ${
-                        formattedDeliveryDate
-                       }</p>
+                       <p class="bold">Shipping Address: ${shippingAddress}</p>
+                       <p class="bold">Estimated Delivery Date ${formattedDeliveryDate}</p>
                    </div>
                    <div class="order-items">
                        <h3>Items Ordered</h3>
@@ -267,14 +261,22 @@ async function SendOrderConfirmMailAfterSomething(orderId, session) {
     `;
 
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: "smtp.gmail.com",
       port: 587,
       secure: false,
-      auth: { user: 'fortune.solutionpoint@gmail.com', pass: 'rsyh xzdk cfgo vdak' }
+      auth: {
+        user: "fortune.solutionpoint@gmail.com",
+        pass: "rsyh xzdk cfgo vdak",
+      },
     });
-    const to = requiredOrder.shippingInfo.deliveryAddress.email
+    const to = requiredOrder.shippingInfo.deliveryAddress.email;
 
-    await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
+    await transporter.sendMail({
+      from: "fortune.solutionpoint@gmail.com",
+      to,
+      subject,
+      html: htmlContent,
+    });
 
     return { success: true };
   } catch (error) {
@@ -605,171 +607,213 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     );
 
     //=-=-=-=-=-=-=-=-=-=-=-= Sending email starts (after transaction) =-=-=-=-=-=-=-=-=-=-=-=-
-    // if (orderedFrom === 'app' && user.email) {
-    //   const sendOrderEmail = async (to, order, shippingInfo, orderItems, totalPrice, deliveryDate,user) => {
-    //     const shippingAddress = [
-    //       shippingInfo.deliveryAddress.address,
-    //       shippingInfo.deliveryAddress.locality,
-    //       shippingInfo.deliveryAddress.landmark,
-    //       shippingInfo.deliveryAddress.city,
-    //       shippingInfo.deliveryAddress.pin_code,
-    //       shippingInfo.deliveryAddress.state
-    //     ].filter(Boolean).join(', ');
+    if (orderedFrom === "app" && user.email) {
+      const sendOrderEmail = async (
+        to,
+        order,
+        shippingInfo,
+        orderItems,
+        totalPrice,
+        deliveryDate,
+        user
+      ) => {
+        const shippingAddress = [
+          shippingInfo.deliveryAddress.address,
+          shippingInfo.deliveryAddress.locality,
+          shippingInfo.deliveryAddress.landmark,
+          shippingInfo.deliveryAddress.city,
+          shippingInfo.deliveryAddress.pin_code,
+          shippingInfo.deliveryAddress.state,
+        ]
+          .filter(Boolean)
+          .join(", ");
 
-    //     const items = orderItems || [];
-    //     const subject = 'Order placed at Fresh Vegie for ' + order.orderId;
-    //     const createdAtUTC = new Date(newOrder.createdAt);
+        const items = orderItems || [];
+        const subject = "Order placed at Fresh Vegie for " + order.orderId;
+        const createdAtUTC = new Date(newOrder.createdAt);
 
-    //       // Convert to IST (UTC + 5:30)
-    //       const createdAtIST = new Date(createdAtUTC.getTime() + (5.5 * 60 * 60 * 1000));
+        // Convert to IST (UTC + 5:30)
+        const createdAtIST = new Date(
+          createdAtUTC.getTime() + 5.5 * 60 * 60 * 1000
+        );
 
-    //       // Format the IST date as a string (customize as needed)
-    //       const orderDateIST = createdAtIST.toLocaleDateString('en-IN', {
-    //         weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
-    //         hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short'
-    //       });
+        // Format the IST date as a string (customize as needed)
+        const orderDateIST = createdAtIST.toLocaleDateString("en-IN", {
+          weekday: "long",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          timeZoneName: "short",
+        });
 
-    //       // Add 1 day for estimated delivery date
-    //       const estimatedDeliveryDate = new Date(createdAtIST);
-    //       estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 1);
-    //       const formattedDeliveryDate = estimatedDeliveryDate.toLocaleDateString('en-IN', {
-    //         weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
-    //       });
+        // Add 1 day for estimated delivery date
+        const estimatedDeliveryDate = new Date(createdAtIST);
+        estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 1);
+        const formattedDeliveryDate = estimatedDeliveryDate.toLocaleDateString(
+          "en-IN",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }
+        );
 
-    //     const htmlContent = `
-    //     <!DOCTYPE html>
-    //     <html lang="en">
-    //     <head>
-    //         <meta charset="UTF-8">
-    //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //         <title>Order Confirmation</title>
-    //         <style>
-    //             body {
-    //                 font-family: Arial, sans-serif;
-    //                 background-color: #f4f4f4;
-    //                 margin: 0;
-    //                 padding: 0;
-    //             }
-    //             .container {
-    //                 width: 100%;
-    //                 max-width: 600px;
-    //                 margin: 0 auto;
-    //                 background-color: #ffffff;
-    //                 padding: 20px;
-    //                 border-radius: 8px;
-    //                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    //             }
-    //             h1 {
-    //                 color: #333;
-    //             }
-    //             .header {
-    //                 text-align: center;
-    //                 padding: 20px 0;
-    //             }
-    //             .header h1 {
-    //                 color: #4caf50;
-    //                 font-size: 28px;
-    //                 margin: 0;
-    //             }
-    //             .order-details {
-    //                 margin: 20px 0;
-    //             }
-    //             .order-details p {
-    //                 margin: 10px 0;
-    //             }
-    //             .order-details .bold {
-    //                 font-weight: bold;
-    //             }
-    //             .order-items {
-    //                 border: 1px solid #ddd;
-    //                 padding: 10px;
-    //                 margin: 20px 0;
-    //             }
-    //             .order-items h3 {
-    //                 border-bottom: 1px solid #ddd;
-    //                 padding-bottom: 10px;
-    //                 margin-bottom: 10px;
-    //                 color: #333;
-    //             }
-    //             .order-items ul {
-    //                 list-style: none;
-    //                 padding: 0;
-    //                 margin: 0;
-    //             }
-    //             .order-items li {
-    //                 padding: 10px 0;
-    //                 border-bottom: 1px solid #ddd;
-    //             }
-    //             .order-items li:last-child {
-    //                 border-bottom: none;
-    //             }
-    //             .contact-info {
-    //                 margin: 20px 0;
-    //                 padding: 20px;
-    //                 background-color: #f4f4f4;
-    //                 border-radius: 8px;
-    //                 text-align: center;
-    //             }
-    //             .contact-info p {
-    //                 margin: 0;
-    //             }
-    //             .footer {
-    //                 text-align: center;
-    //                 font-size: 12px;
-    //                 color: #888;
-    //                 margin-top: 20px;
-    //             }
-    //         </style>
-    //     </head>
-    //     <body>
-    //         <div class="container">
-    //             <div class="header">
-    //                 <h1>Order Placed Successfully!</h1>
-    //             </div>
-    //             <p>Dear <strong>${user.name}</strong>,</p>
-    //             <p>Thank you for shopping with <strong>Fresh Vegie</strong>. We're happy to inform you that your order has been placed successfully. Below are the details:</p>
-    //             <div class="order-details">
-    //                 <p class="bold">Order Number: ${newOrder.orderId}</p>
-    //                 <p class="bold">Order Date: ${orderDateIST}</p>
-    //                 <p class="bold">Total Amount: ${newOrder.grandTotal}</p>
-    //             </div>
-    //             <div class="order-details">
-    //                 <p class="bold">Shipping Address: ${shippingAddress}</p>
-    //                 <p class="bold">Estimated Delivery Date ${formattedDeliveryDate}</p>
-    //             </div>
-    //             <div class="order-items">
-    //                 <h3>Items Ordered</h3>
-    //                 <ul>
-    //                     ${items.map(item => `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`).join('')}
-    //                 </ul>
-    //             </div>
-    //                 <p>If you have any questions, feel free to contact our support team:</p>
-    //                 <p>Email: fortune.solutionpoint@gmail.com</p>
-    //                 <p>Phone: 9167992130</p>
-    //             </div>
-    //             <div class="footer">
-    //                 <p>If you did not place this order, please contact us immediately at fortune.solutionpoint@gmail.com.</p>
-    //             </div>
-    //         </div>
-    //     </body>
-    //     </html>
-    // `;
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Order Confirmation</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f4;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        width: 100%;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    }
+                    h1 {
+                        color: #333;
+                    }
+                    .header {
+                        text-align: center;
+                        padding: 20px 0;
+                    }
+                    .header h1 {
+                        color: #4caf50;
+                        font-size: 28px;
+                        margin: 0;
+                    }
+                    .order-details {
+                        margin: 20px 0;
+                    }
+                    .order-details p {
+                        margin: 10px 0;
+                    }
+                    .order-details .bold {
+                        font-weight: bold;
+                    }
+                    .order-items {
+                        border: 1px solid #ddd;
+                        padding: 10px;
+                        margin: 20px 0;
+                    }
+                    .order-items h3 {
+                        border-bottom: 1px solid #ddd;
+                        padding-bottom: 10px;
+                        margin-bottom: 10px;
+                        color: #333;
+                    }
+                    .order-items ul {
+                        list-style: none;
+                        padding: 0;
+                        margin: 0;
+                    }
+                  .order-items li {
+                        padding: 10px 0;
+                        border-bottom: 1px solid #ddd;
+                    }
+                    .order-items li:last-child {
+                        border-bottom: none;
+                    }
+                    .contact-info {
+                        margin: 20px 0;
+                        padding: 20px;
+                        background-color: #f4f4f4;
+                        border-radius: 8px;
+                        text-align: center;
+                    }
+                    .contact-info p {
+                        margin: 0;
+                    }
+                    .footer {
+                        text-align: center;
+                        font-size: 12px;
+                        color: #888;
+                        margin-top: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Order Placed Successfully!</h1>
+                    </div>
+                    <p>Dear <strong>${user.name}</strong>,</p>
+                    <p>Thank you for shopping with <strong>Fresh Vegie</strong>. We're happy to inform you that your order has been placed successfully. Below are the details:</p>
+                    <div class="order-details">
+                        <p class="bold">Order Number: ${newOrder.orderId}</p>
+                        <p class="bold">Order Date: ${orderDateIST}</p>
+                        <p class="bold">Total Amount: ${newOrder.grandTotal}</p>
+                    </div>
+                    <div class="order-details">
+                        <p class="bold">Shipping Address: ${shippingAddress}</p>
+                        <p class="bold">Estimated Delivery Date ${formattedDeliveryDate}</p>
+                    </div>
+                    <div class="order-items">
+                        <h3>Items Ordered</h3>
+                        <ul>
+                            ${items
+                              .map(
+                                (item) =>
+                                  `<li>${item.name} - ${item.quantity} - ${item.item_price}</li>`
+                              )
+                              .join("")}
+                        </ul>
+                    </div>
+                        <p>If you have any questions, feel free to contact our support team:</p>
+                        <p>Email: fortune.solutionpoint@gmail.com</p>
+                        <p>Phone: 9167992130</p>
+                    </div>
+                    <div class="footer">
+                        <p>If you did not place this order, please contact us immediately at fortune.solutionpoint@gmail.com.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
 
-    //     const transporter = nodemailer.createTransport({
-    //       host: 'smtp.gmail.com',
-    //       port: 587,
-    //       secure: false,
-    //       auth: { user: 'fortune.solutionpoint@gmail.com', pass: 'rsyh xzdk cfgo vdak' }
-    //     });
+        const transporter = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: "fortune.solutionpoint@gmail.com",
+            pass: "rsyh xzdk cfgo vdak",
+          },
+        });
 
-    //     await transporter.sendMail({ from: 'fortune.solutionpoint@gmail.com', to, subject, html: htmlContent });
-    //   };
+        await transporter.sendMail({
+          from: "fortune.solutionpoint@gmail.com",
+          to,
+          subject,
+          html: htmlContent,
+        });
+      };
 
-    //   sendOrderEmail(user.email, newOrder, shippingInfo, orderItems, totalPrice, newOrder.deliverAt,user)
-    //     .catch(err => console.error('Failed to send email:', err));
-    // }
-
-    console.timeEnd("createNewOrder Execution Time");
+      sendOrderEmail(
+        user.email,
+        newOrder,
+        shippingInfo,
+        orderItems,
+        totalPrice,
+        newOrder.deliverAt,
+        user
+      ).catch((err) => console.error("Failed to send email:", err));
+    }
 
     return res.status(201).json({
       success: true,
@@ -1072,7 +1116,6 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(
       //     .catch(err => console.error('Failed to send email:', err));
       // }
 
-      console.timeEnd("createNewOrder Execution Time");
 
       return res.status(201).json({
         success: true,
@@ -2195,11 +2238,11 @@ exports.updateOrderStatusAfterPayment = catchAsyncError(
       const updatedOrderStatusAfterPayment = await Order.findByIdAndUpdate(
         orderId,
         {
-          'paymentInfo.status': "completed",
-          'orderStatus': 'received',
-          'paidAt': new Date()
+          "paymentInfo.status": "completed",
+          orderStatus: "received",
+          paidAt: new Date(),
         },
-        { new: true, session } 
+        { new: true, session }
       );
 
       await SendOrderConfirmMailAfterSomething(orderId, session);
@@ -2213,8 +2256,8 @@ exports.updateOrderStatusAfterPayment = catchAsyncError(
         message: "Order status updated successfully.",
       });
     } catch (error) {
-      await session.abortTransaction(); 
-      session.endSession(); 
+      await session.abortTransaction();
+      session.endSession();
       console.error(error);
       next(new ErrorHandler("Something went wrong updating the order", 500));
     }
