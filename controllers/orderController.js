@@ -600,7 +600,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     await newOrder.save({ session });
 
-    await session.commitTransaction(); // Commit the transaction
+    await session.commitTransaction(); 
 
     orderLogger.info(
       `Order received: Order ID - ${newOrder.orderId}, User ID - ${newOrder.user.userId}`
@@ -835,6 +835,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
 exports.createNewOrderForOnlinePayment = catchAsyncError(
   async (req, res, next) => {
+    let orderStatus = req.body.orderStatus;
     const {
       shippingInfo,
       orderItems,
@@ -845,7 +846,6 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(
       discountPrice,
       shippingPrice,
       totalPrice,
-      orderStatus,
       deliverAt,
       orderedFrom,
       deliveryInfo,
