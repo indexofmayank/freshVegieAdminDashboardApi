@@ -68,6 +68,7 @@ const getLatLng = async (toCheckAddress) => {
 };
 
 async function SendOrderConfirmMailAfterSomething(orderId, session) {
+
   if (!orderId) {
     throw new Error("Order Id is required");
   }
@@ -90,6 +91,10 @@ async function SendOrderConfirmMailAfterSomething(orderId, session) {
 
     if(!requiredOrder) {
       throw new Error('Order not found, whie sending mail')
+    }
+
+    if(!requiredOrder.user.email) {
+      throw new Error('User email, not found');
     }
 
     const shippingAddress = [
