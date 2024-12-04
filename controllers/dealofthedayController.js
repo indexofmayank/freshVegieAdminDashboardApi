@@ -76,16 +76,11 @@ exports.getAllFeaturedProductForTable = catchAsyncError(async (req, res, next) =
             {
                 $facet: {
                     featuredProducts: [
-                        // {
-                        //     $skip: skip 
-                        // },
-                        // {
-                        //     $limit: limit 
-                        // },
                         {
                             $project: {
                                 name: { $ifNull: ["$name", "N/a"] },
                                 image: {$arrayElemAt: ['$images.secure_url', 0]},
+                                featured: 1
                             }
                         }
                     ],
@@ -263,5 +258,97 @@ exports.updateDealOfTheDayWithBody = catchAsyncError(async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(new ErrorHandler('Something went wrong while updating the deal of the day', 500));
+    }
+});
+
+exports.updateBlukDealOfTheDay = catchAsyncError(async (req, res, next) => {
+    const session = await mongoose.startSession();
+
+    const {udpatedData} = req.body;
+    if (!udpatedData || !Array.isArray(udpatedData)) {
+        throw new ErrorHandler('Invalid input data. Expected an array of updates.', 400);
+      }
+      
+      session.startTransaction();
+      const bulkOps = udpatedData.map((item) => ({
+          updateOne: {
+              filter: {_id: item._id},
+              update: {
+                  $set: {
+                      featured: item.featured,
+                  }
+              }
+          }
+      }));
+
+      console.log('blukops ', bulkOps);
+      
+    try {
+        const result = await Product.bulkWrite(bulkOps, {session});
+        console.log('result ', result);
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Bluk update completed successfully',
+            result
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error(error);
+        next(new ErrorHandler('Something went wrong while updating bulk deal of the day', 500));
+    }
+});
+
+const updateBlukDealOfTheDayById = catchAsyncError(async (req, res, next) => {
+    try {
+        console.log('we came here');
+        console.log(req.body);
+
+        return res.status(200).json({
+            success: true,
+            message: "Its working"
+        });
+    } catch (error) {
+        console.error(error);
+        next(new ErrorHandler('Something went wrong while updating bulk deal'));
+    }
+});
+
+exports.updateAllDealOfDayById = catchAsyncError(async (req, res, next) => {
+    const session = await mongoose.startSession();
+
+    const udpatedData = req.body;
+    console.log('udpatedData', udpatedData);
+
+    if (!udpatedData || !Array.isArray(udpatedData)) {
+        throw new ErrorHandler('Invalid input data. Expected an array of updates.', 400);
+      }
+
+    try {
+
+        const blukops = udpatedData.map((item) => ({
+            updateOne: {
+                filter: {_id: item._id},
+                update: {
+                    $set: {
+                        featured: item.featured,
+                    }
+                }
+            }
+        }));
+
+        const result = await Product.bulkWrite(blukops);
+        console.log(result);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Successfully did'
+        });
+    } catch (error) {
+        console.error(error);
+        throw new ErrorHandler("Something went wrong while fetching products.");
     }
 });
