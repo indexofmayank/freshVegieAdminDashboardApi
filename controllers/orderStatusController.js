@@ -69,7 +69,8 @@ exports.getOrderStatus = catchAsyncError(async (req, res, next) => {
             'delivered',
             'verifying payment',
             'canceled',
-            'failed'
+            'failed',
+            'pending'
         ];
         const orderStatusCounts = await Promise.all(
             statuses.map(async (status) => {
