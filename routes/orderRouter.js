@@ -28,6 +28,8 @@ router.route('/orderforcustomise/:id').get(orderController.getOrderForCustomize)
 router.route('/newforonline').post(orderController.createNewOrderForOnlinePayment);
 // router.route('/editorder/:orderId').get(orderController)
 router.route('/updateOrderStatusAfterPayment').post(orderController.updateOrderStatusAfterPayment);
+router.route('/getOrderIdByCustomOrderId/:customOrderId').get(orderController.getCustomOrderIdByOrderIdTwo);
+router.route('/readeabledate/:orderId').get(orderController.getDateOfOrderByOrderId);
 
 module.exports = router;    
     

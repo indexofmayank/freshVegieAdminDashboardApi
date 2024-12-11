@@ -1573,6 +1573,7 @@ exports.getUserDeliveryInfoByOrderId = catchAsyncError(
 
 exports.getCustomOrderIdByOrderId = catchAsyncError(async (req, res, next) => {
   const orderId = req.params.orderId;
+  console.log('we came here');
   try {
     const customOrderId = await Order.aggregate([
       {
@@ -2183,6 +2184,7 @@ exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
 exports.getOrderForCustomize = catchAsyncError(async (req, res, next) => {
   try {
     const result = await Order.findById(req.params.id);
+    console.log('getOrderForCustomize/result: ', result);
     if (!result) {
       throw new ErrorHandler("Something went wrong getting the order");
     }
@@ -2263,3 +2265,67 @@ exports.updateOrderStatusAfterPayment = catchAsyncError(
     }
   }
 );
+
+exports.getCustomOrderIdByOrderIdTwo = catchAsyncError(async (req, res, next) => {
+  const { customOrderId } = req.params;
+  const matchCondition = customOrderId ? { orderId: { $regex: `^${customOrderId}$`, $options: "i" } } : {};
+  console.log(matchCondition);
+
+  try {
+    const customOrder = await Order.findOne(matchCondition, {
+      orderId: 1,
+      _id: 1,
+    });
+
+    if (!customOrder) {
+      return next(new ErrorHandler("Order not found", 404));
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: customOrder,
+    });
+  } catch (error) {
+    console.error(error);
+    next(new ErrorHandler("Something went wrong retrieving the order", 500));
+  }
+});
+
+
+exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
+  const { orderId } = req.params;
+  if (!orderId) {
+    throw new ErrorHandler("Order Id is not provided");
+  }
+
+  try {
+    const data = await Order.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(orderId) }
+      },
+      {
+        $project: {
+          createdAtKolkata: {
+            $dateToString: {
+              format: "%Y-%m-%d %H:%M:%S",
+              date: "$createdAt",
+              timezone: "Asia/Kolkata"
+            }
+          }
+        }
+      }
+    ]);
+
+    if (!data.length) {
+      throw new ErrorHandler("Order not found");
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: data[0]
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler("Something went wrong getting the order");
+  }
+});
