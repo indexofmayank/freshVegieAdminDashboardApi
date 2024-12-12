@@ -13,6 +13,8 @@ const { useWalletfunds } = require("../controllers/walletController");
 const Wallet = require("../models/walletModel");
 const User = require("../models/userModel");
 
+
+
 const GOOGLE_MAPS_API_KEY = "AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ";
 
 const generateOrderId = async () => {
@@ -2272,18 +2274,19 @@ exports.getCustomOrderIdByOrderIdTwo = catchAsyncError(async (req, res, next) =>
   console.log(matchCondition);
 
   try {
-    const customOrder = await Order.findOne(matchCondition, {
+    const result = await Order.findOne(matchCondition, {
+      user: {$ifNull: ["$user.name", 'N/a']},
       orderId: 1,
       _id: 1,
     });
 
-    if (!customOrder) {
+    if (!result) {
       return next(new ErrorHandler("Order not found", 404));
     }
 
     return res.status(200).json({
       success: true,
-      data: customOrder,
+      data: [result],
     });
   } catch (error) {
     console.error(error);
@@ -2291,6 +2294,41 @@ exports.getCustomOrderIdByOrderIdTwo = catchAsyncError(async (req, res, next) =>
   }
 });
 
+exports.getLastTenOrderForOrderSearch = catchAsyncError(async (req, res, next) => {
+  console.log('Entered in the getLastTenOrderForOrderSearch');
+    try {
+    const result = await Order.aggregate([
+      {
+        $sort: {createdAt: -1}
+      },
+      {
+        $project: {
+          user: {$ifNull: ["$user.name", 'N/a']},
+          orderId: {$ifNull: ["$orderId", "N/a"]},
+          _id: {$ifNull: ["$_id", "N/a"]}
+        }
+      },
+      {
+        $limit: 10
+      }
+    ]);
+
+    if(!result || result.length === 0) {
+      return next(new ErrorHandler("No orders found", 404));
+    }
+    console.log(result);
+    const lastTenOrders = result;
+
+    console.log('Exited in the getLastTenOrderForOrderSearch', );
+    return res.status(200).json({
+      success: true,
+      data: lastTenOrders
+    });
+  } catch (error) {
+    console.error(error);
+    throw new ErrorHandler("Something went wrong getting the orders");
+  }
+});
 
 exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
   const { orderId } = req.params;
