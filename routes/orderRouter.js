@@ -31,6 +31,7 @@ router.route('/updateOrderStatusAfterPayment').post(orderController.updateOrderS
 router.route('/getOrderIdByCustomOrderId/:customOrderId').get(orderController.getCustomOrderIdByOrderIdTwo);
 router.route('/readeabledate/:orderId').get(orderController.getDateOfOrderByOrderId);
 router.route('/lasttenorder/orderforsearch').get(orderController.getLastTenOrderForOrderSearch);
+router.route('/cancellByDemand/:orderId').get(orderController.cancelledOrderById);
+
 
 module.exports = router;    
-    

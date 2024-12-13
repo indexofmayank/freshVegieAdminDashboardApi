@@ -13,8 +13,6 @@ const { useWalletfunds } = require("../controllers/walletController");
 const Wallet = require("../models/walletModel");
 const User = require("../models/userModel");
 
-
-
 const GOOGLE_MAPS_API_KEY = "AIzaSyChe49SyZJZYPXiyZEey4mvgqxO1lagIqQ";
 
 const generateOrderId = async () => {
@@ -602,7 +600,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     await newOrder.save({ session });
 
-    await session.commitTransaction(); 
+    await session.commitTransaction();
 
     orderLogger.info(
       `Order received: Order ID - ${newOrder.orderId}, User ID - ${newOrder.user.userId}`
@@ -1118,7 +1116,6 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(
       //     .catch(err => console.error('Failed to send email:', err));
       // }
 
-
       return res.status(201).json({
         success: true,
         message: "New order created successfully",
@@ -1575,7 +1572,7 @@ exports.getUserDeliveryInfoByOrderId = catchAsyncError(
 
 exports.getCustomOrderIdByOrderId = catchAsyncError(async (req, res, next) => {
   const orderId = req.params.orderId;
-  console.log('we came here');
+  console.log("we came here");
   try {
     const customOrderId = await Order.aggregate([
       {
@@ -2186,7 +2183,7 @@ exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
 exports.getOrderForCustomize = catchAsyncError(async (req, res, next) => {
   try {
     const result = await Order.findById(req.params.id);
-    console.log('getOrderForCustomize/result: ', result);
+    console.log("getOrderForCustomize/result: ", result);
     if (!result) {
       throw new ErrorHandler("Something went wrong getting the order");
     }
@@ -2268,67 +2265,73 @@ exports.updateOrderStatusAfterPayment = catchAsyncError(
   }
 );
 
-exports.getCustomOrderIdByOrderIdTwo = catchAsyncError(async (req, res, next) => {
-  const { customOrderId } = req.params;
-  const matchCondition = customOrderId ? { orderId: { $regex: `^${customOrderId}$`, $options: "i" } } : {};
-  console.log(matchCondition);
+exports.getCustomOrderIdByOrderIdTwo = catchAsyncError(
+  async (req, res, next) => {
+    const { customOrderId } = req.params;
+    const matchCondition = customOrderId
+      ? { orderId: { $regex: `^${customOrderId}$`, $options: "i" } }
+      : {};
+    console.log(matchCondition);
 
-  try {
-    const result = await Order.findOne(matchCondition, {
-      user: {$ifNull: ["$user.name", 'N/a']},
-      orderId: 1,
-      _id: 1,
-    });
-
-    if (!result) {
-      return next(new ErrorHandler("Order not found", 404));
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: [result],
-    });
-  } catch (error) {
-    console.error(error);
-    next(new ErrorHandler("Something went wrong retrieving the order", 500));
-  }
-});
-
-exports.getLastTenOrderForOrderSearch = catchAsyncError(async (req, res, next) => {
-  console.log('Entered in the getLastTenOrderForOrderSearch');
     try {
-    const result = await Order.aggregate([
-      {
-        $sort: {createdAt: -1}
-      },
-      {
-        $project: {
-          user: {$ifNull: ["$user.name", 'N/a']},
-          orderId: {$ifNull: ["$orderId", "N/a"]},
-          _id: {$ifNull: ["$_id", "N/a"]}
-        }
-      },
-      {
-        $limit: 10
+      const result = await Order.findOne(matchCondition, {
+        user: { $ifNull: ["$user.name", "N/a"] },
+        orderId: 1,
+        _id: 1,
+      });
+
+      if (!result) {
+        return next(new ErrorHandler("Order not found", 404));
       }
-    ]);
 
-    if(!result || result.length === 0) {
-      return next(new ErrorHandler("No orders found", 404));
+      return res.status(200).json({
+        success: true,
+        data: [result],
+      });
+    } catch (error) {
+      console.error(error);
+      next(new ErrorHandler("Something went wrong retrieving the order", 500));
     }
-    console.log(result);
-    const lastTenOrders = result;
-
-    console.log('Exited in the getLastTenOrderForOrderSearch', );
-    return res.status(200).json({
-      success: true,
-      data: lastTenOrders
-    });
-  } catch (error) {
-    console.error(error);
-    throw new ErrorHandler("Something went wrong getting the orders");
   }
-});
+);
+
+exports.getLastTenOrderForOrderSearch = catchAsyncError(
+  async (req, res, next) => {
+    console.log("Entered in the getLastTenOrderForOrderSearch");
+    try {
+      const result = await Order.aggregate([
+        {
+          $sort: { createdAt: -1 },
+        },
+        {
+          $project: {
+            user: { $ifNull: ["$user.name", "N/a"] },
+            orderId: { $ifNull: ["$orderId", "N/a"] },
+            _id: { $ifNull: ["$_id", "N/a"] },
+          },
+        },
+        {
+          $limit: 10,
+        },
+      ]);
+
+      if (!result || result.length === 0) {
+        return next(new ErrorHandler("No orders found", 404));
+      }
+      console.log(result);
+      const lastTenOrders = result;
+
+      console.log("Exited in the getLastTenOrderForOrderSearch");
+      return res.status(200).json({
+        success: true,
+        data: lastTenOrders,
+      });
+    } catch (error) {
+      console.error(error);
+      throw new ErrorHandler("Something went wrong getting the orders");
+    }
+  }
+);
 
 exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
   const { orderId } = req.params;
@@ -2339,7 +2342,7 @@ exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
   try {
     const data = await Order.aggregate([
       {
-        $match: { _id: mongoose.Types.ObjectId(orderId) }
+        $match: { _id: mongoose.Types.ObjectId(orderId) },
       },
       {
         $project: {
@@ -2347,11 +2350,11 @@ exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
             $dateToString: {
               format: "%Y-%m-%d %H:%M:%S",
               date: "$createdAt",
-              timezone: "Asia/Kolkata"
-            }
-          }
-        }
-      }
+              timezone: "Asia/Kolkata",
+            },
+          },
+        },
+      },
     ]);
 
     if (!data.length) {
@@ -2360,10 +2363,97 @@ exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      data: data[0]
+      data: data[0],
     });
   } catch (error) {
     console.error(error);
     throw new ErrorHandler("Something went wrong getting the order");
+  }
+});
+
+exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
+  const { orderId } = req.params;
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    const result = await Order.findOneAndUpdate(
+      { _id: orderId },
+      { orderStatus: "cancelled" },
+      { new: true, session }
+    );
+
+    if (!result) {
+      throw new ErrorHandler("Something went wrong while updating the order.");
+    }
+
+    //=-=-=-=-=-=-=-=-=-=-=-= Stock updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
+    const handleStockUpdate = async (orderItems, session) => {
+      const bulkOps = result.orderItems.map((item) => ({
+        updateOne: {
+          filter: { _id: item.id },
+          update: { $inc: { stock: item.quantity } },
+        },
+      }));
+      await Product.bulkWrite(bulkOps, { session });
+    };
+    console.log(result);
+    //=-=-=-=-=-=-=-=-=-=-=-= Stock updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
+
+    //=-=-=-=-=-=-=-=-=-=-=-= Payment updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
+    const handlePayment = async (paymentInfo, userId, session) => {
+      if(paymentInfo) {
+            if(paymentInfo.useReferral) {
+              const userForReferal = await User.findById(userId).session(
+                session
+              );
+              if(!userForReferal) throw new Error("Referral not found");
+              userForReferal.userReferrInfo.referralAmount =+ 
+              paymentInfo.referralAmount;
+              userForReferal.userReferrInfo.referredLogs.push({
+                type: "credit",
+                amount: paymentInfo.referralAmount,
+                description: "Cancelled refuned"
+              });
+              await userForReferal.save({session});
+            }
+
+            if(paymentInfo.useWallet) {
+              const wallet = await Wallet.findOne({userId}).session(
+                session
+              );
+              if(!wallet) throw new Error("Wallet not found");
+              wallet.balance -= paymentInfo.walletAmount;
+              wallet.transactions.push({
+                type: 'credit',
+                amount: paymentInfo.walletAmount,
+                description: "Order cancelled refunded",
+              });
+              await wallet.save({session});
+            }
+            paymentInfo.status = "refunded";
+        }
+      }
+    //=-=-=-=-=-=-=-=-=-=-=-= Payment updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
+
+    // Process payment and stock update in parallel
+    const paymentPromise = handlePayment(result.paymentInfo, result.user.userId, session);
+    const stockPromise = handleStockUpdate(result.orderItems, session);
+    await Promise.all([stockPromise, paymentPromise]);
+
+    // const resultTwo = await Product.bulkWrite(bulkOps, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(error);
+    next(new ErrorHandler("Something went wrong while cancelling the order"));
   }
 });
