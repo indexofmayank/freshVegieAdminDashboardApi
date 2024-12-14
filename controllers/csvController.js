@@ -61,7 +61,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       }
     }
 
-    console.log(matchCondition);
+    // console.log(matchCondition);
 
     const Orders = await Order.aggregate([
       {
@@ -82,12 +82,57 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
         }
       },
       {
+        $lookup: {
+          from: "products",        // The name of the products collection
+          localField: "orderItems.id", // Field in the orders collection
+          foreignField: "_id",     // Field in the products collection
+          as: "productDetails"     // Name for the joined field
+        }
+      },
+      {
+        $addFields: {
+          orderItems: {
+            $map: {
+              input: "$orderItems",
+              as: "item",
+              in: {
+                $mergeObjects: [
+                  "$$item",
+                  {
+                    $let: {
+                      vars: {
+                        matchedProduct: {
+                          $arrayElemAt: [
+                            {
+                              $filter: {
+                                input: "$productDetails",
+                                as: "product",
+                                cond: { $eq: ["$$product._id", "$$item.id"] }
+                              }
+                            },
+                            0
+                          ]
+                        }
+                      },
+                      in: {
+                        product_weight: { $ifNull: ["$$matchedProduct.product_weight", "N/A"] },
+                        product_weight_type: { $ifNull: ["$$matchedProduct.product_weight_type", "N/A"] }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
         $addFields: {
           createdAtTimesFormatted: {
             $dateToString: {
               format: "%d %B %Y, %H:%M:%S",
               date: "$createdAt",
-              timezone: "UTC"
+              timezone: "Asia/Kolkata",
             }
           }
         }
@@ -95,31 +140,30 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       {
         $project: {
           orderId: { $ifNull: ["$orderId", "N/A"] },
-          orderItems: {
-            $map: {
-              input: "$orderItems",
-              as: "item",
-              in: {
-                name: { $ifNull: ["$$item.name", "N/A"] },
-                item_price: { $ifNull: ["$$item.item_price", "N/A"] },
-                quantity: { $ifNull: ["$$item.quantity", "N/A"] },
-                item_total_discount: { $ifNull: ["$$item.item_total_discount", "N/A"] },
-                item_total_tax: { $ifNull: ["$$item.item_total_tax", "N/A"] },
-                item_total: { $ifNull: ["$$item.item_total", "N/A"] },
-              }
-            }
-          },
+          orderItems: 1,
           customer: { $ifNull: ["$user.name", "N/A"] },
           customer_address: { $ifNull: ["$shippingInfo.deliveryAddress", "N/A"] },
           mobile: { $toString: { $ifNull: ["$userDetails.phone", "N/A"] } },
           delivery_type: { $ifNull: ["$deliveryTpye", "N/A"] },
           payment_type: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
-          ordered_date: { $ifNull: ["$createdAtTimesFormatted", "N/A"] }
+          ordered_date: { $ifNull: ["$createdAtTimesFormatted", "N/A"] },
+          orderStatus: { $ifNull: ["$orderStatus", "N/A"] }
         }
       }
     ]);
 
+    // Log the mapped orderItems for debugging
+    // console.log(JSON.stringify(Orders, null, 2));
+    // Orders.forEach(order => {
+    //   console.log("Order:", order.orderId);
+    //   console.log("Product Details:", order.productDetails);
+    //   order.orderItems.forEach(item => {
+    //     console.log("Item:", item);
+    //   });
+    // });
+
     // console.log(Orders);
+    // console.log(Orders.orderItems);
     const csvFilePath = path.join(__dirname, '../output.csv');
     // console.log(csvFilePath);
     const csvStringifier = createObjectCsvStringifier({
@@ -128,7 +172,10 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
         { id: 'orderNo', title: 'Order No' },
         { id: 'productName', title: 'Product Name' },
         { id: 'productPrice', title: 'Product Price' },
+        { id: 'productOfferPrice', title: 'Offer Price' },
         { id: 'quantity', title: 'Quantity' },
+        { id: 'productWeight', title: 'Product weight' },
+        { id: 'productWeightType', title: 'Product weight type' },
         { id: 'grandTotal', title: 'Grand Total' },
         { id: 'customer', title: 'Customer' },
         { id: 'address', title: 'Address' },
@@ -137,18 +184,24 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
         { id: 'paymentType', title: 'Payment Type' },
         { id: 'orderedDate', title: 'Ordered Date' },
         { id: 'tax', title: 'Tax' },
-        { id: 'totalTax', title: 'Total Tax' }
+        { id: 'totalTax', title: 'Total Tax' },
+        { id: 'orderStatus', title: 'Order Status' }
+        
       ],
     });
     const records = [];
-    // console.log(Orders);
+    // console.log(Orders.orderItems);
     Orders.forEach(order => {
       order.orderItems.forEach(item => {
+        // console.log(item)
         records.push({
           orderNo: order.orderId,
           productName: item.name,
           productPrice: item.item_price,
+          productOfferPrice: item.offer_price,
           quantity: item.quantity,
+          productWeight: item.product_weight,
+          productWeightType: item.product_weight_type,
           grandTotal: item.item_total,
           tax: item.item_total_tax,
           totalTax: item.item_total_tax,
@@ -157,7 +210,8 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
           mobile: order.mobile,
           deliveryType: order.delivery_type,
           paymentType: order.payment_type,
-          orderedDate: order.ordered_date
+          orderedDate: order.ordered_date,
+          orderStatus : order.orderStatus
         });
 
       })
