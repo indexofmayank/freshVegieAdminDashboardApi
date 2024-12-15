@@ -3,7 +3,7 @@ const Asset = require('../models/assetModel');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const multer = require('multer');
 const unzipper = require('unzipper');
-const upload = multer({ dest: '../uploads' });
+const upload = multer({ dest: '/var/uploads' });
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -30,7 +30,7 @@ exports.uploadAssetZip = [
         const zipFile = req.file;
         console.log(zipFilePath);
 
-        const extractedFolder = path.join(__dirname,'../uploads', 'extracted_images');
+        // const extractedFolder = path.join(__dirname,'../uploads', 'extracted_images');
 
         if (!zipFilePath) {
             return res.status(400).json({
