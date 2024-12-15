@@ -2372,78 +2372,78 @@ exports.getDateOfOrderByOrderId = catchAsyncError(async (req, res, next) => {
 });
 
 exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
-  const { orderId } = req.params;
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
+  // const { orderId } = req.params;
+  // const session = await mongoose.startSession();
+  // try {
+  //   session.startTransaction();
 
-    const result = await Order.findOneAndUpdate(
-      { _id: orderId },
-      { orderStatus: "canceled" },
-      { new: true, session }
-    );
+  //   const result = await Order.findOneAndUpdate(
+  //     { _id: orderId },
+  //     { orderStatus: "canceled" },
+  //     { new: true, session }
+  //   );
 
-    if (!result) {
-      throw new ErrorHandler("Order not found or could not be updated.");
-    }
+  //   if (!result) {
+  //     throw new ErrorHandler("Order not found or could not be updated.");
+  //   }
 
-    const handleStockUpdate = async (orderItems, session) => {
-      const bulkOps = orderItems.map((item) => ({
-        updateOne: {
-          filter: { _id: item.id },
-          update: { $inc: { stock: item.quantity } },
-        },
-      }));
-      await Product.bulkWrite(bulkOps, { session });
-    };
+  //   const handleStockUpdate = async (orderItems, session) => {
+  //     const bulkOps = orderItems.map((item) => ({
+  //       updateOne: {
+  //         filter: { _id: item.id },
+  //         update: { $inc: { stock: item.quantity } },
+  //       },
+  //     }));
+  //     await Product.bulkWrite(bulkOps, { session });
+  //   };
 
-    const handlePayment = async (paymentInfo, userId, session) => {
-      if (!paymentInfo) return;
+  //   const handlePayment = async (paymentInfo, userId, session) => {
+  //     if (!paymentInfo) return;
 
-      if (paymentInfo.useReferral) {
-        const userForReferral = await User.findById(userId).session(session);
-        if (!userForReferral) throw new Error("Referral user not found");
-        userForReferral.userReferrInfo.referralAmount += paymentInfo.referralAmount;
-        userForReferral.userReferrInfo.referredLogs.push({
-          type: "credit",
-          amount: paymentInfo.referralAmount,
-          description: "Refunded for canceled order",
-        });
-        await userForReferral.save({ session });
-      }
+  //     if (paymentInfo.useReferral) {
+  //       const userForReferral = await User.findById(userId).session(session);
+  //       if (!userForReferral) throw new Error("Referral user not found");
+  //       userForReferral.userReferrInfo.referralAmount += paymentInfo.referralAmount;
+  //       userForReferral.userReferrInfo.referredLogs.push({
+  //         type: "credit",
+  //         amount: paymentInfo.referralAmount,
+  //         description: "Refunded for canceled order",
+  //       });
+  //       await userForReferral.save({ session });
+  //     }
 
-      if (paymentInfo.useWallet) {
-        const wallet = await Wallet.findOne({ userId }).session(session);
-        if (!wallet) throw new Error("Wallet not found");
-        wallet.balance += paymentInfo.walletAmount;
-        wallet.transactions.push({
-          type: "credit",
-          amount: paymentInfo.walletAmount,
-          description: "Refunded for canceled order",
-        });
-        await wallet.save({ session });
-      }
+  //     if (paymentInfo.useWallet) {
+  //       const wallet = await Wallet.findOne({ userId }).session(session);
+  //       if (!wallet) throw new Error("Wallet not found");
+  //       wallet.balance += paymentInfo.walletAmount;
+  //       wallet.transactions.push({
+  //         type: "credit",
+  //         amount: paymentInfo.walletAmount,
+  //         description: "Refunded for canceled order",
+  //       });
+  //       await wallet.save({ session });
+  //     }
 
-      paymentInfo.status = "refunded";
-    };
+  //     paymentInfo.status = "refunded";
+  //   };
 
-    // Run stock and payment updates in parallel
-    const paymentPromise = handlePayment(result.paymentInfo, result.user.userId, session);
-    const stockPromise = handleStockUpdate(result.orderItems, session);
-    await Promise.all([stockPromise, paymentPromise]);
+  //   // Run stock and payment updates in parallel
+  //   const paymentPromise = handlePayment(result.paymentInfo, result.user.userId, session);
+  //   const stockPromise = handleStockUpdate(result.orderItems, session);
+  //   await Promise.all([stockPromise, paymentPromise]);
 
-    await session.commitTransaction();
-    session.endSession();
+  //   await session.commitTransaction();
+  //   session.endSession();
 
-    return res.status(200).json({
-      success: true,
-      message: "Order canceled successfully",
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error(error);
-    next(new ErrorHandler(error.message || "Failed to cancel order"));
-  }
+  //   return res.status(200).json({
+  //     success: true,
+  //     message: "Order canceled successfully",
+  //   });
+  // } catch (error) {
+  //   await session.abortTransaction();
+  //   session.endSession();
+  //   console.error(error);
+  //   next(new ErrorHandler(error.message || "Failed to cancel order"));
+  // }
 });
 
