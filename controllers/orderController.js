@@ -2379,17 +2379,16 @@ exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
 
     const result = await Order.findOneAndUpdate(
       { _id: orderId },
-      { orderStatus: "cancelled" },
+      { orderStatus: "canceled" },
       { new: true, session }
     );
 
     if (!result) {
-      throw new ErrorHandler("Something went wrong while updating the order.");
+      throw new ErrorHandler("Order not found or could not be updated.");
     }
 
-    //=-=-=-=-=-=-=-=-=-=-=-= Stock updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
     const handleStockUpdate = async (orderItems, session) => {
-      const bulkOps = result.orderItems.map((item) => ({
+      const bulkOps = orderItems.map((item) => ({
         updateOne: {
           filter: { _id: item.id },
           update: { $inc: { stock: item.quantity } },
@@ -2397,63 +2396,54 @@ exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
       }));
       await Product.bulkWrite(bulkOps, { session });
     };
-    console.log(result);
-    //=-=-=-=-=-=-=-=-=-=-=-= Stock updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
 
-    //=-=-=-=-=-=-=-=-=-=-=-= Payment updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
     const handlePayment = async (paymentInfo, userId, session) => {
-      if(paymentInfo) {
-            if(paymentInfo.useReferral) {
-              const userForReferal = await User.findById(userId).session(
-                session
-              );
-              if(!userForReferal) throw new Error("Referral not found");
-              userForReferal.userReferrInfo.referralAmount =+ 
-              paymentInfo.referralAmount;
-              userForReferal.userReferrInfo.referredLogs.push({
-                type: "credit",
-                amount: paymentInfo.referralAmount,
-                description: "Cancelled refuned"
-              });
-              await userForReferal.save({session});
-            }
+      if (!paymentInfo) return;
 
-            if(paymentInfo.useWallet) {
-              const wallet = await Wallet.findOne({userId}).session(
-                session
-              );
-              if(!wallet) throw new Error("Wallet not found");
-              wallet.balance -= paymentInfo.walletAmount;
-              wallet.transactions.push({
-                type: 'credit',
-                amount: paymentInfo.walletAmount,
-                description: "Order cancelled refunded",
-              });
-              await wallet.save({session});
-            }
-            paymentInfo.status = "refunded";
-        }
+      if (paymentInfo.useReferral) {
+        const userForReferral = await User.findById(userId).session(session);
+        if (!userForReferral) throw new Error("Referral user not found");
+        userForReferral.userReferrInfo.referralAmount += paymentInfo.referralAmount;
+        userForReferral.userReferrInfo.referredLogs.push({
+          type: "credit",
+          amount: paymentInfo.referralAmount,
+          description: "Refunded for canceled order",
+        });
+        await userForReferral.save({ session });
       }
-    //=-=-=-=-=-=-=-=-=-=-=-= Payment updation starts (BLUK WRITE) -=-=-=-=-=-=-=-=-=-=-=-=-
 
-    // Process payment and stock update in parallel
+      if (paymentInfo.useWallet) {
+        const wallet = await Wallet.findOne({ userId }).session(session);
+        if (!wallet) throw new Error("Wallet not found");
+        wallet.balance += paymentInfo.walletAmount;
+        wallet.transactions.push({
+          type: "credit",
+          amount: paymentInfo.walletAmount,
+          description: "Refunded for canceled order",
+        });
+        await wallet.save({ session });
+      }
+
+      paymentInfo.status = "refunded";
+    };
+
+    // Run stock and payment updates in parallel
     const paymentPromise = handlePayment(result.paymentInfo, result.user.userId, session);
     const stockPromise = handleStockUpdate(result.orderItems, session);
     await Promise.all([stockPromise, paymentPromise]);
-
-    // const resultTwo = await Product.bulkWrite(bulkOps, { session });
 
     await session.commitTransaction();
     session.endSession();
 
     return res.status(200).json({
       success: true,
-      message: "Order cancelled successfully",
+      message: "Order canceled successfully",
     });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     console.error(error);
-    next(new ErrorHandler("Something went wrong while cancelling the order"));
+    next(new ErrorHandler(error.message || "Failed to cancel order"));
   }
 });
+
