@@ -1329,40 +1329,89 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
       {
         $match: { _id: mongoose.Types.ObjectId(orderId) },
       },
+      { $unwind: "$orderItems" },
+      {
+        $lookup: {
+          from: "products", // The name of the Product collection
+          localField: "orderItems.id", // Match productId in orderItems
+          foreignField: "_id", // Match _id in Product collection
+          as: "productDetails", // Output array field
+        },
+      },
+      {
+        $addFields: {
+          "orderItems.product_weight_type": {
+            $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight_type", 0] }, "N/A"],
+          },
+          "orderItems.product_weight": {
+            $ifNull: [
+              { $arrayElemAt: ["$productDetails.product_weight", 0] },
+              "N/A",
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          orderItems: { $push: "$orderItems" },
+          total_discount: { $first: { $ifNull: ["$total_discount", "N/A"] } },
+          total_item_count: {
+            $first: { $ifNull: ["$total_item_count", "N/A"] },
+          },
+          total_tax: { $first: { $ifNull: ["$total_tax", "N/A"] } },
+          items_grand_total: {
+            $first: { $ifNull: ["$items_grand_total", "N/A"] },
+          },
+          grand_total: { $first: { $ifNull: ["$grandTotal", "N/A"] } },
+        },
+      },
       {
         $project: {
           orderItems: {
-            $slice: [
-              {
-                $map: {
-                  input: "$orderItems",
-                  as: "item",
-                  in: {
-                    name: { $ifNull: ["$$item.name", "N/A"] },
-                    item_price: { $ifNull: ["$$item.item_price", "N/A"] },
-                    quantity: { $ifNull: ["$$item.quantity", "N/A"] },
-                    image: { $ifNull: ["$$item.image", "N/A"] },
-                    item_total_discount: {
-                      $ifNull: ["$$item.item_total_discount", "N/A"],
-                    },
-                    item_total_tax: {
-                      $ifNull: ["$$item.item_total_tax", "N/A"],
-                    },
-                    item_total: { $ifNull: ["$$item.item_total", "N/A"] },
-                  },
-                },
-              },
-              skip,
-              limit,
-            ],
+            $slice: ["$orderItems", skip, limit],
           },
-          total_discount: { $ifNull: ["$total_discount", "N/A"] },
-          total_item_count: { $ifNull: ["$total_item_count", "N/A"] },
-          total_tax: { $ifNull: ["$total_tax", "N/A"] },
-          items_grand_total: { $ifNull: ["$items_grand_total", "N/A"] },
-          grand_total: { $ifNull: ["$grandTotal", "N/A"] },
+          total_discount: 1,
+          total_item_count: 1,
+          total_tax: 1,
+          items_grand_total: 1,
+          grand_total: 1,
         },
       },
+      // {
+      //   $project: {
+      //     orderItems: {
+      //       $slice: [
+      //         {
+      //           $map: {
+      //             input: "$orderItems",
+      //             as: "item",
+      //             in: {
+      //               name: { $ifNull: ["$$item.name", "N/A"] },
+      //               item_price: { $ifNull: ["$$item.item_price", "N/A"] },
+      //               quantity: { $ifNull: ["$$item.quantity", "N/A"] },
+      //               image: { $ifNull: ["$$item.image", "N/A"] },
+      //               item_total_discount: {
+      //                 $ifNull: ["$$item.item_total_discount", "N/A"],
+      //               },
+      //               item_total_tax: {
+      //                 $ifNull: ["$$item.item_total_tax", "N/A"],
+      //               },
+      //               item_total: { $ifNull: ["$$item.item_total", "N/A"] },
+      //             },
+      //           },
+      //         },
+      //         skip,
+      //         limit,
+      //       ],
+      //     },
+      //     total_discount: { $ifNull: ["$total_discount", "N/A"] },
+      //     total_item_count: { $ifNull: ["$total_item_count", "N/A"] },
+      //     total_tax: { $ifNull: ["$total_tax", "N/A"] },
+      //     items_grand_total: { $ifNull: ["$items_grand_total", "N/A"] },
+      //     grand_total: { $ifNull: ["$grandTotal", "N/A"] },
+      //   },
+      // },
     ]);
     if (!orderWithItems) {
       throw new ErrorHandler("Dont found worth");
@@ -2182,14 +2231,114 @@ exports.getOrderForEditOrder = catchAsyncError(async (req, res, next) => {
 
 exports.getOrderForCustomize = catchAsyncError(async (req, res, next) => {
   try {
-    const result = await Order.findById(req.params.id);
+    // const result = await Order.aggregate([
+    //   {
+    //     $match: { _id: mongoose.Types.ObjectId(req.params.id) },
+    //   },
+    //   { $unwind: "$orderItems" },
+    //   {
+    //     $lookup: {
+    //       from: "products", // The name of the Product collection
+    //       localField: "orderItems.id", // Match productId in orderItems
+    //       foreignField: "_id", // Match _id in Product collection
+    //       as: "productDetails", // Output array field
+    //     },
+    //   },
+    //   {
+    //     $addFields: {
+    //       "orderItems.product_weight_type": {
+    //         $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight_type", 0] }, "N/A"],
+    //       },
+    //       "orderItems.product_weight": {
+    //         $ifNull: [
+    //           { $arrayElemAt: ["$productDetails.product_weight", 0] },
+    //           "N/A",
+    //         ],
+    //       },
+    //     },
+    //   },
+    //   {
+    //     $group: {
+    //       _id: "$_id",
+    //       orderItems: { $push: "$orderItems" },
+    //       total_discount: { $first: { $ifNull: ["$total_discount", "N/A"] } },
+    //       total_item_count: {
+    //         $first: { $ifNull: ["$total_item_count", "N/A"] },
+    //       },
+    //       total_tax: { $first: { $ifNull: ["$total_tax", "N/A"] } },
+    //       items_grand_total: {
+    //         $first: { $ifNull: ["$items_grand_total", "N/A"] },
+    //       },
+    //       grand_total: { $first: { $ifNull: ["$grandTotal", "N/A"] } },
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       orderItems: {
+    //         $slice: ["$orderItems", skip, limit],
+    //       },
+    //       total_discount: 1,
+    //       total_item_count: 1,
+    //       total_tax: 1,
+    //       items_grand_total: 1,
+    //       grand_total: 1,
+    //     },
+    //   },
+    // ]);
+    // const result = await Order.findById(req.params.id);
+    const result = await Order.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(req.params.id) }, // Match the order by ID
+      },
+      { $unwind: "$orderItems" }, // Flatten orderItems array for lookup
+      {
+        $lookup: {
+          from: "products", // Ensure this matches your actual Product collection name
+          localField: "orderItems.id", // The field in orderItems referencing Product
+          foreignField: "_id", // The field in Product to match
+          as: "productDetails", // Output matched products into this field
+        },
+      },
+      {
+        $addFields: {
+          "orderItems.product_weight_type": {
+            $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight_type", 0] }, "N/A"],
+          },
+          "orderItems.product_weight": {
+            $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight", 0] }, "N/A"],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id", // Group by the order ID
+          orderItems: { $push: "$orderItems" }, // Reconstruct orderItems array
+          total_discount: { $first: { $ifNull: ["$total_discount", "N/A"] } },
+          total_item_count: { $first: { $ifNull: ["$total_item_count", "N/A"] } },
+          total_tax: { $first: { $ifNull: ["$total_tax", "N/A"] } },
+          items_grand_total: { $first: { $ifNull: ["$items_grand_total", "N/A"] } },
+          grand_total: { $first: { $ifNull: ["$grandTotal", "N/A"] } },
+        },
+      },
+      {
+        $project: {
+          orderItems: 1,
+          total_discount: 1,
+          total_item_count: 1,
+          total_tax: 1,
+          items_grand_total: 1,
+          grand_total: 1,
+        },
+      },
+    ]);
+
     console.log("getOrderForCustomize/result: ", result);
     if (!result) {
       throw new ErrorHandler("Something went wrong getting the order");
     }
     return res.status(200).json({
       success: true,
-      data: result,
+      data:  result[0]
     });
   } catch (error) {
     console.error(error);
@@ -2382,7 +2531,6 @@ exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
       { orderStatus: "canceled" },
       { new: true, session }
     );
-
     if (!result) {
       throw new ErrorHandler("Order not found or could not be updated.");
     }
@@ -2434,7 +2582,9 @@ exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
 
     await session.commitTransaction();
     session.endSession();
-
+    orderLogger.info(
+      `Order status updated for Order ID - ${result.orderId} to canceled for User ID - ${result.user.userId}`
+    );
     return res.status(200).json({
       success: true,
       message: "Order canceled successfully",
@@ -2446,4 +2596,5 @@ exports.cancelledOrderById = catchAsyncError(async (req, res, next) => {
     next(new ErrorHandler(error.message || "Failed to cancel order"));
   }
 });
+
 

@@ -110,7 +110,7 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
           featured:1,
         }
       },
-      {$sort: {name: 1}},
+      {$sort: {sku: 1}},
     ], {session});
 
     if(!products) {
