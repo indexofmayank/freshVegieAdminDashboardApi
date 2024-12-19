@@ -1915,9 +1915,40 @@ exports.getOrderByOrderIdForUser = catchAsyncError(async (req, res, next) => {
     }
     const session = await mongoose.startSession();
     session.startTransaction();
-    const OrderForUser = await Order.findById({ _id: orderId }).session(
-      session
-    );
+    // const OrderForUser = await Order.findById({ _id: orderId }).session(
+    //   session
+    // );
+    const OrderForUser = await Order.aggregate([
+    {
+      $match: { _id: mongoose.Types.ObjectId(orderId) }, // Match the order by ID
+    },  
+    {
+      $lookup: {
+        from: "products", // Ensure this matches your actual Product collection name
+        localField: "orderItems.id", // The field in orderItems referencing Product
+        foreignField: "_id", // The field in Product to match
+        as: "productDetails", // Output matched products into this field
+      },
+    },
+    {
+      $addFields: {
+        orderId: "$orderId",
+        "orderItems.product_weight_type": {
+          $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight_type", 0] }, "N/A"],
+        },
+        "orderItems.product_weight": {
+          $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight", 0] }, "N/A"],
+        },
+        "orderItems.barcode": {
+          $ifNull: [{ $arrayElemAt: ["$productDetails.barcode", 0] }, "N/A"],
+        },
+      },
+    },
+    {
+      $unset: "productDetails", // Remove temporary 'products' field after embedding details
+    },
+  ]);
+
     if (!OrderForUser) {
       throw new ErrorHandler("Not found");
     }
@@ -1930,7 +1961,7 @@ exports.getOrderByOrderIdForUser = catchAsyncError(async (req, res, next) => {
           {
             $match: {
               message: {
-                $regex: `Order ID - ${OrderForUser.orderId}`,
+                $regex: `Order ID - ${OrderForUser[0].orderId}`,
                 $options: "i",
               },
             },
@@ -2046,7 +2077,7 @@ exports.getOrderByOrderIdForUser = catchAsyncError(async (req, res, next) => {
     res.status(200).json({
       success: true,
       logs: logs,
-      data: OrderForUser,
+      data: OrderForUser[0],
     });
   } catch (error) {
     console.error("error while getting, order by Id");
