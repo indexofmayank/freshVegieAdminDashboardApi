@@ -3,7 +3,7 @@ const router = require('express').Router();
 const productController = require('../controllers/productController');
 
 router.route('/').get(productController.getAllProducts);
-
+router.route('/exportproductdata').get(productController.getAllproductExportCSV);
 router.route('/:id').get(productController.getSingleProduct);
 
 router.route('/reviews').post(productController.createProductReview);

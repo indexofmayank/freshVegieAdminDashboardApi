@@ -4,6 +4,7 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 const mongoose = require('mongoose');
 const DemoProduct = require('../models/demoProductModel');
+const { createObjectCsvWriter, createObjectCsvStringifier } = require('csv-writer');
 
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   req.body.admin = req.user.id;
@@ -739,3 +740,56 @@ exports.experimentedRouteToTestTwo = catchAsyncError (async (req, res, next) => 
     session.endSession();
   }
 });
+
+exports.getAllproductExportCSV = catchAsyncError(async(req, res, next) => {
+  try {
+    const products = await Product.find().populate('category').lean();
+  
+            const csvStringifier = createObjectCsvStringifier({
+              // path: filePath,
+              header: [
+                { id: 'name', title: 'Name' },
+                { id: 'product_status', title: 'Status' },
+                { id: 'category', title: 'Category' },
+                { id: 'add_ons', title: 'Add Ons' },
+                { id: 'search_tags', title: 'Search Tags' },
+                { id: 'selling_method', title: 'Selling Method' },
+                { id: 'information', title: 'Information' },
+                { id: 'description', title: 'Description' },
+                { id: 'price', title: 'Price' },
+                { id: 'offer_price', title: 'Offer Price' },
+                { id: 'purchase_price', title: 'Purchase Price' },
+                { id: 'sku', title: 'SKU' },
+                { id: 'barcode', title: 'Barcode' },
+                { id: 'stock', title: 'Stock' },
+                { id: 'stock_notify', title: 'Stock Notify' },
+                { id: 'tax', title: 'Tax' },
+                { id: 'product_detail_min', title: 'Detail Min' },
+                { id: 'product_detail_max', title: 'Detail Max' },
+                { id: 'increment_value', title: 'Increment Value' },
+                { id: 'variant_type', title: 'Variant Type' },
+                { id: 'variant_value', title: 'Variant Value' },
+                { id: 'product_weight_type', title: 'Weight Type' },
+                { id: 'product_weight', title: 'Weight' },
+                { id: 'featured', title: 'Featured' },
+              ],
+            });
+
+            const records = products.map(product => ({
+              ...product,
+              category: product.category?.name || 'Unknown',
+            }));
+  
+          // Write data to CSV
+          const csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
+  
+              // Send CSV as response
+              res.header('Content-Type', 'text/csv');
+              res.attachment('product.csv');
+              res.send(csvContent);
+              console.log('product exported successfully to product.csv');
+          } catch (err) {
+              console.error('Error exporting product:', err);
+              // process.exit(1);
+          }
+  });

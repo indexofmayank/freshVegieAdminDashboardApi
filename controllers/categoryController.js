@@ -2,6 +2,7 @@ const Category = require('../models/categoryModel');
 const ErrorHandler = require('../utils/ErrorHandler');
 const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
+const { createObjectCsvWriter, createObjectCsvStringifier } = require('csv-writer');
 
 exports.createCategory = catchAsyncError(async(req, res, next) => {
     let {name, image, status, order} = req.body;
@@ -176,3 +177,50 @@ exports.getAllCategoryByName = (catchAsyncError(async (req, res, next) => {
         error: 'Something went wrong';
     }
 }));
+
+exports.getAllCategoryExportCSV = catchAsyncError(async(req, res, next) => {
+try {
+        const categories = await Category.find();
+        // Define CSV writer
+        const csvStringifier = createObjectCsvStringifier({
+            // path: csvFilePath,
+            header: [
+                { id: '_id', title: 'ID' },
+                { id: 'name', title: 'Name' },
+                { id: 'image', title: 'Image' },
+                { id: 'status', title: 'Status' },
+                { id: 'order', title: 'Order' },
+                { id: 'createdAt', title: 'Created At' },
+                { id: 'updatedAt', title: 'Updated At' }
+            ]
+          });
+
+          const records = [];
+          // console.log(Orders.orderItems);
+          categories.forEach(category => {
+              records.push({
+                _id: category._id.toString(),
+                name: category.name,
+                image: category.image,
+                status: category.status,
+                order: category.order,
+                createdAt: category.createdAt,
+                updatedAt: category.updatedAt
+              });
+          });
+
+        // Write data to CSV
+        const csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
+
+            // Send CSV as response
+            res.header('Content-Type', 'text/csv');
+            res.attachment('category.csv');
+            res.send(csvContent);
+            console.log('Categories exported successfully to categories.csv');
+        } catch (err) {
+            console.error('Error exporting categories:', err);
+            // process.exit(1);
+        }
+});
+
+
