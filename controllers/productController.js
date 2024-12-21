@@ -793,3 +793,50 @@ exports.getAllproductExportCSV = catchAsyncError(async(req, res, next) => {
               // process.exit(1);
           }
   });
+
+
+  exports.getAllproductinventoryExportCSV = catchAsyncError(async(req, res, next) => {
+    try {
+      const products = await Product.find().lean();
+    
+              const csvStringifier = createObjectCsvStringifier({
+                // path: filePath,
+                header: [
+                  { id: 'name', title: 'Name' },
+                  { id: 'image', title: 'Image' },
+                  { id: 'price', title: 'Price' },
+                  { id: 'offer_price', title: 'Offer Price' },
+                  { id: 'purchase_price', title: 'Purchase Price' },
+                  { id: 'stock_notify', title: 'Stock Notify' },
+                  { id: 'stock', title: 'Stock' },
+                  { id: 'stock_value', title: 'Stock Value' }
+                ],
+              });
+
+              const records = products.map(product => ({
+                name: product.name || '',
+                image: product.images[0].secure_url || '',
+                price : product.price || '',
+                offer_price : product.offer_price || '',
+                purchase_price : product.purchase_price || '',
+                stock_notify : product.stock_notify || '',
+                stock : product.stock || '',
+                stock_value : product.purchase_price * product.stock || ''
+            }));
+    
+            // Write data to CSV
+            const csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
+    
+                // Send CSV as response
+                res.header('Content-Type', 'text/csv');
+                res.attachment('inventory.csv');
+                res.send(csvContent);
+                console.log('product exported successfully to product.csv');
+            } catch (err) {
+                console.error('Error exporting product:', err);
+                // process.exit(1);
+            }
+    });
+
+
+  

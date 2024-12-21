@@ -4,8 +4,9 @@ const productController = require('../controllers/productController');
 
 router.route('/').get(productController.getAllProducts);
 router.route('/exportproductdata').get(productController.getAllproductExportCSV);
-router.route('/:id').get(productController.getSingleProduct);
+router.route('/exportproductinventorydata').get(productController.getAllproductinventoryExportCSV);
 
+router.route('/:id').get(productController.getSingleProduct);
 router.route('/reviews').post(productController.createProductReview);
 
 router.route('/reviews/:id').get(productController.getAllReviews);

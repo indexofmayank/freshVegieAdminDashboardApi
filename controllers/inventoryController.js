@@ -31,7 +31,7 @@ exports.getAllProductsForInventory = catchAsyncError(async (req, res, next) => {
       { $limit: limit },
     ]);
     const totalProducts = await Product.countDocuments({category: mongoose.Types.ObjectId(categoryId)});
-    console.log(totalProducts);
+    // console.log(totalProducts);
     return res.status(200).json({
       success: true,
       page,
@@ -103,7 +103,7 @@ exports.getAllProductsForInventory = catchAsyncError(async (req, res, next) => {
 
 exports.updateProductForInventory = catchAsyncError(async (req, res, next) => {
 
-  console.log('we hit here');
+  // console.log('we hit here');
   try {
     const productsToUpdate = req.body; // Array of products to update
 
@@ -130,7 +130,7 @@ exports.updateProductForInventory = catchAsyncError(async (req, res, next) => {
 
     // Perform the bulk write operation
     const result = await Product.bulkWrite(bulkOperations);
-    console.log(result);
+    // console.log(result);
 
     res.status(200).json({
       success: true,
@@ -166,7 +166,7 @@ exports.getProductByNameForInventory = (catchAsyncError(async (req, res, next) =
         $sort: { name: 1 }
       }
     ]);
-    console.log(productsByName);
+    // console.log(productsByName);
     return res.status(200).json({
       success: true,
       data: productsByName

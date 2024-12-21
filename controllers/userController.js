@@ -5,6 +5,7 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const mongoose = require('mongoose');
 const Referral = require('../models/referModel');
 const Wallet = require('../models/walletModel');
+const { createObjectCsvWriter, createObjectCsvStringifier } = require('csv-writer');
 
 
 exports.getAllUser = catchAsyncError(async (req, res, next) => {
@@ -667,4 +668,46 @@ exports.getFcmtokenedUser = catchAsyncError(async (req, res, next) => {
         })
     }
 });
+
+
+exports.exportUsertocsv = catchAsyncError(async (req, res, next) => {
+
+    try {
+        // Fetch all users
+        const users = await User.find().lean();
+
+        // Define the CSV header
+        const csvStringifier = createObjectCsvStringifier({
+            // path: 'users.csv', // The path where the CSV will be saved
+            header: [
+                { id: '_id', title: 'ID' },
+                { id: 'name', title: 'Name' },
+                { id: 'phone', title: 'Phone' },
+                { id: 'email', title: 'Email' },
+                { id: 'createdAt', title: 'Created At' }
+            ]
+        });
+
+       // Map users' data to match the CSV header structure
+        const records = users.map(user => ({
+            _id: user._id,
+            name: user.name || '',
+            phone: user.phone,
+            email: user.email || '',
+            createdAt: user.createdAt
+        }));
+
+        // Write records to CSV
+        const csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
+  
+        // Send CSV as response
+        res.header('Content-Type', 'text/csv');
+        res.attachment('product.csv');
+        res.send(csvContent);
+        console.log('product exported successfully to product.csv');
+    } catch (error) {
+        console.error('Error exporting users to CSV:', error);
+    }
+});
+
 
