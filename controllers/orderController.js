@@ -519,18 +519,12 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
         switch (paymentInfo.payment_type) {
           case "cod":
             if (paymentInfo.useReferral) {
-              const userForReferral = await User.findById(userId).session(
-                session
-              );
+              const userForReferral = await User.findById(userId).session(session);
               if (!userForReferral) throw new Error("Referral not found");
-              if (
-                userForReferral.userReferrInfo.referralAmount <
-                paymentInfo.referralAmount
-              ) {
+              if (userForReferral.userReferrInfo.referralAmount < paymentInfo.referralAmount) {
                 throw new Error("Referral amount is insufficient");
               }
-              userForReferral.userReferrInfo.referralAmount -=
-                paymentInfo.referralAmount;
+              userForReferral.userReferrInfo.referralAmount -=paymentInfo.referralAmount;
               userForReferral.userReferrInfo.referredLogs.push({
                 type: "debit",
                 amount: paymentInfo.referralAmount,
@@ -543,7 +537,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
               const wallet = await Wallet.findOne({ userId }).session(session);
               if (!wallet) throw new Error("Wallet not found");
               if (wallet.balance < paymentInfo.walletAmount) {
-                throw new Error("Wallet amount is insufficient");
+                throw new Error("Insufficient wallet balance");
               }
               wallet.balance -= paymentInfo.walletAmount;
               wallet.transactions.push({
@@ -601,6 +595,8 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     await newOrder.save({ session });
 
     await session.commitTransaction();
+
+    session.endSession();
 
     orderLogger.info(
       `Order received: Order ID - ${newOrder.orderId}, User ID - ${newOrder.user.userId}`
@@ -823,12 +819,18 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
   } catch (error) {
     console.error("Error in createNewOrder:", error);
     await session.abortTransaction();
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create new order",
-      error: error.message,
-    });
+    session.endSession();
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create new order",
+        error: error.message,
+      });
+    }
   } finally {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     session.endSession();
   }
 });
@@ -866,13 +868,11 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(
                 );
                 if (!userForReferral) throw new Error("Referral not found");
                 if (
-                  userForReferral.userReferrInfo.referralAmount <
-                  paymentInfo.referralAmount
+                  userForReferral.userReferrInfo.referralAmount < paymentInfo.referralAmount
                 ) {
                   throw new Error("Referral amount is insufficient");
                 }
-                userForReferral.userReferrInfo.referralAmount -=
-                  paymentInfo.referralAmount;
+                userForReferral.userReferrInfo.referralAmount -= paymentInfo.referralAmount;
                 userForReferral.userReferrInfo.referredLogs.push({
                   type: "debit",
                   amount: paymentInfo.referralAmount,
@@ -946,7 +946,7 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(
       await newOrder.save({ session });
 
       await session.commitTransaction();
-
+      session.endSession();
       orderLogger.info(
         `Order received: Order ID - ${newOrder.orderId}, User ID - ${newOrder.user.userId}`
       );
@@ -1125,12 +1125,19 @@ exports.createNewOrderForOnlinePayment = catchAsyncError(
       console.error("Error in createNewOrder:", error); // Log the error
 
       await session.abortTransaction(); // Abort the transaction on error
+      session.endSession();
+
+    if (!res.headersSent) {
       return res.status(500).json({
         success: false,
         message: "Failed to create new order",
         error: error.message,
       });
+    }
     } finally {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
       session.endSession();
     }
   }

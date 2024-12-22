@@ -84,6 +84,21 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
         },
       },
       {
+        $addFields: {
+          sku_as_number: {
+            $convert: {
+              input: "$sku",
+              to: "int",
+              onError: 0, // Fallback for invalid values
+              onNull: 0,  // Fallback for null or missing values
+            },
+          },
+        },
+      },
+      {
+        $sort: { sku_as_number: 1 },
+      },
+      {
         $project : {
           name: 1,
           category: 1,
@@ -111,18 +126,20 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
           featured:1,
         }
       },
-      {$sort: {sku: 1}},
     ], {session});
 
-    if(!products) {
+    if (!products || products.length === 0) {
+      session.endSession(); // Explicitly close the session before returning
       return res.status(404).json({
-        success: 'false',
-        message: 'No product found'
+        success: false,
+        message: "No products found",
       });
     }
+
+    session.endSession();
     return res.status(200).json({
       success: true,
-      data: products
+      data: products,
     });
   } catch (error) {
     return res.status(500).json({
@@ -749,35 +766,37 @@ exports.getAllproductExportCSV = catchAsyncError(async(req, res, next) => {
               // path: filePath,
               header: [
                 { id: 'name', title: 'Name' },
-                { id: 'product_status', title: 'Status' },
-                { id: 'category', title: 'Category' },
-                { id: 'add_ons', title: 'Add Ons' },
-                { id: 'search_tags', title: 'Search Tags' },
-                { id: 'selling_method', title: 'Selling Method' },
-                { id: 'information', title: 'Information' },
-                { id: 'description', title: 'Description' },
-                { id: 'price', title: 'Price' },
-                { id: 'offer_price', title: 'Offer Price' },
-                { id: 'purchase_price', title: 'Purchase Price' },
-                { id: 'sku', title: 'SKU' },
-                { id: 'barcode', title: 'Barcode' },
-                { id: 'stock', title: 'Stock' },
-                { id: 'stock_notify', title: 'Stock Notify' },
-                { id: 'tax', title: 'Tax' },
-                { id: 'product_detail_min', title: 'Detail Min' },
-                { id: 'product_detail_max', title: 'Detail Max' },
-                { id: 'increment_value', title: 'Increment Value' },
-                { id: 'variant_type', title: 'Variant Type' },
-                { id: 'variant_value', title: 'Variant Value' },
-                { id: 'product_weight_type', title: 'Weight Type' },
-                { id: 'product_weight', title: 'Weight' },
-                { id: 'featured', title: 'Featured' },
+                { id: 'information', title: 'information' },
+                { id: 'category', title: 'category' },
+                { id: 'variant_value', title: 'variant_value' },
+                { id: 'tax', title: 'tax' },
+                { id: 'selling_method', title: 'selling_method' },
+                { id: 'purchase_price', title: 'purchase_price' },
+                { id: 'price', title: 'price' },
+                { id: 'offer_price', title: 'offer_price' },
+                { id: 'sku', title: 'sku' },
+                { id: 'description', title: 'description' },
+                { id: 'images', title: 'images'},
+                { id: 'barcode', title: 'barcode'},
+                { id: 'stock', title: 'stock'},
+                { id: 'stock_notify', title: 'stock_notify' },
+                { id: 'product_weight_type', title: 'product_weight_type' },
+                { id: 'product_weight', title: 'product_weight' },
+                { id: 'product_detail_min', title: 'product_detail_min' },
+                { id: 'product_detail_max', title: 'product_detail_max' },
+                { id: 'increment_value', title: 'increment_value' },
+                { id: 'featured', title: 'featured' },
+                { id: 'product_status', title: 'product_status' },
+                { id: 'add_ons', title: 'add_ons' },
+                { id: 'search_tags', title: 'search_tags' },
+                { id: 'variant_type', title: 'Variant Type' }
               ],
             });
 
             const records = products.map(product => ({
               ...product,
               category: product.category?.name || 'Unknown',
+              images: product.images[0].secure_url || '',
             }));
   
           // Write data to CSV
