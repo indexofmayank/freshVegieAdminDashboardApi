@@ -7,7 +7,66 @@ const Product = require('../models/productModel');
 const Category = require('../models/categoryModel');
 const User = require('../models/userModel');
 const Order = require('../models/orderModel');
+const admin = require('firebase-admin');
+const { google } = require('googleapis');
+const axios = require('axios');
+const path = require('path');
 
+const serviceAccount = require('./fresh-vegi-bb1a1-f7eb7c5b59cc.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+
+// Path to your service account JSON key file
+const serviceAccountKeyFile = path.join(__dirname, 'fresh-vegi-bb1a1-f7eb7c5b59cc.json');
+console.log(serviceAccountKeyFile);
+// Initialize Google Auth
+const getAccessToken = async () => {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: serviceAccountKeyFile,
+    scopes: ['https://www.googleapis.com/auth/firebase.messaging'],
+  });
+  const accessToken = await auth.getAccessToken();
+  return accessToken;
+};
+
+// Function to send FCM notification
+const sendNotification = async (deviceTokens, title, body, imageUrl, data) => {
+    const accessToken = await getAccessToken();
+    const fcmUrl = `https://fcm.googleapis.com/v1/projects/fresh-vegi-bb1a1/messages:send`;
+//   console.log(deviceTokens);
+//   console.log(deviceTokens.length);
+
+    for (const token of deviceTokens) {
+       
+     try {
+        // console.log(token.fcm_token);
+        const payload = {
+            message: {
+            token: token.fcm_token, // Single device token (use loop for multiple)
+            notification: {
+                title: title,
+                body: body,
+                image: imageUrl,
+            },
+            data: data,
+            },
+        };
+       
+    const response = await axios.post(fcmUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Notification sent:', response.data);
+    } catch (error) {
+        console.error('Error sending notification:', error.response?.data || error.message);
+      }
+  }
+  };
 
 exports.createNoficiation = catchAsyncError (async (req, res, next) => {
 try {
@@ -244,7 +303,7 @@ exports.getAllUserForNotification = (catchAsyncError (async (req, res, next) => 
                 }
             }
         ]);
-                if(!users) {
+        if(!users) {
             return new ErrorHandler('Not found', 404);
         }
         return res.status(200).json({
@@ -519,3 +578,48 @@ exports.pushNotification = catchAsyncError(async (req, res, next) => {
         });
     }
 });
+
+exports.sendNotification = catchAsyncError (async (req, res, next) => {
+    try {
+        console.log(req.body);
+        const matchCondition = {'fcm_token': {$ne: null}}
+        const users = await User.aggregate([
+            {
+                $match: matchCondition
+            },
+            {
+                $project: {
+                    fcm_token: 1
+                }
+            }
+        ]);
+        // const notificationId = mongoose.Types.ObjectId(req.body.id);
+
+        const notification = await Notification.findById(req.body.id);
+
+        if (!notification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Notification not found'
+            });
+        }
+        // console.log(users)
+        // console.log(notification)
+        sendNotification(
+            // ['fKBFbnT1QiazCJqk6lqmcd:APA91bFiC27OLgGZYDr3C_vHQZLrk-pUMu3GdH_LHoDQRkrEx0c3me5OwMLL68wkhHxS1K5DPLBqNIecUuaFjIKxBdqWtIv8grBY4T2LXjZlkFwN0wOSPBc','eknfAlMfRiu3UK8fpXAG5K:APA91bFJL_Z-mc9g8SeuSsMX_hmp3Hi3KLqG_DS2Wy-2qB4LF7zvqIqyrO-e2uB8kNP7ZzyzfHPXp2JUoW1-ZUboRfkvOkuQpNr0znGdwLA00651NubCUfM','eXB5yZRpQRGuDkCPVaeu2w:APA91bGFJuz4CkRvXWOASAhdi9nXyjQauBE95uWz71SsMrAu97lDEPvu8fjdxmI1m5pjudBBAyKmDYSGFxNeOFkGmoXvdrHsyTCBqiuUg2ZpS7HsU2JZ85liZUv3La9nBG_j3h0Y3JcC'], // Replace with your device tokens
+            users,
+            notification.name,
+            notification.message,
+            notification.image,
+            { screen: 'HomePage', saleId: '56789' }
+          );
+        // let {name, heading, message, redirect_to, specific_product, specific_category, link, audience, branch, customFilters, customers, status, image} = req.body;
+        return res.status(200).json({
+            success: true,
+            message:"Notification sent sucessfully"
+        });
+    } catch (error) {
+        console.log(error);
+        throw new ErrorHandler('Something went wrong create notification');
+    }
+    });

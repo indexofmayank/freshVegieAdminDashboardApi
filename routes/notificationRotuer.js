@@ -12,5 +12,6 @@ router.route('/user/fcmtoken').get(notificationController.getAllUserForNotificat
 router.route('/fcmtokens/').post(notificationController.getUserFcmTokenByUserId);
 router.route('/user/name').get(notificationController.getUserNamesForNotification);
 router.route('/send/:id').get(notificationController.pushNotification);
+router.route('/sendnotification').post(notificationController.sendNotification);
 
 module.exports = router;
