@@ -573,7 +573,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
 
     await handlePayment(paymentInfo, user.userId, session);
     await handleStockUpdate(orderItems, session);
-    
+
     //=-=-=-=-=-=-=-=-=-=-=-= Order creation starts =-=-=-=-=-=-=-=-=-=-=-=-
     const orderId = await generateOrderId();
     const newOrder = new Order({
@@ -1161,6 +1161,9 @@ exports.getOrderWithItems = catchAsyncError(async (req, res, next) => {
               { $arrayElemAt: ["$productDetails.product_weight", 0] },
               "N/A",
             ],
+          },
+          "orderItems.barcode": {
+            $ifNull: [{ $arrayElemAt: ["$productDetails.barcode", 0] }, "N/A"],
           },
         },
       },
