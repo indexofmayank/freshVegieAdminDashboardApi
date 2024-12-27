@@ -55,7 +55,7 @@ exports.getOrdersForTable = catchAsyncError(async (req, res, next) => {
           location: { $ifNull: ["$shippingInfo.deliveryAddress.city", "N/A"] },
           paymentType: { $ifNull: ["$paymentInfo.payment_type", "N/A"] },
           status: { $ifNull: ["$orderStatus", "N/A"] },
-          amount: { $ifNull: ["$grandTotal", "N/A"] },
+          amount: { $ifNull: ["$paymentInfo.amount", "N/A"] },
           createdAt: 1
         }
       },
