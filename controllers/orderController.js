@@ -1734,10 +1734,40 @@ exports.getOrderByOrderIdForUser = catchAsyncError(async (req, res, next) => {
     // const OrderForUser = await Order.findById({ _id: orderId }).session(
     //   session
     // );
-    const OrderForUser = await Order.aggregate([
+  //   const OrderForUser = await Order.aggregate([
+  //   {
+  //     $match: { _id: mongoose.Types.ObjectId(orderId) }, // Match the order by ID
+  //   },  
+  //   {
+  //     $lookup: {
+  //       from: "products", // Ensure this matches your actual Product collection name
+  //       localField: "orderItems.id", // The field in orderItems referencing Product
+  //       foreignField: "_id", // The field in Product to match
+  //       as: "productDetails", // Output matched products into this field
+  //     },
+  //   },
+  //   {
+  //     $addFields: {
+  //       orderId: "$orderId",
+  //       "orderItems.product_weight_type": {
+  //         $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight_type", 0] }, "N/A"],
+  //       },
+  //       "orderItems.product_weight": {
+  //         $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight", 0] }, "N/A"],
+  //       },
+  //       "orderItems.barcode": {
+  //         $ifNull: [{ $arrayElemAt: ["$productDetails.barcode", 0] }, "N/A"],
+  //       },
+  //     },
+  //   },
+  //   {
+  //     $unset: "productDetails", // Remove temporary 'products' field after embedding details
+  //   },
+  // ]);
+  const OrderForUser = await Order.aggregate([
     {
       $match: { _id: mongoose.Types.ObjectId(orderId) }, // Match the order by ID
-    },  
+    },
     {
       $lookup: {
         from: "products", // Ensure this matches your actual Product collection name
@@ -1748,15 +1778,57 @@ exports.getOrderByOrderIdForUser = catchAsyncError(async (req, res, next) => {
     },
     {
       $addFields: {
-        orderId: "$orderId",
-        "orderItems.product_weight_type": {
-          $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight_type", 0] }, "N/A"],
-        },
-        "orderItems.product_weight": {
-          $ifNull: [{ $arrayElemAt: ["$productDetails.product_weight", 0] }, "N/A"],
-        },
-        "orderItems.barcode": {
-          $ifNull: [{ $arrayElemAt: ["$productDetails.barcode", 0] }, "N/A"],
+        orderItems: {
+          $map: {
+            input: "$orderItems",
+            as: "orderItem",
+            in: {
+              $mergeObjects: [
+                "$$orderItem", // Original order item fields
+                {
+                  product_weight_type: {
+                    $ifNull: [
+                      {
+                        $arrayElemAt: [
+                          "$productDetails.product_weight_type",
+                          {
+                            $indexOfArray: ["$productDetails._id", "$$orderItem.id"],
+                          },
+                        ],
+                      },
+                      "N/A",
+                    ],
+                  },
+                  product_weight: {
+                    $ifNull: [
+                      {
+                        $arrayElemAt: [
+                          "$productDetails.product_weight",
+                          {
+                            $indexOfArray: ["$productDetails._id", "$$orderItem.id"],
+                          },
+                        ],
+                      },
+                      "N/A",
+                    ],
+                  },
+                  barcode: {
+                    $ifNull: [
+                      {
+                        $arrayElemAt: [
+                          "$productDetails.barcode",
+                          {
+                            $indexOfArray: ["$productDetails._id", "$$orderItem.id"],
+                          },
+                        ],
+                      },
+                      "N/A",
+                    ],
+                  },
+                },
+              ],
+            },
+          },
         },
       },
     },
@@ -1764,7 +1836,8 @@ exports.getOrderByOrderIdForUser = catchAsyncError(async (req, res, next) => {
       $unset: "productDetails", // Remove temporary 'products' field after embedding details
     },
   ]);
-
+  
+console.log("sfgsgsg ",OrderForUser);
     if (!OrderForUser) {
       throw new ErrorHandler("Not found");
     }
