@@ -710,4 +710,47 @@ exports.exportUsertocsv = catchAsyncError(async (req, res, next) => {
     }
 });
 
+exports.getAllUserNameForSearchQuery = catchAsyncError(async (req, res, next) => {
+    const { name } = req.query;
+    const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};
+  
+    try {
+      const nusers = await User.aggregate([
+        // {
+        //   $match: matchCondition
+        // },
+        // {
+        //   $project: {
+        //     name: {$ifNull: ["$name", "N/a"]}
+        //   }
+        // }
+        {
+          $match: matchCondition
+        },
+        {
+            $project: {
+                name: 1,
+                email: 1,
+                phone: 1,
+                status: 1,
+                createdAt: 1,
+              },
+        },
+        {
+          $sort: { name: 1 },
+        }
+      ]);
+      const totalUsers = await User.countDocuments();
+      return res.status(200).json({
+        success: true,
+        totalUsers,
+        data: nusers,
+      });
+    } catch (error) {
+      console.error(error);
+      throw new ErrorHandler('Something went wrong while getting the user data');
+    }
+  });
+
+ 
 

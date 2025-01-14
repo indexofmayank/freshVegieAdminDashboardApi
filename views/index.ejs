@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fresh-Vegi - An Online Grocery Store</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #e0eed1;
+        }
+
+        .navbar {
+            /* background-color: #fff; */
+            padding: 2rem 2rem;
+            /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0rem auto;
+            padding: 0 1rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .logo {
+            width: 200px;
+            margin: 1rem 0;
+        }
+
+        .company-name {
+            color: #4CAF50;
+            font-size: 2.5rem;
+            margin: 1rem 0;
+        }
+
+        .tagline {
+            color: #2E7D32;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subsidiary {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .product-sections {
+            display: flex;
+            justify-content: space-around;
+            margin: 2rem 0;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .product-section {
+            /* flex: 1; */
+            text-align: center;
+        }
+
+        .product-section img {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+        }
+
+        .contact-info {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+        }
+
+        .app-download {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .app-logowithinfo {
+            text-align: center;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: end;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+
+        .logowithinfoimg {
+            width: 100%;
+            max-width: 800px;
+        }
+       
+        .app-customercare {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+
+        .app-customercare img {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        
+        .app-download img {
+            max-width: 350px;
+            width: 100%;
+        }
+
+        .home-delivery {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin: 1rem 0;
+        }
+
+        .home-delivery {
+            width: 200px;
+        }
+
+.vegetable-decorations img {
+    position: fixed;
+    /* Reduced size */
+    height: auto;
+    object-fit: contain;
+}
+.veg-pepper {
+    top: 1%;
+    right: 0%;
+    z-index: -1;
+    max-width: 150px;
+    width: 100%;
+}
+
+.veg-carrot {
+    bottom: 1%;
+    left: 0%;
+    width: 300px !important;
+    z-index: -1;
+}
+.veg-eggplant {
+    bottom: 0%;
+    right: 0%;
+    z-index: -1;
+    width: 150px;
+  
+}
+@media (max-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        text-align: left;
+        gap: 1rem;
+    }
+    .logowithinfoimg {
+        width: 70%;
+        max-width: 700px;
+    }
+    .home-delivery {
+        /* width: 80%; */
+        max-width: 150px;
+        }
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/about">About Us</a>
+            <a href="/terms">Terms & Conditions</a>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/contact">Contact US</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- <div class="hero">
+            <img src="/logo.jpeg" alt="Fresh-Vegi Logo" class="logo">
+            <h1 class="company-name">Fresh-Vegi</h1>
+            <p class="tagline">An Online Grocery Store</p>
+            <p class="subsidiary">(A Subsidiary of SPT Sanchay Enterprises)</p>
+        </div> -->
+
+        <div class="product-sections">
+            <div class="product-section">
+                <img src="/groceries.png" alt="Grocery Products">
+            </div>
+            <div class="product-section">
+                <img src="/logo.jpeg" alt="Fresh-Vegi Logo" class="logo">
+            </div>
+            <div class="product-section">
+                <img src="/personal-care.png" alt="Personal Care Products">
+            </div>
+        </div>
+
+        <!-- <div class="contact-info">
+            <h2>www.Fresh-Vegi.com</h2>
+            <p>Customer Care – 7050815081</p>
+        </div> -->
+        <div class="app-logowithinfo">
+            <img class="logowithinfoimg" src="/logowithinfo.jpeg" alt="">
+            <img class="home-delivery" src="/delivery.jpeg" alt="Home Delivery">
+        </div>
+        <div class="app-customercare">
+            <img src="/customercare.jpeg" alt="">
+        </div>
+
+        <div class="app-download">
+            <a href="https://play.google.com/store/apps/details?id=com.freshvegie" target="_blank"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Get it on Google Play"></a>
+        </div>
+    </div>
+
+    <div class="vegetable-decorations">
+        <img src="/pepper.jpeg" class="veg-pepper" alt="" >
+        <img src="/carrot.jpeg" alt="" class="veg-carrot" >
+        <img src="/eggplant.jpeg" alt="" class="veg-eggplant" >
+    </div>
+</body>
+</html>

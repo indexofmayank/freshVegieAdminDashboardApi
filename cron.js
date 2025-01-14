@@ -33,28 +33,31 @@ const transporter = nodemailer.createTransport({
 
 // Cron job to check for low stock and notify users
 // 0 21 * * *
+//
 cron.schedule('0 21 * * *', async () => {
   console.log('Running low stock reminder job at 9 pm every day');
 
   try {
-  
     // Fetch low stock products
     const lowStockProducts = await Product.aggregate([
-        {
-          $project: {
-            name: 1,
-            image: { $arrayElemAt: ["$images.secure_url", 0] },
-            stock: 1,
-            price: 1,
-            offer_price: 1,
-            stock_notify: 1,
-            purchase_price: 1,
-          },
+      {
+        $match: { product_status: true }, // Match only products with product_status = true
+      },
+      {
+        $project: {
+          name: 1,
+          image: { $arrayElemAt: ["$images.secure_url", 0] },
+          stock: 1,
+          price: 1,
+          offer_price: 1,
+          stock_notify: 1,
+          purchase_price: 1,
         },
-        {
-            $match: { $expr: { $lte: ["$stock", "$stock_notify"] } }, // Correct comparison
-        },
-      ]);
+      },
+      {
+        $match: { $expr: { $lte: ["$stock", "$stock_notify"] } }, // Filter low-stock products
+      },
+    ]);
     
     //   console.log("asdaddasa",lowStockProducts.length);
     //   console.log(lowStockProducts);

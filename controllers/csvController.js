@@ -184,7 +184,6 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
         { id: 'paymentType', title: 'Payment Type' },
         { id: 'orderedDate', title: 'Ordered Date' },
         { id: 'tax', title: 'Tax' },
-        { id: 'totalTax', title: 'Total Tax' },
         { id: 'orderStatus', title: 'Order Status' }
         
       ],
@@ -203,8 +202,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
           productWeight: item.product_weight,
           productWeightType: item.product_weight_type,
           grandTotal: item.item_total,
-          tax: item.item_total_tax,
-          totalTax: item.item_total_tax,
+          tax: item.tax,
           customer: order.customer,
           address: order.customer_address.address + " " + order.customer_address.city + " " + order.customer_address.locality + " " + order.customer_address.landmark + " " + order.customer_address.state + " " + order.customer_address.pin_code,
           mobile: order.mobile,

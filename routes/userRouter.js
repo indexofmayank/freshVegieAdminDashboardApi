@@ -16,6 +16,7 @@ router.route('/transactions/:userId').get(userController.getUserTranscationByUse
 router.route('/metadata/:userId').get(userController.getUserMetaDataByUserId);
 router.route('/address/:userId').get(userController.getUserAllAddressByUserId);
 router.route('/dropdown/createOrder').get(userController.getUserNameDropdownForCreateOrder);
+router.route('/dropdown/forsearch/').get(userController.getAllUserNameForSearchQuery);
 router.route('/address-for-create-order/:userId').get(userController.getUserAllAddressByUserIdForCreateOrder);
 router.route('/meta-data-for-create-order/:userId').get(userController.getUserMetaDataForCreateOrder);
 router.route('/referr/').post(userController.updateUserReferrInfo);

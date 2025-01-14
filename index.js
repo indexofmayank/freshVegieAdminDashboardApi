@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-
+const path = require('path');
 const app = express();
 
 const paymentRouter = require('./routes/paymentRouter');
@@ -45,19 +45,25 @@ connectToDb();
 
 app.use(
   cors({
-    origin: [/vercel\.app$/, /localhost:\d{4}$/],
+    origin: [/vercel\.app$/,/fresh-vegis\.in$/, /localhost:\d{4}$/],
     credentials: true,
   })
 );
 app.use(express.json({ limit: '100mb' }));
 app.use(cookieParser());
+app.use(express.static('public'));
+app.set('views', path.join(__dirname, '/views'));
+app.set('view engine', 'ejs');
 
-app.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'API service running 🚀',
-  });
-});
+// Define a route to serve an EJS page 
+
+
+// app.get('/', (req, res) => {
+//   res.status(200).json({
+//     success: true,
+//     message: 'API service running 🚀',
+//   });
+// });
 
 app.use('/api/payment', paymentRouter);
 app.use('/api/products', productRouter);
@@ -83,6 +89,47 @@ app.use('/api/demo/', demoProductRouter);
 app.use('/api/asset/', assetRouter);
 
 app.use(errorMiddleware);
+
+app.get('/', (req, res) => {
+  res.render('index', {
+      title: 'Fresh-Vegi - An Online Grocery Store',
+      companyInfo: {
+          name: 'Fresh-Vegi',
+          subtitle: 'An Online Grocery Store',
+          subsidiary: 'A Subsidiary of SPT Sanchay Enterprises',
+          customerCare: '7050815081',
+          website: 'www.Fresh-Vegi.com'
+      }
+  });
+});
+
+app.get('/about', (req, res) => {
+  res.render('about', {
+      title: 'About Us - Fresh-Vegi'
+  });
+});
+
+// Terms & Conditions page
+app.get('/terms', (req, res) => {
+  res.render('terms', {
+      title: 'Terms & Conditions - Fresh-Vegi'
+  });
+});
+
+// Privacy Policy page
+app.get('/privacy', (req, res) => {
+  res.render('privacy', {
+      title: 'Privacy Policy - Fresh-Vegi'
+  });
+});
+
+// Contact Us page
+app.get('/contact', (req, res) => {
+  res.render('contact', {
+      title: 'Contact Us - Fresh-Vegi',
+      customerCare: '7050815081'
+  });
+});
 
 const server = app.listen(process.env.PORT || 5000, () => {
   console.log('Server running');
