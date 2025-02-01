@@ -15,14 +15,56 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
     const tableLabel = req.query.tableLabel.toLowerCase();
     let matchCondition = {};
     const currentDate = new Date();
-    matchCondition.orderStatus = tableLabel;
+    
+// console.log("tableLabel",tableLabel);
 
     if (period === 'custom' && startDate && endDate) {
+      matchCondition.orderStatus = tableLabel;
       matchCondition.createdAt = {
         $gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
         $lt: new Date(new Date(endDate).setHours(23, 59, 59, 999))
       }
-    } else {
+    } else if(tableLabel === 'all'){
+      console.log("orderstatus",tableLabel.orderStatus);
+      switch (filter) {
+        case 'Day':
+          matchCondition.createdAt = {
+            $gte: new Date(currentDate.setHours(0, 0, 0, 0)),
+            $lt: new Date(currentDate.setHours(23, 59, 59, 999))
+          };
+          break;
+
+        case 'Week':
+          const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+          const endOfWeek = new Date(currentDate.setDate(startOfWeek.getDate() + 6));
+          matchCondition.createdAt = {
+            $gte: new Date(startOfWeek.setHours(0, 0, 0, 0)),
+            $lt: new Date(endOfWeek.setHours(23, 59, 59, 999))
+          };
+          break;
+        case 'Month':
+          const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, currentDate.getDate());
+          const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());    
+          matchCondition.createdAt = {
+            $gte: new Date(startOfMonth.setHours(0, 0, 0, 0)),
+            $lt: new Date(endOfMonth.setHours(23, 59, 59, 999))
+          };
+          break;
+        case 'Year':
+          const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+          const endOfYear = new Date(currentDate.getFullYear(), 11, 31);
+          matchCondition.createdAt = {
+            $gte: new Date(startOfYear.setHours(0, 0, 0, 0)),
+            $lt: new Date(endOfYear.setHours(23, 59, 59, 999))
+          };
+          break;
+        default:
+          break;
+
+      }
+
+    }else {
+      matchCondition.orderStatus = tableLabel;
       switch (filter) {
         case 'Day':
           matchCondition.createdAt = {
@@ -61,7 +103,7 @@ exports.createCSVfileForOrder = catchAsyncError(async (req, res, next) => {
       }
     }
 
-    // console.log(matchCondition);
+    // console.log("adsassdhasda",matchCondition);
 
     const Orders = await Order.aggregate([
       {
