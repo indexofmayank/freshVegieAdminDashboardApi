@@ -34,6 +34,8 @@ exports.getDeliveryInstructionsForTable = catchAsyncError(async (req, res, next)
                     minimumcart_amount: {$ifNull: ["$minimumcart_amount", "N/a"]},
                     delivery_charges: {$ifNull: ["$delivery_charges" , "N/a"]},
                     initial_rewardpoint: {$ifNull: ["$initial_rewardpoint", "N/a"]},
+                    delivery_instruction: {$ifNull: ["$delivery_instruction", "N/a"]},
+                    max_referral: {$ifNull: ["$max_referral", "N/a"]},
                 }
             },
             {$sort: {createdAt: -1}},

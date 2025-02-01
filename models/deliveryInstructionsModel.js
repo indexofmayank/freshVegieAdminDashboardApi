@@ -12,10 +12,17 @@ const deliveryInstructionSchema = mongoose.Schema({
         type: Number,
         required: [true, 'Please provide delivery charges']
     },
-
     initial_rewardpoint: {
         type: Number,
         required: [true, 'Please provide initial reward point']
+    },
+    delivery_instruction: {
+        type: String,
+        required: [true, 'Please provide delivery instruction']
+    },
+    max_referral: {
+        type: Number,
+        required: [true, 'Please provide Max Referral point']
     },
 }, {
     timestamps: true,

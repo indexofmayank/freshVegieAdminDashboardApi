@@ -517,9 +517,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
     //=-=-=-=-=-=-=-=-=-=-=-= Payment handling starts =-=-=-=-=-=-=-=-=-=-=-=-
     const handlePayment = async (paymentInfo, userId, session) => {
       if (!paymentInfo) return;
-    
-      switch (paymentInfo.payment_type) {
-        case "cod":
+      
           if (paymentInfo.useReferral) {
             const userForReferral = await User.findById(userId).session(session);
             if (!userForReferral) throw new Error("Referral not found");
@@ -549,10 +547,7 @@ exports.createNewOrder = catchAsyncError(async (req, res, next) => {
             await wallet.save({ session });
           }
           paymentInfo.status = "completed";
-          break;
-        default:
-          throw new Error("Payment type not recognized");
-      }
+         
     };
     
     //=-=-=-=-=-=-=-=-=-=-=-= Payment handling ends =-=-=-=-=-=-=-=-=-=-=-=-
@@ -2307,15 +2302,13 @@ exports.updateOrderStatusAfterPayment = catchAsyncError(
 
       const updatedOrderStatusAfterPayment = await Order.findByIdAndUpdate(
         orderId,
-        {
-          "paymentInfo.status": "completed",
-          orderStatus: "received",
-          paidAt: new Date(),
+        { 
+          orderStatus: "accepted",
         },
         { new: true, session }
       );
 
-      await SendOrderConfirmMailAfterSomething(orderId, session);
+      // await SendOrderConfirmMailAfterSomething(orderId, session);
 
       await session.commitTransaction();
       session.endSession();
