@@ -472,14 +472,15 @@ exports.getUserAllAddressByUserId = catchAsyncError(async (req, res, next) => {
 exports.getUserNameDropdownForCreateOrder = catchAsyncError(async (req, res, next) => {
     try {
         const { name } = req.query;
-        const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};
+        const matchCondition = name ? { "name": { $regex: name, $options: "i" ,status: true} } : {status: true};
         const usernames = await User.aggregate([
             {
                 $match: matchCondition
             },
             {
                 $project: {
-                    name: { $ifNull: ["$name", "N/A"] }, // Handle missing product name
+                    name: { $ifNull: ["$name", "N/A"] },
+                    address: { $ifNull: ["$address", 'N/a'] } // Handle missing product name
                 }
             }
         ]);
