@@ -4,13 +4,13 @@ const catchAsyncError = require('../middleware/CatchAsyncErrors');
 const cloudinary = require('../config/cloudinary');
 
 exports.createBanner = catchAsyncError(async (req, res, next) => {
-    let { name, image, status } = req.body;
+    let { name, image, status,redirect_to,specific_product,specific_category } = req.body;
     try {
         const { secure_url } = await cloudinary.uploader.upload(image, {
             folder: 'tomper-wear',
         });
         image = secure_url;
-        const category = await Banner.create({ name, image, status });
+        const category = await Banner.create({ name, image, status,redirect_to,specific_product,specific_category });
         if (!category) {
             return next(new ErrorHandler('Server error', 500));
         }
@@ -51,13 +51,19 @@ exports.getAllBanner = catchAsyncError(async (req, res, next) => {
                 _id: id,
                 name,
                 image,
-                status
+                status,
+                redirect_to,
+                specific_product,
+                specific_category 
             } = item;
             const newItem = {
                 id,
                 name,
                 image,
-                status
+                status,
+                redirect_to,
+                specific_product,
+                specific_category 
             };
             return newItem;
         });

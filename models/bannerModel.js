@@ -15,7 +15,22 @@ const bannerSchema = mongoose.Schema({
     status: {
         type: Boolean,
         required: [true, 'Pleae enter status']
-    }
+    },
+    redirect_to: {
+        type: String,
+        required: [false, 'Please enter redirect'],
+        default: null,
+    },
+    specific_product: {
+        type: String,
+        required: false,
+        default: null,
+    },
+    specific_category: {
+        type: String,
+        required: false,
+        default: null
+    },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
