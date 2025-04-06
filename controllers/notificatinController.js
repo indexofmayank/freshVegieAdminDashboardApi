@@ -51,6 +51,12 @@ const sendNotification = async (deviceTokens, title, body, imageUrl, data) => {
                 body: body,
                 image: imageUrl,
             },
+            android: {
+                notification: {
+                  sound: "default",
+                  image: imageUrl, // Optional for Android
+                },
+            },
             data: data,
             },
         };
@@ -607,14 +613,55 @@ exports.sendNotification = catchAsyncError (async (req, res, next) => {
         }
         // console.log(users)
         // console.log(notification)
-        sendNotification(
-            // ['fKBFbnT1QiazCJqk6lqmcd:APA91bFiC27OLgGZYDr3C_vHQZLrk-pUMu3GdH_LHoDQRkrEx0c3me5OwMLL68wkhHxS1K5DPLBqNIecUuaFjIKxBdqWtIv8grBY4T2LXjZlkFwN0wOSPBc','eknfAlMfRiu3UK8fpXAG5K:APA91bFJL_Z-mc9g8SeuSsMX_hmp3Hi3KLqG_DS2Wy-2qB4LF7zvqIqyrO-e2uB8kNP7ZzyzfHPXp2JUoW1-ZUboRfkvOkuQpNr0znGdwLA00651NubCUfM','eXB5yZRpQRGuDkCPVaeu2w:APA91bGFJuz4CkRvXWOASAhdi9nXyjQauBE95uWz71SsMrAu97lDEPvu8fjdxmI1m5pjudBBAyKmDYSGFxNeOFkGmoXvdrHsyTCBqiuUg2ZpS7HsU2JZ85liZUv3La9nBG_j3h0Y3JcC'], // Replace with your device tokens
-            users,
-            notification.name,
-            notification.message,
-            notification.image,
-            { screen: 'HomePage', saleId: '56789' }
-          );
+
+        if(notification.redirect_to =='specific_product'){
+            // console.log("specific_product");
+            sendNotification(
+                // ['d-o1I7IUQ4uF3k2v8FQL1I:APA91bE4uRbYqvLEQnrbk9gV-DTk2rCVrjKc1KjzIR-BnCD_EWrN4DthLiQ8OeemYimt9si89GnuTkcaSRc9NeZki9gTcFC1VbgFC6BqJCcDow5srnj4b70'],
+                users,
+                notification.name,
+                notification.message,
+                notification.image,
+                { navigationId: 'SingleProduct', itemId: notification.specific_product }
+              );
+        }else if(notification.redirect_to =='category'){
+            // console.log("category");
+            const category = await Category.findById(notification.specific_category).select('name');
+            if(!category) {
+                return next(new ErrorHandler('Category Not found', 200));
+            }else{
+              sendNotification(
+                // ['d-o1I7IUQ4uF3k2v8FQL1I:APA91bE4uRbYqvLEQnrbk9gV-DTk2rCVrjKc1KjzIR-BnCD_EWrN4DthLiQ8OeemYimt9si89GnuTkcaSRc9NeZki9gTcFC1VbgFC6BqJCcDow5srnj4b70'],
+                users,
+                notification.name,
+                notification.message,
+                notification.image,
+                { navigationId: 'ProductListing', catId: notification.specific_category,catName:category.name}
+                );
+            }
+
+        }else{
+            // console.log("default");
+            sendNotification(
+                // ['d-o1I7IUQ4uF3k2v8FQL1I:APA91bE4uRbYqvLEQnrbk9gV-DTk2rCVrjKc1KjzIR-BnCD_EWrN4DthLiQ8OeemYimt9si89GnuTkcaSRc9NeZki9gTcFC1VbgFC6BqJCcDow5srnj4b70'],
+                users,
+                notification.name,
+                notification.message,
+                notification.image,
+                { screen: 'HomeScreen'}
+              );
+        }
+
+
+        // sendNotification(
+        //     // ['fKBFbnT1QiazCJqk6lqmcd:APA91bFiC27OLgGZYDr3C_vHQZLrk-pUMu3GdH_LHoDQRkrEx0c3me5OwMLL68wkhHxS1K5DPLBqNIecUuaFjIKxBdqWtIv8grBY4T2LXjZlkFwN0wOSPBc','eknfAlMfRiu3UK8fpXAG5K:APA91bFJL_Z-mc9g8SeuSsMX_hmp3Hi3KLqG_DS2Wy-2qB4LF7zvqIqyrO-e2uB8kNP7ZzyzfHPXp2JUoW1-ZUboRfkvOkuQpNr0znGdwLA00651NubCUfM','eXB5yZRpQRGuDkCPVaeu2w:APA91bGFJuz4CkRvXWOASAhdi9nXyjQauBE95uWz71SsMrAu97lDEPvu8fjdxmI1m5pjudBBAyKmDYSGFxNeOFkGmoXvdrHsyTCBqiuUg2ZpS7HsU2JZ85liZUv3La9nBG_j3h0Y3JcC'], // Replace with your device tokens
+        //     users,
+        //     notification.name,
+        //     notification.message,
+        //     notification.image,
+        //     { screen: 'HomePage', saleId: '56789' }
+        //   );
+
         // let {name, heading, message, redirect_to, specific_product, specific_category, link, audience, branch, customFilters, customers, status, image} = req.body;
         return res.status(200).json({
             success: true,

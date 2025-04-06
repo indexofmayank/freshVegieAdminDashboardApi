@@ -2333,7 +2333,7 @@ exports.getCustomOrderIdByOrderIdTwo = catchAsyncError(
     const matchCondition = customOrderId
       ? { orderId: { $regex: `^${customOrderId}$`, $options: "i" } }
       : {};
-    console.log(matchCondition);
+    // console.log(matchCondition);
 
     try {
       const result = await Order.findOne(matchCondition, {

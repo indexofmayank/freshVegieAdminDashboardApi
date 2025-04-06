@@ -713,9 +713,13 @@ exports.exportUsertocsv = catchAsyncError(async (req, res, next) => {
 
 exports.getAllUserNameForSearchQuery = catchAsyncError(async (req, res, next) => {
     const { name } = req.query;
-    const matchCondition = name ? { "name": { $regex: name, $options: "i" } } : {};
-  
-    try {
+    const matchCondition = {
+        $or: [
+            { name: { $regex: name, $options: "i" } }, // Case-insensitive search
+            { phone: name } // Exact match for phone number
+        ]
+    };
+    try {   
       const nusers = await User.aggregate([
         // {
         //   $match: matchCondition
