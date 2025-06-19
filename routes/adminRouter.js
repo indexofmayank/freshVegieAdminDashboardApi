@@ -6,6 +6,7 @@ const orderController = require('../controllers/orderController');
 const userController = require('../controllers/userController');
 const categoryController = require('../controllers/categoryController');
 const orderLogController = require('../controllers/orderLogController');
+const subcategoryController = require('../controllers/subcategoryController');
 
 
 const auth = require('../middleware/Auth');
@@ -174,6 +175,14 @@ router
     categoryController.getAllCategoriesForTable
   );
 
+  router
+  .route('/subcategory/')
+  .get(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super', 'moderate'),
+    subcategoryController.getAllSubCategoriesForTable
+  );
+
 router
   .route('/category/:id')
   .put(
@@ -189,6 +198,14 @@ router
     auth.checkUserAuthentication,
     auth.checkAdminPrivileges('super', 'moderate'),
     categoryController.deleteCategory
+  );
+
+  router
+  .route('/subcategory/delete/:id')
+  .delete(
+    auth.checkUserAuthentication,
+    auth.checkAdminPrivileges('super', 'moderate'),
+    subcategoryController.deleteSubCategory
   );
 
 

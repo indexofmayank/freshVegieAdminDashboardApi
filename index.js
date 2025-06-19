@@ -28,6 +28,7 @@ const deliveryInstructions = require('./routes/deliveryInstructionsRouter');
 const walletRouter = require('./routes/walletRouter');
 const demoProductRouter = require('./routes/demoProductRouter');
 const assetRouter = require('./routes/assetRouter');
+const subcategory = require('./routes/subcategoryRouter');
 
 const errorMiddleware = require('./middleware/Error');
 
@@ -87,6 +88,7 @@ app.use('/api/deliveryInstructions', deliveryInstructions);
 app.use('/api/wallet', walletRouter);
 app.use('/api/demo/', demoProductRouter);
 app.use('/api/asset/', assetRouter);
+app.use('/api/subcategory',subcategory);
 
 app.use(errorMiddleware);
 

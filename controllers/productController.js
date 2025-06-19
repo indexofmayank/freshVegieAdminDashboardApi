@@ -153,7 +153,124 @@ exports.getAllProducts = catchAsyncError(async (req, res, next) => {
 
 });
 
+exports.searchProducts = catchAsyncError(async (req, res, next) => {
+  const query = req.query.q;
+
+  if (!query || !query.trim()) {
+    return res.status(400).json({ message: 'Missing search query' });
+  }
+
+  const searchWords = query.trim().toLowerCase().split(/\s+/);
+
+
+  // Build MongoDB `$and` array of `$or` conditions for each word
+  const mongoConditions = searchWords.map(word => ({
+    $or: [
+      { name: { $regex: word, $options: 'i' } },
+      { search_tags: { $regex: word, $options: 'i' } }
+    ]
+  }));
+
+  try {
+    // const results = await Product.find({ $and: mongoConditions })
+    const results = await Product.find({
+      $and: [
+        { product_status: true },
+        ...mongoConditions    
+      ]
+    }).select('name category add_ons search_tags selling_method information description price offer_price purchase_price images sku barcode stock stock_notify tax product_detail_min product_detail_max increment_value variant_type variant_value product_weight_type product_weight featured');
+    res.json({ results });
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ message: 'Search failed' });
+  }
+
+});
+
+exports.featuredProducts = catchAsyncError(async (req, res, next) => {
+  try {
+    const session = await mongoose.startSession();
+    const products = await Product.aggregate([
+      {
+        $match: {
+          product_status: true,
+          featured:true
+        },
+      },
+      {
+        $addFields: {
+          sku_as_number: {
+            $convert: {
+              input: "$sku",
+              to: "int",
+              onError: 0, // Fallback for invalid values
+              onNull: 0,  // Fallback for null or missing values
+            },
+          },
+        },
+      },
+      {
+        $sort: { sku_as_number: 1 },
+      },
+      {
+        $project : {
+          name: 1,
+          category: 1,
+          add_ons: 1,
+          search_tags: 1,
+          selling_method: 1,
+          information: 1,
+          description: 1,
+          price: 1,
+          offer_price: 1,
+          purchase_price: 1,
+          images: 1,
+          sku: 1,
+          barcode: 1,
+          stock: 1,
+          stock_notify: 1,
+          tax: 1,
+          product_detail_min: 1,
+          product_detail_max: 1,
+          increment_value: 1,
+          variant_type: 1,
+          variant_value: 1,
+          product_weight_type: 1,
+          product_weight: 1,
+          featured:1,
+        }
+      },
+    ], {session});
+
+    if (!products || products.length === 0) {
+      session.endSession(); // Explicitly close the session before returning
+      return res.status(404).json({
+        success: false,
+        message: "No products found",
+      });
+    }
+
+    session.endSession();
+    return res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      message: error.message
+    });
+  } finally {
+    session.endSession();
+  }
+
+});
+
+
+
 exports.getAllProductForTable = catchAsyncError(async (req, res, next) => {
+
   const {name} = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -264,9 +381,10 @@ exports.getSingleProduct = catchAsyncError(async (req, res, next) => {
   if (!req.params.id) {
     return next(new ErrorHandler('Product Not Found', 400));
   }
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id)
+
   if (!product) {
-    return next(new ErrorHandler('Product Not Found', 200));
+    return next(new ErrorHandler('Product not found', 404));
   }
   res.status(200).json({
     success: true,
@@ -373,9 +491,13 @@ exports.getProductByCategory = catchAsyncError( async (req, res, next) => {
   if(!categoryId) {
     return next(new ErrorHandler('Category not found', 400));
   }
-  const products = await Product.find({category: categoryId});
+  const products = await Product.find({
+    category: categoryId,
+    product_status: true
+  });
+
   if(!products) {
-    return next(new ErrorHandler('Product not found', 200));
+    return next(new ErrorHandler('Product not found', 404));
   }
   res.status(200).json({
     success: true,
