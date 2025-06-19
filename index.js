@@ -26,7 +26,7 @@ const dashboardRouter = require('./routes/dashboardRouter');
 const referralRouter = require('./routes/referralRouter');
 const deliveryInstructions = require('./routes/deliveryInstructionsRouter');
 const walletRouter = require('./routes/walletRouter');
-const demoProductRouter = require('./routes/demoProductRouter');
+// const demoProductRouter = require('./routes/demoProductRouter');
 // const assetRouter = require('./routes/assetRouter');
 const subcategory = require('./routes/subcategoryRouter');
 
@@ -86,7 +86,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/referral', referralRouter);
 app.use('/api/deliveryInstructions', deliveryInstructions);
 app.use('/api/wallet', walletRouter);
-app.use('/api/demo/', demoProductRouter);
+// app.use('/api/demo/', demoProductRouter);
 // app.use('/api/asset/', assetRouter);
 app.use('/api/subcategory',subcategory);
 
